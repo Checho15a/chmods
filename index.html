@@ -15,7 +15,8 @@
       sendEmailVerification, onAuthStateChanged, signOut
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
-      getFirestore, doc, setDoc, serverTimestamp
+      getFirestore, doc, getDoc, setDoc, collection,
+      query, where, getDocs, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -34,16 +35,55 @@
     const db   = getFirestore(app);
     let _user = null, _guest = false;
 
+    // Verificar si un username ya existe en Firestore
+    async function usernameExists(username) {
+      const q = query(
+        collection(db, "users"),
+        where("usernameLower", "==", username.toLowerCase())
+      );
+      const snap = await getDocs(q);
+      return !snap.empty;
+    }
+
+    // Resolver si el input es email o username, y devolver el email real
+    async function resolveEmail(input) {
+      // Si tiene @ es un email directo
+      if (input.includes('@')) return input;
+      // Si no, buscar en Firestore por username
+      const q = query(
+        collection(db, "users"),
+        where("usernameLower", "==", input.toLowerCase())
+      );
+      const snap = await getDocs(q);
+      if (snap.empty) throw { code: 'auth/username-not-found' };
+      return snap.docs[0].data().email;
+    }
+
     window._chm = {
+      async checkUsername(username) {
+        return usernameExists(username);
+      },
       async register(email, pw, username) {
+        // 1. Verificar username único
+        if (await usernameExists(username)) {
+          throw { code: 'auth/username-taken' };
+        }
+        // 2. Crear usuario en Firebase Auth
         const c = await createUserWithEmailAndPassword(auth, email, pw);
+        // 3. Mandar verificación
         await sendEmailVerification(c.user);
+        // 4. Guardar en Firestore
         await setDoc(doc(db, "users", c.user.uid), {
-          username, email, createdAt: serverTimestamp(), role: "user"
+          username,
+          usernameLower: username.toLowerCase(),
+          email,
+          createdAt: serverTimestamp(),
+          role: "user"
         });
         return c.user;
       },
-      async login(email, pw) {
+      async login(emailOrUsername, pw) {
+        const email = await resolveEmail(emailOrUsername);
         return (await signInWithEmailAndPassword(auth, email, pw)).user;
       },
       async logout() { await signOut(auth); },
@@ -512,8 +552,8 @@
       <!-- Login -->
       <div id="form-in">
         <div class="auth-field">
-          <label>Correo electrónico</label>
-          <input type="email" id="in-email" placeholder="tu@correo.com" />
+          <label>Correo electrónico o usuario</label>
+          <input type="text" id="in-email" placeholder="tu@correo.com o Usuario123" autocomplete="off" />
         </div>
         <div class="auth-field">
           <label>Contraseña</label>
@@ -533,7 +573,7 @@
         </div>
         <div class="auth-field">
           <label>Nombre de usuario</label>
-          <input type="text" id="reg-user" placeholder="Checho123" />
+          <input type="text" id="reg-user" placeholder="Ejm: Usuario123" autocomplete="off" />
         </div>
         <div class="auth-field">
           <label>Correo electrónico</label>
@@ -736,11 +776,34 @@
     const username = document.getElementById('reg-user').value.trim();
     const email    = document.getElementById('reg-email').value.trim();
     const pw       = document.getElementById('reg-pw').value;
-    if (!username || !email || !pw) { showMsg('Completá todos los campos.', 'err'); return; }
-    if (pw.length < 6) { showMsg('La contraseña debe tener al menos 6 caracteres.', 'err'); return; }
 
+    // Validaciones locales primero (sin llamadas async, sin deshabilitar botón)
+    if (!username || !email || !pw) {
+      showMsg('Completá todos los campos.', 'err'); return;
+    }
+    if (username.length < 3) {
+      showMsg('El nombre de usuario debe tener al menos 3 caracteres.', 'err'); return;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      showMsg('El usuario solo puede tener letras, números y guión bajo.', 'err'); return;
+    }
+    if (pw.length < 6) {
+      showMsg('La contraseña debe tener al menos 6 caracteres.', 'err'); return;
+    }
+
+    // Deshabilitar botón solo cuando vamos a hacer llamadas reales
     setBtnLoading(true);
+
     try {
+      // Verificar username único
+      const taken = await window._chm.checkUsername(username);
+      if (taken) {
+        showMsg('Ese nombre de usuario ya está en uso. Elegí otro.', 'err');
+        setBtnLoading(false);
+        return;
+      }
+
+      // Crear cuenta
       await window._chm.register(email, pw, username);
       setBtnLoading(false);
       showVerifyScreen();
@@ -749,26 +812,10 @@
     } catch(e) {
       setBtnLoading(false);
 
-      // Correo ya registrado — intentar login para ver si está verificado o no
-      if (e.code === 'auth/email-already-in-use') {
-        try {
-          const user = await window._chm.login(email, pw);
-          if (user.emailVerified) {
-            // Ya tiene cuenta verificada, mandarlo a la app directamente
-            enterApp(user, false);
-          } else {
-            // Tiene cuenta pero sin verificar — mandar a verificación
-            showVerifyScreen();
-            showMsg('Ya tenés una cuenta con ese correo. Verificá tu correo para poder ingresar.', 'ok');
-          }
-        } catch(loginErr) {
-          // El login falló — contraseña incorrecta para ese correo
-          if (loginErr.code === 'auth/wrong-password' || loginErr.code === 'auth/invalid-credential') {
-            showMsg('Ya existe una cuenta con ese correo. Iniciá sesión en vez de registrarte.', 'err');
-          } else {
-            showMsg(fbErr(loginErr.code), 'err');
-          }
-        }
+      if (e.code === 'auth/username-taken') {
+        showMsg('Ese nombre de usuario ya está en uso. Elegí otro.', 'err');
+      } else if (e.code === 'auth/email-already-in-use') {
+        showMsg('Ese correo ya tiene una cuenta. Iniciá sesión en la pestaña de arriba.', 'err');
       } else {
         showMsg(fbErr(e.code), 'err');
       }
@@ -867,11 +914,13 @@
       'auth/email-already-in-use':  'Ese correo ya está registrado.',
       'auth/invalid-email':          'El correo no es válido.',
       'auth/weak-password':          'Contraseña muy débil.',
-      'auth/user-not-found':         'No existe cuenta con ese correo.',
-      'auth/wrong-password':         'Contraseña incorrecta.',
+      'auth/user-not-found':         'No existe cuenta con ese correo o usuario.',
+      'auth/wrong-password':         'Correo/usuario o contraseña incorrectos.',
       'auth/too-many-requests':      'Demasiados intentos. Esperá un momento.',
       'auth/network-request-failed': 'Error de red. Revisá tu conexión.',
-      'auth/invalid-credential':     'Credenciales incorrectas.',
+      'auth/invalid-credential':     'Correo/usuario o contraseña incorrectos.',
+      'auth/username-not-found':     'No existe ningún usuario con ese nombre.',
+      'auth/username-taken':         'Ese nombre de usuario ya está en uso.',
     }[code] || 'Error inesperado. Intentá de nuevo.';
   }
 </script>
