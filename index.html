@@ -1414,37 +1414,71 @@
       version: 'Forge 1.20.1',
       general: {
         title: 'CH Images',
-        chips: ['Forge 1.20.1', 'Media', 'GUI', 'Comandos', 'GIF · Video · Imagen'],
+        chips: ['Forge 1.20.1', 'v1.0.0', 'Media', 'GUI', 'Imágenes · Videos · GIFs'],
         table: [
-          ['Versión', 'Forge 1.20.1'],
-          ['Tipo', 'Mod de cliente / servidor'],
-          ['Función principal', 'Proyectar imágenes, videos y GIFs en el mundo'],
-          ['Requiere config.', 'No'],
+          ['Versión del juego', 'Minecraft Java 1.20.1 (Forge)'],
+          ['Versión del mod', '1.0.0'],
+          ['Tipo', 'Mod de servidor / cliente'],
+          ['Función principal', 'Proyección multimedia en el mundo via URL'],
+          ['Requiere configuración', 'No — funciona desde el primer inicio'],
+          ['Estado', 'En desarrollo activo'],
         ],
-        desc: '<strong>CH Images</strong> es un mod para Minecraft Java 1.20.1 (Forge) que permite proyectar imágenes, videos y GIFs directamente en el mundo del juego, sobre superficies como paredes o suelos. Funciona mediante comandos de chat o a través de la interfaz visual integrada.',
+        desc: `<strong>CH Images</strong> es un mod para Minecraft Java 1.20.1 (Forge) que permite proyectar <strong>imágenes, videos y GIFs</strong> directamente en el mundo del juego, utilizando links o URLs como fuente de contenido. El mod incluye tanto comandos de chat como una <strong>interfaz gráfica (GUI)</strong> completa para gestionar y controlar la proyección de medios de forma ordenada y eficiente.`,
         extra: `
-          <div class="ws-note"><span class="ws-note-icon">💡</span><span>Ideal para servidores creativos, eventos, presentaciones dentro del juego, o para personalizar tu mundo con contenido multimedia propio.</span></div>
-          <div class="ws-p">Soporta los formatos <strong>PNG, JPG, GIF animados</strong> y <strong>videos</strong> mediante URL directa. Todo el contenido se renderiza en tiempo real sobre las superficies del mundo.</div>
+          <div class="ws-note"><span class="ws-note-icon">⚡</span><span><strong>Optimización propia:</strong> el mod gestiona el contenido multimedia de forma inteligente — carga el video o GIF, lo proyecta una vez descargado, y va eliminando los frames que ya no están en pantalla a medida que avanza la reproducción. Esto evita sobrecargar la RAM del servidor y la de los jugadores que están visualizando el contenido.</span></div>
+          <div class="ws-h2">¿Qué permite hacer?</div>
+          <div class="ws-p">Desde la GUI, los operadores pueden organizar sus medios en marcos separados por categoría — <strong>imágenes, videos y GIFs</strong> — con nombres personalizables para identificarlos fácilmente. Cada marco puede editarse, previsualizarse y enviarse de forma independiente. El mod también ofrece controles de experiencia para los jugadores no operadores, como bloquear movimiento, chat, inventario e interacciones mientras se proyecta un medio.</div>
+          <div class="ws-note"><span class="ws-note-icon">🔧</span><span>El mod se encuentra en <strong>desarrollo activo</strong>. Algunas funciones, como la reproducción de sonido en videos, están planificadas para versiones futuras.</span></div>
         `
       },
       inicio: {
-        intro: 'CH Images no requiere ninguna activación especial. Una vez instalado, el mod está disponible de inmediato. Todas las funciones son opcionales y no existe un paso de "inicio" obligatorio.',
+        intro: 'CH Images no requiere ninguna activación previa ni configuración inicial. Una vez instalado, el mod está disponible de inmediato. No existe un paso de "inicio" obligatorio — todas las funciones son opcionales y están a disposición del operador.',
         steps: [
-          { n: '01', title: 'Descargar el mod', desc: 'Obtené el archivo <code>.jar</code> de CH Images (ver sección Descarga). El archivo es compatible con Forge 1.20.1.' },
-          { n: '02', title: 'Instalar en la carpeta mods', desc: 'Colocá el <code>.jar</code> dentro de la carpeta <code>mods/</code> de tu instalación de Forge 1.20.1.' },
-          { n: '03', title: 'Iniciar Minecraft con Forge', desc: 'Abrí el juego con el perfil de Forge 1.20.1. El mod cargará automáticamente sin necesidad de configuración adicional.' },
-          { n: '04', title: 'Usar el comando o la GUI', desc: 'En el chat podés escribir <code>/chimage</code> seguido de los parámetros, o utilizar el ítem incluido en el mod para abrir la interfaz visual.' },
+          { n: '01', title: 'Obtener el mod', desc: 'Descargá el archivo <code>.jar</code> de CH Images (consultá la sección <strong>Descarga</strong> para obtener acceso). El archivo es compatible exclusivamente con Forge 1.20.1.' },
+          { n: '02', title: 'Instalar en la carpeta mods', desc: 'Colocá el archivo <code>.jar</code> dentro de la carpeta <code>mods/</code> de tu instalación de Forge 1.20.1, tanto en el cliente como en el servidor si aplica.' },
+          { n: '03', title: 'Iniciar Minecraft con Forge 1.20.1', desc: 'Abrí el juego usando el perfil de Forge 1.20.1. El mod cargará automáticamente al iniciar, sin necesidad de configuración adicional.' },
+          { n: '04', title: 'Abrir la GUI del administrador', desc: 'En el chat del juego, ejecutá el comando <code>/chpreview</code> para abrir el administrador multimedia. Desde ahí podés gestionar todos tus marcos de imágenes, videos y GIFs.' },
         ],
-        extra: `<div class="ws-note"><span class="ws-note-icon">ℹ️</span><span>No se requiere configurar archivos adicionales. El mod funciona listo para usar desde el primer inicio.</span></div>`
+        extra: `<div class="ws-note"><span class="ws-note-icon">ℹ️</span><span>No se generan archivos de configuración. El mod funciona listo para usar desde el primer inicio sin pasos adicionales.</span></div>`
       },
       tutorial: {
-        intro: 'A continuación, cada función del mod explicada con descripción de uso e imagen de referencia.',
+        intro: 'A continuación se detallan todas las funciones del mod, organizadas por sección. Cada función incluye su descripción de uso e imagen de referencia.',
         blocks: [
-          { title: 'Proyectar una imagen con comando', desc: 'Usá el comando <code>/chimage url [URL]</code> apuntando a una superficie del mundo para proyectar una imagen desde internet.', img: true },
-          { title: 'Interfaz visual (GUI)', desc: 'El mod incluye un ítem especial que al usarse abre una interfaz gráfica. Desde ahí podés pegar la URL, ajustar el tamaño y confirmar la proyección sin necesidad de comandos.', img: true },
-          { title: 'GIF animado', desc: 'CH Images soporta GIFs animados. Copiá la URL directa del GIF y el mod lo reproducirá en bucle automáticamente sobre la superficie elegida.', img: true },
-          { title: 'Video en tiempo real', desc: 'También es posible proyectar videos mediante URL directa. El mod renderizará el video frame a frame sobre la superficie del mundo.', img: true },
-          { title: 'Eliminar una proyección', desc: 'Apuntá a una proyección existente y ejecutá <code>/chimage remove</code>, o seleccionala desde la GUI del ítem y presioná el botón de eliminar.', img: true },
+          {
+            title: 'Comando /chpreview — Abrir el administrador (GUI)',
+            desc: 'El comando <code>/chpreview</code> abre la interfaz gráfica principal del mod. Desde aquí el operador puede gestionar todos sus marcos multimedia, organizados en tres secciones: <strong>IMAGES</strong>, <strong>VIDEOS</strong> y <strong>GIFS</strong>. Cada sección cuenta con <strong>16 marcos</strong> para almacenar links, con nombre personalizable para identificarlos fácilmente.',
+            img: true
+          },
+          {
+            title: 'Interruptor ON/OFF de proyección',
+            desc: 'Al proyectar cualquier medio, aparece un <strong>interruptor en la parte superior izquierda</strong> de la GUI. Este botón ON/OFF permite iniciar o detener inmediatamente la última proyección activa. Incluye un <strong>cooldown de aproximadamente 2 segundos</strong> para evitar spam y posibles bugs por activaciones rápidas consecutivas.',
+            img: true
+          },
+          {
+            title: 'Botones de marco: PREVIEW, SAVE y SEND',
+            desc: 'Cada marco dentro de las secciones cuenta con tres botones esenciales:<br><br><strong>PREVIEW</strong> — Permite al operador previsualizar el medio antes de proyectarlo a todos los jugadores del servidor.<br><strong>SAVE</strong> — Guarda todos los cambios realizados en el marco actual para no perder la configuración.<br><strong>SEND</strong> — Envía y proyecta el contenido del marco directamente a todos los jugadores, sin pasos intermedios.',
+            img: true
+          },
+          {
+            title: 'Guardado seguro al salir del marco',
+            desc: 'Si un operador está editando un marco y presiona el botón de volver sin haber guardado, el mod mostrará un <strong>aviso de confirmación</strong> indicando que hay cambios sin guardar. El operador puede elegir salir sin guardar o continuar editando.<br><br><div class="ws-note" style="margin-top:.5rem"><span class="ws-note-icon">⚠️</span><span>Esta protección <strong>no cubre</strong> el caso en que se presione la tecla <strong>ESC</strong> dentro del marco. El guardado seguro aplica únicamente al botón de volver — no es guardado automático.</span></div>',
+            img: false
+          },
+          {
+            title: 'Sección IMAGES — Parámetros de control',
+            desc: 'En la sección de imágenes, el operador dispone de los siguientes parámetros. <strong>Todos están desactivados (NO) por defecto</strong> y pueden activarse según la necesidad:<br><br><strong>CHAT</strong> — Controla si los jugadores no operadores pueden o no enviar mensajes al chat general durante la proyección.<br><strong>CMDS</strong> — Controla si los jugadores no operadores pueden ejecutar comandos en el chat (como <code>/msg</code>, <code>/tpa</code>, <code>/lobby</code>, etc.).<br><strong>MOVE</strong> — Bloquea o permite el movimiento de los jugadores no operadores mientras se proyecta la imagen.<br><strong>INTERACT</strong> — Bloquea o permite el uso de click derecho e izquierdo, incluyendo colocar o romper bloques, usar objetos lanzables, etc.<br><strong>INV</strong> — Bloquea o permite que los jugadores no operadores abran su inventario durante la proyección.',
+            img: true
+          },
+          {
+            title: 'Sección VIDEOS — Reproducción y parámetro',
+            desc: 'La sección de videos permite proyectar contenido de video mediante link directo. Cuenta con un único parámetro:<br><br><strong>CHAT</strong> — Controla si el chat de los jugadores no operadores se muestra <em>por encima</em> del video proyectado o permanece oculto.<br><br>Los videos tienen <strong>reproducción única</strong>: se reproducen desde el inicio hasta el final y no se repiten automáticamente. Para volver a proyectar el video, debe enviarse nuevamente.<br><br><div class="ws-note" style="margin-top:.5rem"><span class="ws-note-icon">⚠️</span><span>Los links de video <strong>deben terminar obligatoriamente en <code>.gif</code></strong>. No se aceptan otros formatos de URL. Además, <strong>los videos no reproducen sonido</strong> en esta versión — esa funcionalidad está en desarrollo para futuras actualizaciones.</span></div>',
+            img: true
+          },
+          {
+            title: 'Sección GIFS — Parámetros y opciones',
+            desc: 'La sección de GIFs incluye tres parámetros y una opción condicional:<br><br><strong>OPACIDAD</strong> — Reduce la opacidad del GIF proyectado. Útil para efectos de pantalla, bromas entre jugadores o superposiciones visuales sin interrumpir la vista del mundo.<br><br><strong>TIEMPO</strong> — Define el comportamiento de duración del GIF. Tiene dos modos:<br>— <em>REPETIR</em>: el GIF se reproduce en bucle indefinidamente hasta que se desactive manualmente.<br>— <em>LÍMITE</em>: al seleccionar esta opción, se despliega un campo adicional para definir minutos y segundos de duración. El límite máximo en esta versión es <strong>5 minutos más los segundos especificados</strong>.<br><br><strong>CHAT</strong> — Igual que en las otras secciones, controla si el chat se muestra por encima del GIF o se oculta. Si la opacidad es alta, el chat podría verse de todas formas.',
+            img: true
+          },
         ]
       },
       recursos: [
