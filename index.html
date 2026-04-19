@@ -717,13 +717,17 @@
     try {
       const user = await window._chm.login(email, pw);
       if (!user.emailVerified) {
+        setBtnLoading(false);
         showVerifyScreen();
-        showMsg('Verificá tu correo antes de ingresar.', 'err');
+        showMsg('Tu correo no está verificado todavía. Revisá tu bandeja.', 'err');
         return;
       }
       enterApp(user, false);
-    } catch(e) { showMsg(fbErr(e.code), 'err'); }
-    finally { setBtnLoading(false); }
+    } catch(e) {
+      showMsg(fbErr(e.code), 'err');
+    } finally {
+      setBtnLoading(false);
+    }
   }
 
   // ── Registro ──────────────────────────────────────────────────
@@ -734,15 +738,40 @@
     const pw       = document.getElementById('reg-pw').value;
     if (!username || !email || !pw) { showMsg('Completá todos los campos.', 'err'); return; }
     if (pw.length < 6) { showMsg('La contraseña debe tener al menos 6 caracteres.', 'err'); return; }
+
     setBtnLoading(true);
     try {
       await window._chm.register(email, pw, username);
-      setBtnLoading(false); // resetear ANTES de ocultar
+      setBtnLoading(false);
       showVerifyScreen();
       showMsg('✓ Cuenta creada. Revisá tu correo para verificar.', 'ok');
+
     } catch(e) {
-      showMsg(fbErr(e.code), 'err');
       setBtnLoading(false);
+
+      // Correo ya registrado — intentar login para ver si está verificado o no
+      if (e.code === 'auth/email-already-in-use') {
+        try {
+          const user = await window._chm.login(email, pw);
+          if (user.emailVerified) {
+            // Ya tiene cuenta verificada, mandarlo a la app directamente
+            enterApp(user, false);
+          } else {
+            // Tiene cuenta pero sin verificar — mandar a verificación
+            showVerifyScreen();
+            showMsg('Ya tenés una cuenta con ese correo. Verificá tu correo para poder ingresar.', 'ok');
+          }
+        } catch(loginErr) {
+          // El login falló — contraseña incorrecta para ese correo
+          if (loginErr.code === 'auth/wrong-password' || loginErr.code === 'auth/invalid-credential') {
+            showMsg('Ya existe una cuenta con ese correo. Iniciá sesión en vez de registrarte.', 'err');
+          } else {
+            showMsg(fbErr(loginErr.code), 'err');
+          }
+        }
+      } else {
+        showMsg(fbErr(e.code), 'err');
+      }
     }
   }
 
