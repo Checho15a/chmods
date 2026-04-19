@@ -300,8 +300,28 @@
 
     #verify-view { display: none; text-align: center; padding: .4rem 0; }
     .v-icon { font-size: 2.8rem; margin-bottom: .7rem; }
-    .v-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--white); margin-bottom: .45rem; }
-    .v-text  { font-size: .82rem; color: var(--dim); line-height: 1.6; margin-bottom: .9rem; }
+    .v-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--white); margin-bottom: .5rem; }
+    .v-text  { font-size: .83rem; color: var(--dim); line-height: 1.6; margin-bottom: 1rem; }
+    .v-email {
+      color: var(--accent); font-family: 'DM Mono', monospace;
+      font-size: .8rem; word-break: break-all;
+    }
+    .v-steps {
+      display: flex; flex-direction: column; gap: .6rem;
+      text-align: left; margin-bottom: 1rem;
+    }
+    .v-step {
+      display: flex; align-items: flex-start; gap: .75rem;
+      font-size: .82rem; color: var(--dim); line-height: 1.5;
+    }
+    .v-step strong { color: var(--text); }
+    .v-step-num {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--accent); color: #0c0c0c;
+      font-family: 'Syne', sans-serif; font-size: .72rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: .05rem;
+    }
     .v-spam-note {
       display: flex; align-items: flex-start; gap: .5rem;
       background: rgba(232,130,12,.06);
@@ -314,8 +334,8 @@
     .v-spam-note strong { color: var(--accent); }
     .v-btn {
       background: var(--accent); color: #0c0c0c;
-      border: none; border-radius: var(--r); padding: .65rem 1.4rem;
-      font-family: 'Nunito', sans-serif; font-size: .84rem;
+      border: none; border-radius: var(--r); padding: .7rem 1.4rem;
+      font-family: 'Nunito', sans-serif; font-size: .86rem;
       font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
       cursor: pointer; transition: all var(--ease);
       display: block; width: 100%; margin-bottom: .6rem;
@@ -324,7 +344,7 @@
     .v-back-btn {
       background: transparent; border: 1px solid var(--border2);
       border-radius: var(--r); padding: .5rem 1rem;
-      font-family: 'Nunito', sans-serif; font-size: .78rem;
+      font-family: 'Nunito', sans-serif; font-size: .8rem;
       font-weight: 600; color: var(--dim); cursor: pointer;
       transition: all var(--ease); display: block; width: 100%;
     }
@@ -591,13 +611,27 @@
       <!-- Verificar correo -->
       <div id="verify-view">
         <div class="v-icon">📬</div>
-        <div class="v-title">Revisá tu correo</div>
+        <div class="v-title">¡Revisá tu correo!</div>
         <div class="v-text">
-          Te mandamos un link de verificación a tu correo. Una vez que hagas click en ese link, volvé acá y presioná el botón de abajo para entrar.
+          Te enviamos un correo a <span id="v-email-display" class="v-email"></span> con un link de verificación.
+        </div>
+        <div class="v-steps">
+          <div class="v-step">
+            <span class="v-step-num">1</span>
+            <span>Abrí tu correo electrónico</span>
+          </div>
+          <div class="v-step">
+            <span class="v-step-num">2</span>
+            <span>Buscá el mensaje de <strong>CH Mods</strong> y hacé click en el link de verificación</span>
+          </div>
+          <div class="v-step">
+            <span class="v-step-num">3</span>
+            <span>Volvé acá y presioná el botón de abajo para ingresar</span>
+          </div>
         </div>
         <div class="v-spam-note">
           <span class="v-spam-icon">⚠️</span>
-          <span>Si no lo ves en tu bandeja principal, revisá la carpeta <strong>Spam</strong> o <strong>No deseado</strong> — el correo llega desde una dirección de Firebase y algunos clientes lo filtran automáticamente.</span>
+          <span>¿No te llegó? Revisá la carpeta <strong>Spam</strong> o <strong>No deseado</strong> — a veces el correo de verificación cae ahí.</span>
         </div>
         <button class="v-btn" onclick="checkVerify()">✓ Ya verifiqué — entrar</button>
         <button class="v-back-btn" onclick="backToLogin()">← Volver al inicio de sesión</button>
@@ -725,11 +759,16 @@
     clearMsg();
   }
 
-  function showVerifyScreen() {
-    document.getElementById('auth-tabs').style.display = 'none'; // ocultar tabs
+  function showVerifyScreen(email) {
+    document.getElementById('auth-tabs').style.display = 'none';
     document.getElementById('form-in').style.display   = 'none';
     document.getElementById('form-reg').style.display  = 'none';
     document.getElementById('verify-view').style.display = '';
+    // Mostrar el correo del usuario si se pasó
+    const emailEl = document.getElementById('v-email-display');
+    if (emailEl && email) emailEl.textContent = email;
+    // Limpiar el mensaje de éxito/error para que no tape el contenido
+    clearMsg();
   }
 
   function backToLogin() {
@@ -758,8 +797,7 @@
       const user = await window._chm.login(email, pw);
       if (!user.emailVerified) {
         setBtnLoading(false);
-        showVerifyScreen();
-        showMsg('Tu correo no está verificado todavía. Revisá tu bandeja.', 'err');
+        showVerifyScreen(user.email);
         return;
       }
       enterApp(user, false);
@@ -806,8 +844,7 @@
       // Crear cuenta
       await window._chm.register(email, pw, username);
       setBtnLoading(false);
-      showVerifyScreen();
-      showMsg('✓ Cuenta creada. Revisá tu correo para verificar.', 'ok');
+      showVerifyScreen(email);
 
     } catch(e) {
       setBtnLoading(false);
