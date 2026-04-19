@@ -261,14 +261,34 @@
     #verify-view { display: none; text-align: center; padding: .4rem 0; }
     .v-icon { font-size: 2.8rem; margin-bottom: .7rem; }
     .v-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--white); margin-bottom: .45rem; }
-    .v-text  { font-size: .82rem; color: var(--dim); line-height: 1.6; margin-bottom: 1.2rem; }
-    .v-btn {
-      background: var(--bg3); border: 1px solid var(--border2);
-      border-radius: var(--r); padding: .55rem 1.1rem;
-      font-family: 'Nunito', sans-serif; font-size: .8rem;
-      font-weight: 600; color: var(--dim); cursor: pointer; transition: all var(--ease);
+    .v-text  { font-size: .82rem; color: var(--dim); line-height: 1.6; margin-bottom: .9rem; }
+    .v-spam-note {
+      display: flex; align-items: flex-start; gap: .5rem;
+      background: rgba(232,130,12,.06);
+      border: 1px solid rgba(232,130,12,.2);
+      border-radius: 8px; padding: .6rem .8rem;
+      margin-bottom: 1.1rem; text-align: left;
+      font-size: .75rem; color: var(--dim); line-height: 1.5;
     }
-    .v-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .v-spam-icon { flex-shrink: 0; font-size: .85rem; margin-top: .05rem; }
+    .v-spam-note strong { color: var(--accent); }
+    .v-btn {
+      background: var(--accent); color: #0c0c0c;
+      border: none; border-radius: var(--r); padding: .65rem 1.4rem;
+      font-family: 'Nunito', sans-serif; font-size: .84rem;
+      font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      cursor: pointer; transition: all var(--ease);
+      display: block; width: 100%; margin-bottom: .6rem;
+    }
+    .v-btn:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 0 18px var(--aglow); }
+    .v-back-btn {
+      background: transparent; border: 1px solid var(--border2);
+      border-radius: var(--r); padding: .5rem 1rem;
+      font-family: 'Nunito', sans-serif; font-size: .78rem;
+      font-weight: 600; color: var(--dim); cursor: pointer;
+      transition: all var(--ease); display: block; width: 100%;
+    }
+    .v-back-btn:hover { border-color: var(--accent); color: var(--accent); }
 
     /* ════ APP ════ */
     #app-screen { display: none; position: relative; z-index: 1; }
@@ -484,7 +504,7 @@
     </div>
     <div class="auth-card">
       <div class="auth-msg" id="auth-msg"></div>
-      <div class="auth-tabs">
+      <div class="auth-tabs" id="auth-tabs">
         <button class="auth-tab on" id="tab-in"  onclick="switchTab('in')">Iniciar sesión</button>
         <button class="auth-tab"    id="tab-reg" onclick="switchTab('reg')">Registrarse</button>
       </div>
@@ -531,12 +551,16 @@
       <!-- Verificar correo -->
       <div id="verify-view">
         <div class="v-icon">📬</div>
-        <div class="v-title">Verificá tu correo</div>
+        <div class="v-title">Revisá tu correo</div>
         <div class="v-text">
-          Te enviamos un link de verificación. Revisá tu bandeja de entrada
-          (y la carpeta spam). Una vez confirmado, presioná el botón.
+          Te mandamos un link de verificación a tu correo. Una vez que hagas click en ese link, volvé acá y presioná el botón de abajo para entrar.
+        </div>
+        <div class="v-spam-note">
+          <span class="v-spam-icon">⚠️</span>
+          <span>Si no lo ves en tu bandeja principal, revisá la carpeta <strong>Spam</strong> o <strong>No deseado</strong> — el correo llega desde una dirección de Firebase y algunos clientes lo filtran automáticamente.</span>
         </div>
         <button class="v-btn" onclick="checkVerify()">✓ Ya verifiqué — entrar</button>
+        <button class="v-back-btn" onclick="backToLogin()">← Volver al inicio de sesión</button>
       </div>
     </div>
   </div>
@@ -655,9 +679,21 @@
     document.getElementById('form-in').style.display   = t==='in'  ? '' : 'none';
     document.getElementById('form-reg').style.display  = t==='reg' ? '' : 'none';
     document.getElementById('verify-view').style.display = 'none';
+    document.getElementById('auth-tabs').style.display = '';  // mostrar tabs
     document.getElementById('tab-in').classList.toggle('on',  t==='in');
     document.getElementById('tab-reg').classList.toggle('on', t==='reg');
     clearMsg();
+  }
+
+  function showVerifyScreen() {
+    document.getElementById('auth-tabs').style.display = 'none'; // ocultar tabs
+    document.getElementById('form-in').style.display   = 'none';
+    document.getElementById('form-reg').style.display  = 'none';
+    document.getElementById('verify-view').style.display = '';
+  }
+
+  function backToLogin() {
+    switchTab('in');
   }
   function showMsg(txt, type) {
     const el = document.getElementById('auth-msg');
@@ -681,8 +717,7 @@
     try {
       const user = await window._chm.login(email, pw);
       if (!user.emailVerified) {
-        document.getElementById('form-in').style.display    = 'none';
-        document.getElementById('verify-view').style.display = '';
+        showVerifyScreen();
         showMsg('Verificá tu correo antes de ingresar.', 'err');
         return;
       }
@@ -702,11 +737,13 @@
     setBtnLoading(true);
     try {
       await window._chm.register(email, pw, username);
-      document.getElementById('form-reg').style.display    = 'none';
-      document.getElementById('verify-view').style.display = '';
+      setBtnLoading(false); // resetear ANTES de ocultar
+      showVerifyScreen();
       showMsg('✓ Cuenta creada. Revisá tu correo para verificar.', 'ok');
-    } catch(e) { showMsg(fbErr(e.code), 'err'); }
-    finally { setBtnLoading(false); }
+    } catch(e) {
+      showMsg(fbErr(e.code), 'err');
+      setBtnLoading(false);
+    }
   }
 
   // ── Verificar ─────────────────────────────────────────────────
