@@ -903,8 +903,8 @@
   }
 
   function openMod(id) {
-    // Acá conectás cada mod a su wiki cuando estén listas
-    console.log('Mod:', id);
+    if (id === 'wip') return; // mod en desarrollo, no tiene wiki aún
+    openWiki(id);
   }
 
   // ── Logout ────────────────────────────────────────────────────
@@ -959,5 +959,641 @@
     }[code] || 'Error inesperado. Intentá de nuevo.';
   }
 </script>
+<!-- ════════════════════════════════════════════════════════════
+     WIKI — Vista de mod individual
+════════════════════════════════════════════════════════════ -->
+<style>
+  /* ── Overlay wiki ── */
+  #wiki-overlay {
+    position: fixed; inset: 0; z-index: 60;
+    background: rgba(0,0,0,.45);
+    backdrop-filter: blur(5px);
+    opacity: 0; pointer-events: none;
+    transition: opacity .32s ease;
+  }
+  #wiki-overlay.show { opacity: 1; pointer-events: all; }
+
+  /* ── Panel wiki ── */
+  #wiki-panel {
+    position: fixed;
+    top: 3vh; left: 50%;
+    transform: translateX(-50%) translateY(24px);
+    width: min(97vw, 1100px);
+    height: 94vh;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    z-index: 61;
+    display: flex; flex-direction: column;
+    box-shadow: 0 32px 80px rgba(0,0,0,.25);
+    opacity: 0; pointer-events: none;
+    transition: opacity .35s ease, transform .35s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+  }
+  #wiki-panel.show {
+    opacity: 1; pointer-events: all;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ── Topbar wiki ── */
+  .wiki-topbar {
+    display: flex; align-items: center; gap: 1rem;
+    padding: .7rem 1.2rem;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .wiki-back {
+    background: none; border: 1px solid var(--border2);
+    border-radius: 6px; padding: .28rem .75rem;
+    font-family: 'DM Mono', monospace; font-size: .62rem;
+    letter-spacing: .08em; color: var(--dim);
+    cursor: pointer; transition: all var(--ease);
+    display: flex; align-items: center; gap: .4rem;
+  }
+  .wiki-back:hover { border-color: var(--accent); color: var(--accent); }
+  .wiki-topbar-title {
+    font-family: 'Syne', sans-serif;
+    font-size: .95rem; font-weight: 700; color: var(--white);
+    flex: 1;
+  }
+  .wiki-topbar-title span { color: var(--accent); }
+  .wiki-version-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: .58rem; letter-spacing: .1em;
+    text-transform: uppercase;
+    border: 1px solid rgba(232,130,12,.35);
+    color: var(--accent); border-radius: 999px;
+    padding: .18rem .6rem;
+  }
+
+  /* ── Layout wiki: sidebar + contenido ── */
+  .wiki-body {
+    display: flex; flex: 1; overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  .wiki-sidebar {
+    width: 235px; flex-shrink: 0;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    overflow-y: auto; overflow-x: hidden;
+    padding: 1.2rem 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+    transition: background var(--ease);
+  }
+  .wiki-sidebar::-webkit-scrollbar { width: 4px; }
+  .wiki-sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .sidebar-mod-name {
+    font-family: 'Syne', sans-serif;
+    font-size: .78rem; font-weight: 700;
+    color: var(--accent); letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 0 1.1rem .8rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: .6rem;
+  }
+
+  .sidebar-item {
+    display: flex; align-items: center; gap: .55rem;
+    padding: .5rem 1.1rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: .82rem; font-weight: 600;
+    color: var(--dim); cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: all var(--ease);
+    position: relative;
+    user-select: none;
+  }
+  .sidebar-item:hover { color: var(--text); background: rgba(232,130,12,.05); }
+  .sidebar-item.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(232,130,12,.07);
+  }
+  .sidebar-item-icon { font-size: .9rem; flex-shrink: 0; width: 18px; text-align: center; }
+
+  /* sección desplegable "Páginas Recursos" */
+  .sidebar-group {}
+  .sidebar-group-header {
+    display: flex; align-items: center; gap: .55rem;
+    padding: .5rem 1.1rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: .82rem; font-weight: 600;
+    color: var(--dim); cursor: pointer;
+    transition: all var(--ease);
+    user-select: none;
+  }
+  .sidebar-group-header:hover { color: var(--text); background: rgba(232,130,12,.05); }
+  .sidebar-group-label { flex: 1; display: flex; align-items: center; gap: .4rem; }
+
+  /* tooltip del ? */
+  .sidebar-tooltip-wrap { position: relative; display: inline-flex; }
+  .sidebar-q {
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 1px solid var(--border2);
+    font-family: 'DM Mono', monospace;
+    font-size: .55rem; color: var(--dim);
+    display: flex; align-items: center; justify-content: center;
+    cursor: help; transition: all var(--ease); flex-shrink: 0;
+  }
+  .sidebar-q:hover { border-color: var(--accent); color: var(--accent); }
+  .sidebar-tooltip {
+    position: absolute;
+    left: calc(100% + 8px); top: 50%;
+    transform: translateY(-50%);
+    width: 210px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: .65rem .8rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: .72rem; color: var(--text); line-height: 1.5;
+    box-shadow: 0 8px 24px rgba(0,0,0,.15);
+    z-index: 10;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s ease;
+    white-space: normal;
+  }
+  .sidebar-tooltip::before {
+    content: '';
+    position: absolute; right: 100%; top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent;
+    border-right-color: var(--border2);
+  }
+  .sidebar-tooltip-wrap:hover .sidebar-tooltip { opacity: 1; }
+
+  .sidebar-chevron {
+    font-size: .65rem; color: var(--dim);
+    transition: transform var(--ease); flex-shrink: 0;
+  }
+  .sidebar-group.open .sidebar-chevron { transform: rotate(90deg); }
+
+  .sidebar-sub {
+    display: none;
+    padding-left: .8rem;
+  }
+  .sidebar-group.open .sidebar-sub { display: block; }
+
+  .sidebar-sub-item {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .38rem 1.1rem .38rem .9rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: .78rem; font-weight: 500;
+    color: var(--dim); cursor: pointer;
+    border-radius: 6px;
+    transition: all var(--ease);
+    text-decoration: none;
+  }
+  .sidebar-sub-item:hover { color: var(--accent); background: rgba(232,130,12,.06); }
+  .sidebar-ext-icon {
+    font-size: .7rem; opacity: .6;
+    transition: opacity var(--ease), transform var(--ease);
+  }
+  .sidebar-sub-item:hover .sidebar-ext-icon { opacity: 1; transform: translate(1px,-1px); }
+
+  /* ── Contenido wiki ── */
+  .wiki-content {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    padding: 2.2rem clamp(1.4rem, 4vw, 3rem);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
+  .wiki-content::-webkit-scrollbar { width: 5px; }
+  .wiki-content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* secciones de contenido */
+  .wiki-section { display: none; animation: wfade .3s ease; }
+  .wiki-section.active { display: block; }
+  @keyframes wfade { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  .wiki-section-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: .62rem; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: .6rem;
+  }
+  .wiki-section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-weight: 700; color: var(--white);
+    line-height: 1.15; margin-bottom: 1.4rem;
+  }
+  .wiki-divider {
+    height: 1px; background: var(--border);
+    margin: 1.6rem 0;
+  }
+  .wiki-p {
+    font-size: .9rem; color: var(--dim);
+    line-height: 1.8; margin-bottom: 1rem;
+  }
+  .wiki-p strong { color: var(--text); font-weight: 600; }
+  .wiki-p code {
+    font-family: 'DM Mono', monospace;
+    font-size: .82rem; background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 4px; padding: .1rem .4rem;
+    color: var(--accent);
+  }
+
+  /* info chips */
+  .wiki-chips {
+    display: flex; flex-wrap: wrap; gap: .5rem;
+    margin-bottom: 1.4rem;
+  }
+  .wiki-chip {
+    font-family: 'DM Mono', monospace;
+    font-size: .62rem; letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: .28rem .75rem; border-radius: 999px;
+    border: 1px solid var(--border2);
+    color: var(--dim); background: var(--bg2);
+  }
+  .wiki-chip.accent { border-color: rgba(232,130,12,.4); color: var(--accent); background: rgba(232,130,12,.06); }
+
+  /* callout / nota */
+  .wiki-callout {
+    display: flex; gap: .75rem;
+    background: rgba(232,130,12,.06);
+    border: 1px solid rgba(232,130,12,.2);
+    border-radius: 9px; padding: .9rem 1rem;
+    margin-bottom: 1.2rem;
+    font-size: .85rem; color: var(--dim); line-height: 1.6;
+  }
+  .wiki-callout-icon { flex-shrink: 0; font-size: 1rem; margin-top: .05rem; }
+  .wiki-callout strong { color: var(--text); }
+
+  /* bloque de comando */
+  .wiki-cmd {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 9px; padding: .9rem 1.1rem;
+    margin-bottom: 1.2rem;
+  }
+  .wiki-cmd-label {
+    font-family: 'DM Mono', monospace;
+    font-size: .58rem; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: .4rem;
+  }
+  .wiki-cmd-code {
+    font-family: 'DM Mono', monospace;
+    font-size: .84rem; color: var(--white);
+    word-break: break-all;
+  }
+
+  /* bloque multimedia: texto + imagen placeholder */
+  .wiki-media-block {
+    margin-bottom: 1.8rem;
+  }
+  .wiki-media-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem; font-weight: 700;
+    color: var(--white); margin-bottom: .5rem;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .wiki-media-title::before {
+    content: '';
+    width: 3px; height: 1em;
+    background: var(--accent); border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .wiki-img-placeholder {
+    width: 100%; aspect-ratio: 16/7;
+    background: var(--bg3);
+    border: 1px dashed var(--border2);
+    border-radius: 9px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: .4rem; margin-top: .7rem;
+    color: var(--dim2);
+    font-family: 'DM Mono', monospace;
+    font-size: .68rem; letter-spacing: .1em;
+  }
+  .wiki-img-placeholder span { font-size: 1.6rem; }
+
+  /* sección de inicio: pasos */
+  .wiki-steps {
+    display: flex; flex-direction: column; gap: .9rem;
+    margin-bottom: 1.4rem;
+  }
+  .wiki-step {
+    display: flex; gap: 1rem; align-items: flex-start;
+  }
+  .wiki-step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: #0c0c0c;
+    font-family: 'Syne', sans-serif; font-size: .78rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: .1rem;
+  }
+  .wiki-step-content { flex: 1; }
+  .wiki-step-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: .9rem; font-weight: 700;
+    color: var(--white); margin-bottom: .2rem;
+  }
+  .wiki-step-desc {
+    font-size: .83rem; color: var(--dim); line-height: 1.65;
+  }
+  .wiki-step-desc code {
+    font-family: 'DM Mono', monospace; font-size: .8rem;
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 4px; padding: .08rem .38rem; color: var(--accent);
+  }
+
+  @media (max-width: 680px) {
+    .wiki-sidebar { width: 200px; }
+    .wiki-topbar-title { font-size: .82rem; }
+  }
+  @media (max-width: 520px) {
+    #wiki-panel { top: 0; border-radius: 0; height: 100vh; width: 100vw; }
+    .wiki-sidebar { display: none; }
+  }
+</style>
+
+<!-- HTML del panel wiki -->
+<div id="wiki-overlay" onclick="closeWiki()"></div>
+<div id="wiki-panel">
+
+  <!-- Topbar -->
+  <div class="wiki-topbar">
+    <button class="wiki-back" onclick="closeWiki()">← Volver</button>
+    <div class="wiki-topbar-title" id="wiki-panel-title">Wiki</div>
+    <span class="wiki-version-badge" id="wiki-version-badge">Forge 1.20.1</span>
+  </div>
+
+  <!-- Body: sidebar + contenido -->
+  <div class="wiki-body">
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="wiki-sidebar" id="wiki-sidebar">
+      <div class="sidebar-mod-name" id="sidebar-mod-name">CH Mod</div>
+
+      <div class="sidebar-item active" onclick="showSection('wiki')" data-sec="wiki">
+        <span class="sidebar-item-icon">📖</span> Wiki
+      </div>
+      <div class="sidebar-item" onclick="showSection('inicio')" data-sec="inicio">
+        <span class="sidebar-item-icon">🚀</span> Cómo empezar
+      </div>
+      <div class="sidebar-item" onclick="showSection('tutorial')" data-sec="tutorial">
+        <span class="sidebar-item-icon">🎬</span> Tutorial Multimedia
+      </div>
+
+      <!-- Páginas Recursos (desplegable) -->
+      <div class="sidebar-group" id="sidebar-resources-group">
+        <div class="sidebar-group-header" onclick="toggleGroup('sidebar-resources-group')">
+          <span class="sidebar-item-icon">📦</span>
+          <span class="sidebar-group-label">
+            Páginas Recursos
+            <span class="sidebar-tooltip-wrap">
+              <span class="sidebar-q">?</span>
+              <span class="sidebar-tooltip">Las Páginas Recursos de los mods son páginas internas del mod, desarrolladas por el mismo creador, que permiten realizar funciones que sirven para complementar el mod.</span>
+            </span>
+          </span>
+          <span class="sidebar-chevron">›</span>
+        </div>
+        <div class="sidebar-sub" id="sidebar-resources-links">
+          <!-- Se llenan dinámicamente según el mod -->
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ── CONTENIDO ── -->
+    <div class="wiki-content" id="wiki-content">
+
+      <!-- SECCIÓN: Wiki general -->
+      <div class="wiki-section active" id="sec-wiki">
+        <div class="wiki-section-tag">Documentación general</div>
+        <div class="wiki-section-title" id="wiki-title-main">Nombre del Mod</div>
+        <div class="wiki-chips" id="wiki-chips-main"></div>
+        <div class="wiki-p" id="wiki-desc-main">Descripción del mod.</div>
+        <div class="wiki-divider"></div>
+        <div id="wiki-extra-main"></div>
+      </div>
+
+      <!-- SECCIÓN: Cómo empezar -->
+      <div class="wiki-section" id="sec-inicio">
+        <div class="wiki-section-tag">Guía de inicio</div>
+        <div class="wiki-section-title">Cómo empezar</div>
+        <div class="wiki-p" id="wiki-inicio-intro"></div>
+        <div class="wiki-steps" id="wiki-steps-main"></div>
+        <div id="wiki-inicio-extra"></div>
+      </div>
+
+      <!-- SECCIÓN: Tutorial Multimedia -->
+      <div class="wiki-section" id="sec-tutorial">
+        <div class="wiki-section-tag">Tutorial paso a paso</div>
+        <div class="wiki-section-title">Tutorial Multimedia</div>
+        <div class="wiki-p" id="wiki-tutorial-intro"></div>
+        <div id="wiki-tutorial-blocks"></div>
+      </div>
+
+    </div><!-- /wiki-content -->
+  </div><!-- /wiki-body -->
+</div><!-- /wiki-panel -->
+
+<script>
+  // ══════════════════════════════════════════════
+  //  DATOS DE LOS MODS
+  // ══════════════════════════════════════════════
+  const MOD_DATA = {
+    images: {
+      name: 'CH Images',
+      version: 'Forge 1.20.1',
+      wiki: {
+        title: 'CH Images',
+        chips: ['Forge 1.20.1', 'Media', 'GUI', 'Comandos', 'GIF / Video / Imagen'],
+        desc: `<strong>CH Images</strong> es un mod para Minecraft Java 1.20.1 (Forge) que te permite proyectar imágenes, videos y GIFs directamente en el mundo del juego. Podés hacerlo mediante comandos de chat o usando la interfaz visual integrada que incluye el mod.`,
+        extra: `
+          <div class="wiki-callout">
+            <span class="wiki-callout-icon">💡</span>
+            <span>Este mod es ideal para servidores creativos, eventos, presentaciones dentro del juego, o simplemente para personalizar tu mundo con contenido multimedia propio.</span>
+          </div>
+          <div class="wiki-p">El mod soporta los formatos más comunes: <strong>PNG, JPG, GIF animados</strong> y <strong>videos</strong> mediante URL directa. Todo el contenido se renderiza en tiempo real sobre superficies del mundo.</div>
+        `
+      },
+      inicio: {
+        intro: 'CH Images no requiere ninguna activación especial para comenzar. Solo instalá el mod y estará disponible de inmediato. Las funciones son opcionales y podés usarlas cuando quieras.',
+        steps: [
+          { title: 'Instalá el mod', desc: 'Descargá el archivo <code>.jar</code> de CH Images y colocalo en la carpeta <code>mods/</code> de tu instalación de Forge 1.20.1.' },
+          { title: 'Abrí Minecraft', desc: 'Iniciá el juego con el perfil de Forge 1.20.1. El mod cargará automáticamente sin configuración adicional.' },
+          { title: 'Usá el comando o la GUI', desc: 'En el chat del juego podés usar <code>/chimage</code> o abrir la interfaz visual con el ítem incluido.' },
+        ],
+        extra: `<div class="wiki-callout"><span class="wiki-callout-icon">ℹ️</span><span>No se necesita configurar archivos adicionales. El mod funciona listo para usar desde el primer inicio.</span></div>`
+      },
+      tutorial: {
+        intro: 'Acá encontrás cada función del mod explicada con texto e imagen de referencia.',
+        blocks: [
+          { title: 'Proyectar una imagen con comando', desc: 'Usá el comando <code>/chimage url [URL]</code> apuntando a una superficie para proyectar una imagen desde internet.', img: true },
+          { title: 'Usar la interfaz visual (GUI)', desc: 'Abrí la GUI con el ítem especial del mod. Desde ahí podés pegar la URL, ajustar el tamaño y confirmar la proyección.', img: true },
+          { title: 'Proyectar un GIF animado', desc: 'CH Images soporta GIFs animados. Simplemente usá la URL directa de un GIF y el mod lo reproducirá en bucle.', img: true },
+          { title: 'Eliminar una proyección', desc: 'Usá <code>/chimage remove</code> apuntando a la proyección, o seleccionala en la GUI y presioná eliminar.', img: true },
+        ]
+      },
+      recursos: [
+        { label: 'Convertidor', icon: '↗', url: '#' },
+        { label: 'Reproductor',  icon: '↗', url: '#' },
+      ]
+    },
+
+    squid: {
+      name: 'CH SquidCraft',
+      version: 'Forge 1.20.1',
+      wiki: {
+        title: 'CH SquidCraft',
+        chips: ['Forge 1.20.1', 'Events', 'Items Custom', 'Mecánicas', 'Fan-made'],
+        desc: `<strong>CH SquidCraft</strong> es un mod inspirado en el evento <em>SquidCraftGames</em>. Agrega mecánicas, ítems y sistemas personalizados que replican la experiencia del evento dentro de tu propio servidor de Minecraft Java.`,
+        extra: `
+          <div class="wiki-callout">
+            <span class="wiki-callout-icon">🦑</span>
+            <span>Este es un proyecto fan-made, no oficial. Todos los créditos de la idea original pertenecen a los organizadores del evento SquidCraftGames.</span>
+          </div>
+          <div class="wiki-p">El mod incluye <strong>ítems exclusivos</strong>, <strong>mecánicas de juego</strong> propias del evento y sistemas que permiten recrear las dinámicas del torneo en un servidor privado.</div>
+        `
+      },
+      inicio: {
+        intro: 'CH SquidCraft requiere una configuración inicial mínima para activar las mecánicas del evento. Seguí los pasos de abajo para empezar.',
+        steps: [
+          { title: 'Instalá el mod', desc: 'Descargá el archivo <code>.jar</code> y colocalo en <code>mods/</code> de tu instalación Forge 1.20.1.' },
+          { title: 'Configurá el evento', desc: 'Al iniciar por primera vez, se generará un archivo de configuración en <code>config/chsquidcraft.toml</code>. Podés ajustar los parámetros del evento desde ahí.' },
+          { title: 'Iniciá el evento', desc: 'Usá el comando <code>/squidcraft start</code> como operador para iniciar las mecánicas del evento en el servidor.' },
+        ],
+        extra: `<div class="wiki-callout"><span class="wiki-callout-icon">⚠️</span><span>Se recomienda usarlo en un servidor dedicado para la mejor experiencia. En modo single-player algunas mecánicas pueden variar.</span></div>`
+      },
+      tutorial: {
+        intro: 'Guía visual de cada función y mecánica que incluye el mod.',
+        blocks: [
+          { title: 'Ítems exclusivos del evento', desc: 'El mod agrega ítems únicos obtenibles durante el evento. Cada ítem tiene una función específica dentro de las dinámicas del torneo.', img: true },
+          { title: 'Sistema de eliminación', desc: 'Cuando un jugador es eliminado, el sistema del mod lo detecta y aplica las reglas configuradas automáticamente.', img: true },
+          { title: 'Comandos de administración', desc: 'Usá <code>/squidcraft start</code>, <code>/squidcraft stop</code> y <code>/squidcraft reset</code> para controlar el flujo del evento.', img: true },
+        ]
+      },
+      recursos: []  // sin páginas recursos por ahora
+    }
+  };
+
+  // ══════════════════════════════════════════════
+  //  LÓGICA DEL WIKI
+  // ══════════════════════════════════════════════
+  let _currentMod = null;
+
+  function openWiki(modId) {
+    const data = MOD_DATA[modId];
+    if (!data) return;
+    _currentMod = modId;
+    populateWiki(data);
+    document.getElementById('wiki-overlay').classList.add('show');
+    document.getElementById('wiki-panel').classList.add('show');
+    document.body.style.overflow = 'hidden';
+    showSection('wiki');
+  }
+
+  function closeWiki() {
+    document.getElementById('wiki-overlay').classList.remove('show');
+    document.getElementById('wiki-panel').classList.remove('show');
+    document.body.style.overflow = '';
+    _currentMod = null;
+  }
+
+  function populateWiki(data) {
+    // Topbar
+    document.getElementById('wiki-panel-title').innerHTML =
+      `<span>${data.name.split(' ')[0]}</span> ${data.name.split(' ').slice(1).join(' ')} — Wiki`;
+    document.getElementById('wiki-version-badge').textContent = data.version;
+    document.getElementById('sidebar-mod-name').textContent = data.name;
+
+    // Sección wiki
+    document.getElementById('wiki-title-main').textContent = data.wiki.title;
+    document.getElementById('wiki-desc-main').innerHTML = data.wiki.desc;
+    document.getElementById('wiki-extra-main').innerHTML = data.wiki.extra || '';
+
+    // Chips
+    const chipsEl = document.getElementById('wiki-chips-main');
+    chipsEl.innerHTML = '';
+    data.wiki.chips.forEach((c, i) => {
+      const span = document.createElement('span');
+      span.className = 'wiki-chip' + (i === 0 ? ' accent' : '');
+      span.textContent = c;
+      chipsEl.appendChild(span);
+    });
+
+    // Inicio
+    document.getElementById('wiki-inicio-intro').innerHTML = data.inicio.intro;
+    const stepsEl = document.getElementById('wiki-steps-main');
+    stepsEl.innerHTML = '';
+    data.inicio.steps.forEach((s, i) => {
+      stepsEl.innerHTML += `
+        <div class="wiki-step">
+          <div class="wiki-step-num">${i+1}</div>
+          <div class="wiki-step-content">
+            <div class="wiki-step-title">${s.title}</div>
+            <div class="wiki-step-desc">${s.desc}</div>
+          </div>
+        </div>`;
+    });
+    document.getElementById('wiki-inicio-extra').innerHTML = data.inicio.extra || '';
+
+    // Tutorial
+    document.getElementById('wiki-tutorial-intro').innerHTML = data.tutorial.intro;
+    const blocksEl = document.getElementById('wiki-tutorial-blocks');
+    blocksEl.innerHTML = '';
+    data.tutorial.blocks.forEach(b => {
+      blocksEl.innerHTML += `
+        <div class="wiki-media-block">
+          <div class="wiki-media-title">${b.title}</div>
+          <div class="wiki-p">${b.desc}</div>
+          ${b.img ? `<div class="wiki-img-placeholder"><span>🖼️</span><span>Imagen / GIF de referencia — próximamente</span></div>` : ''}
+        </div>`;
+    });
+
+    // Recursos en sidebar
+    const resLinks = document.getElementById('sidebar-resources-links');
+    const resGroup = document.getElementById('sidebar-resources-group');
+    resLinks.innerHTML = '';
+    if (data.recursos && data.recursos.length > 0) {
+      resGroup.style.display = '';
+      data.recursos.forEach(r => {
+        resLinks.innerHTML += `
+          <a class="sidebar-sub-item" href="${r.url}" target="_blank" rel="noopener">
+            <span class="sidebar-item-icon" style="font-size:.75rem">📄</span>
+            ${r.label}
+            <span class="sidebar-ext-icon" style="margin-left:auto">↗</span>
+          </a>`;
+      });
+    } else {
+      resGroup.style.display = 'none';
+    }
+  }
+
+  function showSection(sec) {
+    // Contenido
+    document.querySelectorAll('.wiki-section').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('sec-' + sec);
+    if (target) { target.classList.add('active'); }
+
+    // Sidebar items
+    document.querySelectorAll('.sidebar-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.sec === sec);
+    });
+
+    // Scroll al top
+    document.getElementById('wiki-content').scrollTop = 0;
+  }
+
+  function toggleGroup(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  // Cerrar con Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeWiki();
+  });
+</script>
+
 </body>
 </html>
