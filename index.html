@@ -1294,9 +1294,57 @@
   }
   .ws-discord-info span { color: var(--accent); }
 
+  /* tabla de comandos */
+  .ws-cmd-table {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 9px; overflow: hidden;
+    margin-bottom: 1rem;
+  }
+  .ws-cmd-row {
+    display: grid;
+    grid-template-columns: minmax(200px, 2fr) 3fr;
+    border-bottom: 1px solid var(--border);
+  }
+  .ws-cmd-row:last-child { border-bottom: none; }
+  .ws-cmd-row--head .ws-cmd-cell-cmd,
+  .ws-cmd-row--head .ws-cmd-cell-desc {
+    font-family: 'DM Mono', monospace;
+    font-size: .62rem; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--dim2);
+    background: var(--bg3);
+  }
+  .ws-cmd-cell-cmd {
+    padding: .65rem .9rem;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    font-size: .82rem;
+    word-break: break-all;
+    display: flex; align-items: center;
+  }
+  .ws-cmd-cell-cmd code {
+    font-family: 'DM Mono', monospace;
+    font-size: .8rem; color: var(--accent);
+    background: none; border: none; padding: 0;
+  }
+  .ws-cmd-cell-desc {
+    padding: .65rem .9rem;
+    font-size: .83rem; color: var(--dim);
+    line-height: 1.55; display: flex; align-items: center;
+  }
+  .ws-cmd-cell-desc strong { color: var(--text); }
+  .ws-cmd-cell-desc code {
+    font-family: 'DM Mono', monospace; font-size: .78rem;
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 4px; padding: .06rem .35rem; color: var(--accent);
+  }
+
+  /* sub-links del sidebar como items activos */
+  .sb-sub-link.sb-active { color: var(--accent); background: rgba(232,130,12,.06); }
+
   @media (max-width: 600px) {
-    .wiki-sidebar { display: none; }
-    .wiki-content { padding: 1.5rem 1rem; }
+    .ws-cmd-row { grid-template-columns: 1fr; }
+    .ws-cmd-cell-cmd { border-right: none; border-bottom: 1px solid var(--border); }
   }
 </style>
 
@@ -1325,9 +1373,26 @@
       <div class="sb-item" onclick="wikiSection('inicio')" data-s="inicio">
         <span class="sb-icon">▶</span> Cómo empezar
       </div>
-      <div class="sb-item" onclick="wikiSection('tutorial')" data-s="tutorial">
-        <span class="sb-icon">🎬</span> Tutorial Multimedia
+
+      <!-- Tutorial Multimedia — desplegable -->
+      <div class="sb-group" id="sb-tutorial-group">
+        <div class="sb-group-header" onclick="sbToggle('sb-tutorial-group')">
+          <span class="sb-icon">🎬</span>
+          <span class="sb-group-label">Tutorial Multimedia</span>
+          <span class="sb-chevron">›</span>
+        </div>
+        <div class="sb-sub">
+          <div class="sb-sub-link" onclick="wikiSection('tutorial')" data-s="tutorial" style="cursor:pointer">
+            <span style="font-size:.75rem">📖</span> Tutorial
+            <span class="sb-ext" style="opacity:0"></span>
+          </div>
+          <div class="sb-sub-link" onclick="wikiSection('comandos')" data-s="comandos" style="cursor:pointer">
+            <span style="font-size:.75rem">⌨️</span> Comandos
+            <span class="sb-ext" style="opacity:0"></span>
+          </div>
+        </div>
       </div>
+
       <div class="sb-item" onclick="wikiSection('descarga')" data-s="descarga">
         <span class="sb-icon">🔒</span> Descarga
       </div>
@@ -1377,6 +1442,141 @@
         <h1 class="ws-h1">Tutorial Multimedia</h1>
         <div class="ws-p" id="ws-tutorial-intro"></div>
         <div id="ws-tutorial-blocks"></div>
+      </div>
+
+      <!-- COMANDOS -->
+      <div class="ws" id="ws-comandos">
+        <div class="ws-tag">Referencia técnica</div>
+        <h1 class="ws-h1">Comandos</h1>
+        <div class="ws-note" style="margin-bottom:1.4rem">
+          <span class="ws-note-icon">💡</span>
+          <span>Se recomienda usar <code>/chpreview</code> para gestionar proyecciones. La GUI es más intuitiva, permite almacenar medios con nombre, previsualizar antes de enviar y ofrece opciones exclusivas no disponibles por comandos.</span>
+        </div>
+
+        <!-- Comandos generales -->
+        <div class="ws-h2">Comandos generales</div>
+        <div class="ws-cmd-table">
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chimage</code> <code>/chvideo</code> <code>/chgif</code></div>
+            <div class="ws-cmd-cell-desc">Muestra los créditos del mod.</div>
+          </div>
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chimage &lt;&gt;</code></div>
+            <div class="ws-cmd-cell-desc">Acceso a los comandos de la sección de imágenes.</div>
+          </div>
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chvideo &lt;&gt;</code></div>
+            <div class="ws-cmd-cell-desc">Acceso a los comandos de la sección de videos.</div>
+          </div>
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chgif &lt;&gt;</code></div>
+            <div class="ws-cmd-cell-desc">Acceso a los comandos de la sección de GIFs.</div>
+          </div>
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chpreview</code></div>
+            <div class="ws-cmd-cell-desc">Abre la interfaz gráfica (GUI) del administrador del mod.</div>
+          </div>
+        </div>
+
+        <!-- /chimage -->
+        <div class="ws-h2" style="margin-top:1.8rem">/chimage — Imágenes</div>
+        <div class="ws-cmd-table">
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chimage help</code></div>
+            <div class="ws-cmd-cell-desc">Muestra la ayuda de uso de comandos para la proyección de imágenes.</div>
+          </div>
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chimage link "url" true/false</code></div>
+            <div class="ws-cmd-cell-desc"><strong>true</strong> proyecta la imagen del link especificado. <strong>false</strong> detiene su proyección.</div>
+          </div>
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chimage off</code></div>
+            <div class="ws-cmd-cell-desc">Desactiva la imagen que se esté proyectando en ese momento. Uso recomendado sobre el comando completo con <code>false</code>.</div>
+          </div>
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chimage on</code></div>
+            <div class="ws-cmd-cell-desc">Vuelve a proyectar la última imagen mostrada, incluyendo los parámetros que tenía configurados.</div>
+          </div>
+        </div>
+        <div class="ws-note">
+          <span class="ws-note-icon">⚠️</span>
+          <span>Los links deben terminar en <code>.jpg</code>. Otros formatos como <code>.png</code> o <code>.webp</code> pueden funcionar pero no están garantizados.</span>
+        </div>
+
+        <!-- Parámetros de /chimage -->
+        <div class="ws-h2" style="margin-top:1.4rem">Parámetros opcionales de /chimage link</div>
+        <div class="ws-p">Los parámetros se añaden al final del comando, en cualquier combinación. Por defecto todos están en <strong>NO</strong>, por lo que no es necesario especificarlos si no se quieren activar.</div>
+        <div class="ws-cmd-table" style="margin-bottom:.8rem">
+          <div class="ws-cmd-row ws-cmd-row--head">
+            <div class="ws-cmd-cell-cmd">Parámetro</div>
+            <div class="ws-cmd-cell-desc">Función</div>
+          </div>
+          <div class="ws-cmd-row"><div class="ws-cmd-cell-cmd"><code>chatSI</code></div><div class="ws-cmd-cell-desc">Activa la restricción de chat para jugadores no operadores.</div></div>
+          <div class="ws-cmd-row"><div class="ws-cmd-cell-cmd"><code>cmdsSI</code></div><div class="ws-cmd-cell-desc">Activa la restricción de comandos para jugadores no operadores.</div></div>
+          <div class="ws-cmd-row"><div class="ws-cmd-cell-cmd"><code>interactSI</code></div><div class="ws-cmd-cell-desc">Bloquea el uso de click derecho e izquierdo para jugadores no operadores.</div></div>
+          <div class="ws-cmd-row"><div class="ws-cmd-cell-cmd"><code>invSI</code></div><div class="ws-cmd-cell-desc">Bloquea el acceso al inventario para jugadores no operadores.</div></div>
+          <div class="ws-cmd-row"><div class="ws-cmd-cell-cmd"><code>moverSI</code></div><div class="ws-cmd-cell-desc">Bloquea el movimiento de jugadores no operadores durante la proyección.</div></div>
+        </div>
+        <div class="ws-p" style="font-size:.82rem;color:var(--dim2)">Ejemplos de uso con parámetros:</div>
+        <div class="ws-cmd-table">
+          <div class="ws-cmd-row"><div class="ws-cmd-cell-cmd" style="font-size:.72rem"><code>/chimage link "url" true chatSI</code></div><div class="ws-cmd-cell-desc">1 parámetro activo.</div></div>
+          <div class="ws-cmd-row"><div class="ws-cmd-cell-cmd" style="font-size:.72rem"><code>/chimage link "url" true chatSI cmdsSI</code></div><div class="ws-cmd-cell-desc">2 parámetros activos.</div></div>
+          <div class="ws-cmd-row"><div class="ws-cmd-cell-cmd" style="font-size:.72rem"><code>/chimage link "url" true chatSI cmdsSI interactSI invSI moverSI</code></div><div class="ws-cmd-cell-desc">Todos los parámetros activos.</div></div>
+        </div>
+
+        <!-- /chvideo -->
+        <div class="ws-h2" style="margin-top:1.8rem">/chvideo — Videos</div>
+        <div class="ws-cmd-table">
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chvideo help</code></div>
+            <div class="ws-cmd-cell-desc">Muestra la ayuda de uso de comandos para la proyección de videos.</div>
+          </div>
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chvideo link "url" true/false</code></div>
+            <div class="ws-cmd-cell-desc"><strong>true</strong> proyecta el video del link. <strong>false</strong> detiene su proyección. El video se reproduce una sola vez.</div>
+          </div>
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chvideo off</code></div>
+            <div class="ws-cmd-cell-desc">Detiene el video que se esté proyectando.</div>
+          </div>
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chvideo on</code></div>
+            <div class="ws-cmd-cell-desc">Vuelve a proyectar el último video mostrado.</div>
+          </div>
+        </div>
+        <div class="ws-note">
+          <span class="ws-note-icon">⚠️</span>
+          <span>El link debe terminar obligatoriamente en <code>.gif</code>. Si se usa un GIF con este comando, se reproducirá <strong>una sola vez</strong> como si fuera un video, sin repetirse. Los videos <strong>no reproducen sonido</strong> en esta versión.</span>
+        </div>
+
+        <!-- /chgif -->
+        <div class="ws-h2" style="margin-top:1.8rem">/chgif — GIFs</div>
+        <div class="ws-cmd-table">
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chgif help</code></div>
+            <div class="ws-cmd-cell-desc">Muestra la ayuda de uso de comandos para la proyección de GIFs.</div>
+          </div>
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chgif link "url" true/false</code></div>
+            <div class="ws-cmd-cell-desc"><strong>true</strong> proyecta el GIF. <strong>false</strong> lo detiene. Se reproduce en bucle hasta desactivarse.</div>
+          </div>
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chgif link "url" true 30</code></div>
+            <div class="ws-cmd-cell-desc">Proyecta el GIF con <strong>30% de opacidad</strong>. El número es el porcentaje (0–100). Parámetro opcional — sin él, se usa opacidad completa.</div>
+          </div>
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chgif off</code></div>
+            <div class="ws-cmd-cell-desc">Detiene el GIF que se esté proyectando.</div>
+          </div>
+          <div class="ws-cmd-row">
+            <div class="ws-cmd-cell-cmd"><code>/chgif on</code></div>
+            <div class="ws-cmd-cell-desc">Vuelve a proyectar el último GIF mostrado.</div>
+          </div>
+        </div>
+        <div class="ws-note">
+          <span class="ws-note-icon">ℹ️</span>
+          <span>El parámetro de opacidad es completamente opcional. Si no se especifica, el GIF se proyecta con su opacidad original al 100%.</span>
+        </div>
       </div>
 
       <!-- DESCARGA -->
@@ -1622,8 +1822,20 @@
     document.querySelectorAll('.ws').forEach(el => el.classList.remove('active'));
     const target = document.getElementById('ws-' + sec);
     if (target) target.classList.add('active');
+
+    // Marcar items del sidebar
     document.querySelectorAll('.sb-item').forEach(el =>
       el.classList.toggle('active', el.dataset.s === sec));
+
+    // Marcar sub-links (tutorial / comandos)
+    document.querySelectorAll('.sb-sub-link').forEach(el =>
+      el.classList.toggle('sb-active', el.dataset.s === sec));
+
+    // Si es tutorial o comandos, abrir el grupo automáticamente
+    if (sec === 'tutorial' || sec === 'comandos') {
+      document.getElementById('sb-tutorial-group').classList.add('open');
+    }
+
     document.getElementById('wiki-content-area').scrollTop = 0;
   }
 
