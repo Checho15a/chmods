@@ -1065,8 +1065,8 @@
   .sb-group-header:hover { color: var(--text); background: rgba(232,130,12,.04); }
   .sb-group-label { flex: 1; display: flex; align-items: center; gap: .45rem; }
 
-  /* tooltip del ? — posicionado debajo para no cortarse */
-  .sb-tooltip-wrap { position: relative; display: inline-flex; }
+  /* tooltip del ? — aparece debajo, alineado a la izquierda del sidebar */
+  .sb-tooltip-wrap { position: static; display: inline-flex; }
   .sb-q {
     width: 15px; height: 15px; border-radius: 50%;
     border: 1px solid var(--border2);
@@ -1074,27 +1074,26 @@
     color: var(--dim); display: flex; align-items: center;
     justify-content: center; cursor: help;
     transition: all var(--ease); flex-shrink: 0;
+    position: relative;
   }
   .sb-q:hover { border-color: var(--accent); color: var(--accent); }
   .sb-tooltip {
-    position: absolute;
-    /* aparece abajo a la derecha del ? */
-    top: calc(100% + 8px);
-    left: 50%; transform: translateX(-50%);
-    width: 220px;
+    position: fixed;
+    width: 210px;
     background: var(--bg2);
     border: 1px solid var(--border2);
     border-radius: 9px; padding: .7rem .85rem;
     font-family: 'Nunito', sans-serif;
     font-size: .74rem; color: var(--text); line-height: 1.55;
-    box-shadow: 0 8px 24px rgba(0,0,0,.15);
-    z-index: 100;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    z-index: 200;
     opacity: 0; pointer-events: none;
     transition: opacity .2s ease;
     white-space: normal;
+    /* posición dinámica via JS */
+    left: 235px; top: auto;
   }
-  /* ajuste para que no se salga por la derecha */
-  .sb-tooltip { left: auto; right: 0; transform: none; }
+  .sb-q:hover + .sb-tooltip,
   .sb-tooltip-wrap:hover .sb-tooltip { opacity: 1; }
 
   .sb-chevron {
@@ -1102,18 +1101,24 @@
     transition: transform var(--ease); flex-shrink: 0;
   }
   .sb-group.open .sb-chevron { transform: rotate(90deg); }
-  .sb-sub { display: none; padding-left: .6rem; }
+  .sb-sub { display: none; padding-left: 1.4rem; }
   .sb-group.open .sb-sub { display: block; }
 
   .sb-sub-link {
     display: flex; align-items: center; gap: .5rem;
-    padding: .42rem 1.1rem .42rem .8rem;
+    padding: .38rem .8rem .38rem .6rem;
     font-family: 'Nunito', sans-serif;
     font-size: .8rem; font-weight: 500;
     color: var(--dim); cursor: pointer; border-radius: 5px;
     transition: all var(--ease); text-decoration: none;
+    border-left: 2px solid transparent;
   }
-  .sb-sub-link:hover { color: var(--accent); background: rgba(232,130,12,.05); }
+  .sb-sub-link:hover { color: var(--text); background: rgba(232,130,12,.04); }
+  .sb-sub-link.sb-active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(232,130,12,.06);
+  }
   .sb-ext { margin-left: auto; font-size: .68rem; opacity: .5; transition: all var(--ease); }
   .sb-sub-link:hover .sb-ext { opacity: 1; transform: translate(1px,-1px); }
 
@@ -1844,6 +1849,16 @@
   }
 
   // Tema dentro de wiki (sincronizado con el body)
+  // Tooltip del ? — posición dinámica para no salirse del sidebar
+  const sbQ = document.querySelector('.sb-q');
+  const sbTooltip = document.querySelector('.sb-tooltip');
+  if (sbQ && sbTooltip) {
+    sbQ.addEventListener('mouseenter', () => {
+      const rect = sbQ.getBoundingClientRect();
+      sbTooltip.style.top = (rect.top - 10) + 'px';
+    });
+  }
+
   document.getElementById('wikiThemeBtn').addEventListener('click', () => {
     document.body.classList.toggle('dark');
     const dark = document.body.classList.contains('dark');
