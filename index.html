@@ -1351,6 +1351,56 @@
     .ws-cmd-row { grid-template-columns: 1fr; }
     .ws-cmd-cell-cmd { border-right: none; border-bottom: 1px solid var(--border); }
   }
+
+  /* ── Carrusel de media ── */
+  .ws-carousel {
+    position: relative; margin-top: .7rem;
+    border-radius: 9px; overflow: hidden;
+    border: 1px solid var(--border); background: var(--bg3);
+  }
+  .ws-carousel-track { display: flex; transition: transform .35s cubic-bezier(.4,0,.2,1); }
+  .ws-carousel-slide { min-width: 100%; position: relative; }
+  .ws-carousel-slide img {
+    width: 100%; display: block;
+    max-height: 400px; object-fit: contain; background: var(--bg3);
+  }
+  .ws-carousel-label {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,.6);
+    font-family: 'DM Mono', monospace; font-size: .64rem;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: #fff; padding: .4rem .8rem; text-align: center;
+  }
+  .ws-carousel-btn {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 32px; height: 32px;
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .85rem; color: var(--accent);
+    transition: all var(--ease); z-index: 2;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  }
+  .ws-carousel-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ws-carousel-btn.prev { left: .6rem; }
+  .ws-carousel-btn.next { right: .6rem; }
+  .ws-carousel-btn[disabled] { opacity: 0; pointer-events: none; }
+  .ws-carousel-dots {
+    display: flex; justify-content: center; gap: .4rem;
+    padding: .5rem; background: var(--bg2); border-top: 1px solid var(--border);
+  }
+  .ws-carousel-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border2); cursor: pointer; transition: all var(--ease);
+  }
+  .ws-carousel-dot.active { background: var(--accent); width: 18px; border-radius: 3px; }
+
+  /* imagen simple */
+  .ws-media-img {
+    width: 100%; display: block; border-radius: 9px;
+    border: 1px solid var(--border); margin-top: .7rem;
+    max-height: 400px; object-fit: contain; background: var(--bg3);
+  }
 </style>
 
 <!-- HTML de la vista wiki (página completa) -->
@@ -1647,42 +1697,59 @@
         extra: `<div class="ws-note"><span class="ws-note-icon">ℹ️</span><span>No se generan archivos de configuración. El mod funciona listo para usar desde el primer inicio sin pasos adicionales.</span></div>`
       },
       tutorial: {
-        intro: 'A continuación se detallan todas las funciones del mod, organizadas por sección. Cada función incluye su descripción de uso e imagen de referencia.',
+        intro: 'A continuación se detallan todas las funciones del mod, organizadas por sección. Cada función incluye su descripción de uso e imagen o GIF de referencia.',
         blocks: [
           {
             title: 'Comando /chpreview — Abrir el administrador (GUI)',
             desc: 'El comando <code>/chpreview</code> abre la interfaz gráfica principal del mod. Desde aquí el operador puede gestionar todos sus marcos multimedia, organizados en tres secciones: <strong>IMAGES</strong>, <strong>VIDEOS</strong> y <strong>GIFS</strong>. Cada sección cuenta con <strong>16 marcos</strong> para almacenar links, con nombre personalizable para identificarlos fácilmente.',
-            img: true
+            type: 'gif',
+            src:  'images/chimages/tutorial_01_gui.gif',
+            alt:  'Abriendo el administrador con /chpreview'
           },
           {
             title: 'Interruptor ON/OFF de proyección',
             desc: 'Al proyectar cualquier medio, aparece un <strong>interruptor en la parte superior izquierda</strong> de la GUI. Este botón ON/OFF permite iniciar o detener inmediatamente la última proyección activa. Incluye un <strong>cooldown de aproximadamente 2 segundos</strong> para evitar spam y posibles bugs por activaciones rápidas consecutivas.',
-            img: true
+            type: 'gif',
+            src:  'images/chimages/tutorial_02_onoff.gif',
+            alt:  'Interruptor ON/OFF de proyección'
           },
           {
             title: 'Botones de marco: PREVIEW, SAVE y SEND',
             desc: 'Cada marco dentro de las secciones cuenta con tres botones esenciales:<br><br><strong>PREVIEW</strong> — Permite al operador previsualizar el medio antes de proyectarlo a todos los jugadores del servidor.<br><strong>SAVE</strong> — Guarda todos los cambios realizados en el marco actual para no perder la configuración.<br><strong>SEND</strong> — Envía y proyecta el contenido del marco directamente a todos los jugadores, sin pasos intermedios.',
-            img: true
+            type: 'carousel',
+            slides: [
+              { src: 'images/chimages/tutorial_03a_preview.gif', label: 'Botón PREVIEW — Previsualizar antes de proyectar' },
+              { src: 'images/chimages/tutorial_03b_save.gif',    label: 'Botón SAVE — Guardar cambios del marco' },
+              { src: 'images/chimages/tutorial_03c_send.gif',    label: 'Botón SEND — Proyectar directamente a todos' },
+            ]
           },
           {
             title: 'Guardado seguro al salir del marco',
-            desc: 'Si un operador está editando un marco y presiona el botón de volver sin haber guardado, el mod mostrará un <strong>aviso de confirmación</strong> indicando que hay cambios sin guardar. El operador puede elegir salir sin guardar o continuar editando.<br><br><div class="ws-note" style="margin-top:.5rem"><span class="ws-note-icon">⚠️</span><span>Esta protección <strong>no cubre</strong> el caso en que se presione la tecla <strong>ESC</strong> dentro del marco. El guardado seguro aplica únicamente al botón de volver — no es guardado automático.</span></div>',
-            img: false
+            desc: 'Si un operador está editando un marco y presiona el botón de volver sin haber guardado, el mod mostrará un <strong>aviso de confirmación</strong> indicando que hay cambios sin guardar. El operador puede elegir salir sin guardar o continuar editando.',
+            type: 'img',
+            src:  'images/chimages/tutorial_04_guardado.png',
+            alt:  'Aviso de guardado seguro al intentar salir sin guardar'
           },
           {
             title: 'Sección IMAGES — Parámetros de control',
-            desc: 'En la sección de imágenes, el operador dispone de los siguientes parámetros. <strong>Todos están desactivados (NO) por defecto</strong> y pueden activarse según la necesidad:<br><br><strong>CHAT</strong> — Controla si los jugadores no operadores pueden o no enviar mensajes al chat general durante la proyección.<br><strong>CMDS</strong> — Controla si los jugadores no operadores pueden ejecutar comandos en el chat (como <code>/msg</code>, <code>/tpa</code>, <code>/lobby</code>, etc.).<br><strong>MOVE</strong> — Bloquea o permite el movimiento de los jugadores no operadores mientras se proyecta la imagen.<br><strong>INTERACT</strong> — Bloquea o permite el uso de click derecho e izquierdo, incluyendo colocar o romper bloques, usar objetos lanzables, etc.<br><strong>INV</strong> — Bloquea o permite que los jugadores no operadores abran su inventario durante la proyección.',
-            img: true
+            desc: 'En la sección de imágenes, el operador dispone de los siguientes parámetros. <strong>Todos están desactivados (NO) por defecto</strong>:<br><br><strong>CHAT</strong> — Controla si los jugadores no operadores pueden enviar mensajes al chat durante la proyección.<br><strong>CMDS</strong> — Controla si pueden ejecutar comandos en el chat.<br><strong>MOVE</strong> — Bloquea o permite el movimiento durante la proyección.<br><strong>INTERACT</strong> — Bloquea o permite el click derecho e izquierdo (bloques, objetos, etc.).<br><strong>INV</strong> — Bloquea o permite abrir el inventario.',
+            type: 'img',
+            src:  'images/chimages/tutorial_05_parametros.png',
+            alt:  'Parámetros CHAT, CMDS, MOVE, INTERACT e INV en la sección IMAGES'
           },
           {
             title: 'Sección VIDEOS — Reproducción y parámetro',
-            desc: 'La sección de videos permite proyectar contenido de video mediante link directo. Cuenta con un único parámetro:<br><br><strong>CHAT</strong> — Controla si el chat de los jugadores no operadores se muestra <em>por encima</em> del video proyectado o permanece oculto.<br><br>Los videos tienen <strong>reproducción única</strong>: se reproducen desde el inicio hasta el final y no se repiten automáticamente. Para volver a proyectar el video, debe enviarse nuevamente.<br><br><div class="ws-note" style="margin-top:.5rem"><span class="ws-note-icon">⚠️</span><span>Los links de video <strong>deben terminar obligatoriamente en <code>.gif</code></strong>. No se aceptan otros formatos de URL. Además, <strong>los videos no reproducen sonido</strong> en esta versión — esa funcionalidad está en desarrollo para futuras actualizaciones.</span></div>',
-            img: true
+            desc: 'Permite proyectar videos mediante link directo. Reproducción única: se reproduce una vez y no se repite. Parámetro disponible:<br><br><strong>CHAT</strong> — Muestra u oculta el chat por encima del video proyectado.',
+            type: 'img',
+            src:  'images/chimages/tutorial_06_videos.png',
+            alt:  'Sección VIDEOS y parámetro de chat'
           },
           {
             title: 'Sección GIFS — Parámetros y opciones',
-            desc: 'La sección de GIFs incluye tres parámetros y una opción condicional:<br><br><strong>OPACIDAD</strong> — Reduce la opacidad del GIF proyectado. Útil para efectos de pantalla, bromas entre jugadores o superposiciones visuales sin interrumpir la vista del mundo.<br><br><strong>TIEMPO</strong> — Define el comportamiento de duración del GIF. Tiene dos modos:<br>— <em>REPETIR</em>: el GIF se reproduce en bucle indefinidamente hasta que se desactive manualmente.<br>— <em>LÍMITE</em>: al seleccionar esta opción, se despliega un campo adicional para definir minutos y segundos de duración. El límite máximo en esta versión es <strong>5 minutos más los segundos especificados</strong>.<br><br><strong>CHAT</strong> — Igual que en las otras secciones, controla si el chat se muestra por encima del GIF o se oculta. Si la opacidad es alta, el chat podría verse de todas formas.',
-            img: true
+            desc: 'La sección de GIFs incluye tres parámetros:<br><br><strong>OPACIDAD</strong> — Reduce la opacidad del GIF proyectado (efectos, memes, superposiciones).<br><strong>TIEMPO</strong> — <em>REPETIR</em>: bucle indefinido hasta desactivarse. <em>LÍMITE</em>: duración en minutos/segundos (máx. 5 min + segundos extra).<br><strong>CHAT</strong> — Muestra u oculta el chat por encima del GIF.',
+            type: 'img',
+            src:  'images/chimages/tutorial_07_gifs.png',
+            alt:  'Sección GIFS con parámetros OPACIDAD, TIEMPO y CHAT'
           },
         ]
       },
@@ -1800,12 +1867,35 @@
     // tutorial
     document.getElementById('ws-tutorial-intro').innerHTML = data.tutorial.intro;
     const blocksEl = document.getElementById('ws-tutorial-blocks');
-    blocksEl.innerHTML = data.tutorial.blocks.map(b => `
-      <div class="ws-media-block">
-        <div class="ws-media-title">${b.title}</div>
-        <div class="ws-p">${b.desc}</div>
-        ${b.img ? `<div class="ws-img-placeholder"><span>🖼️</span><span>Captura / imagen de referencia — próximamente</span></div>` : ''}
-      </div>`).join('');
+    blocksEl.innerHTML = data.tutorial.blocks.map((b, idx) => {
+      let mediaHtml = '';
+      if (b.type === 'gif' || b.type === 'img') {
+        mediaHtml = `<img class="ws-media-img" src="${b.src}" alt="${b.alt || b.title}" loading="lazy" />`;
+      } else if (b.type === 'carousel') {
+        const id = `carousel-${idx}`;
+        const slides = b.slides.map((s, i) => `
+          <div class="ws-carousel-slide">
+            <img src="${s.src}" alt="${s.label}" loading="lazy" />
+            <div class="ws-carousel-label">${s.label}</div>
+          </div>`).join('');
+        const dots = b.slides.map((_, i) =>
+          `<div class="ws-carousel-dot${i===0?' active':''}" onclick="carouselGo('${id}',${i})"></div>`
+        ).join('');
+        mediaHtml = `
+          <div class="ws-carousel" id="${id}">
+            <div class="ws-carousel-track" id="${id}-track">${slides}</div>
+            <button class="ws-carousel-btn prev" id="${id}-prev" onclick="carouselPrev('${id}')" disabled>‹</button>
+            <button class="ws-carousel-btn next" id="${id}-next" onclick="carouselNext('${id}')" ${b.slides.length<=1?'disabled':''}>›</button>
+            <div class="ws-carousel-dots" id="${id}-dots">${dots}</div>
+          </div>`;
+      }
+      return `
+        <div class="ws-media-block">
+          <div class="ws-media-title">${b.title}</div>
+          <div class="ws-p">${b.desc}</div>
+          ${mediaHtml}
+        </div>`;
+    }).join('');
 
     // recursos
     const resLinks = document.getElementById('sb-res-links');
@@ -1846,6 +1936,31 @@
 
   function sbToggle(id) {
     document.getElementById(id).classList.toggle('open');
+  }
+
+  // ── Carrusel ──────────────────────────────────────────────────
+  const _carouselState = {};
+  function carouselGo(id, idx) {
+    if (!_carouselState[id]) _carouselState[id] = { cur: 0 };
+    const track  = document.getElementById(id + '-track');
+    const dots   = document.querySelectorAll(`#${id}-dots .ws-carousel-dot`);
+    const prev   = document.getElementById(id + '-prev');
+    const next   = document.getElementById(id + '-next');
+    const total  = track.children.length;
+    _carouselState[id].cur = idx;
+    track.style.transform = `translateX(-${idx * 100}%)`;
+    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    prev.disabled = idx === 0;
+    next.disabled = idx === total - 1;
+  }
+  function carouselPrev(id) {
+    const cur = _carouselState[id]?.cur ?? 0;
+    if (cur > 0) carouselGo(id, cur - 1);
+  }
+  function carouselNext(id) {
+    const track = document.getElementById(id + '-track');
+    const cur = _carouselState[id]?.cur ?? 0;
+    if (cur < track.children.length - 1) carouselGo(id, cur + 1);
   }
 
   // Tema dentro de wiki (sincronizado con el body)
