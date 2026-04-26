@@ -810,41 +810,43 @@
     setProgress('img', 10, 'Preparando archivo...');
 
     try {
+      // Subir la imagen original — sin parámetros extra (unsigned preset no los acepta)
       const formData = new FormData();
       formData.append('file', file);
       formData.append('upload_preset', CLD_PRESET);
       formData.append('folder', 'chmods/images');
-      // Convertir a JPG en Cloudinary
-      formData.append('format', 'jpg');
-      formData.append('quality', 'auto');
 
-      setProgress('img', 30, 'Subiendo y convirtiendo...');
+      setProgress('img', 30, 'Subiendo imagen...');
 
       const res = await uploadWithProgress(
         `https://api.cloudinary.com/v1_1/${CLD_NAME}/image/upload`,
         formData,
-        (pct) => setProgress('img', 30 + pct * 0.65, 'Subiendo...')
+        (pct) => setProgress('img', 30 + pct * 0.6, 'Subiendo...')
       );
 
-      setProgress('img', 95, 'Finalizando...');
+      setProgress('img', 92, 'Generando link JPG...');
 
-      // Construir URL que termina en .jpg
-      const url = res.secure_url.replace(/\.[^/.]+$/, '.jpg');
-      // Forzar extensión .jpg via Cloudinary transformation
-      const jpgUrl = res.secure_url.replace('/upload/', '/upload/f_jpg/').replace(/\.[^/.]+$/, '.jpg');
+      // Construir URL JPG usando delivery URL de Cloudinary
+      // Formato: /upload/f_jpg,q_auto/<public_id> — sin extensión original
+      const publicIdClean = res.public_id; // ya sin extensión
+      const jpgUrl = `https://res.cloudinary.com/${CLD_NAME}/image/upload/f_jpg,q_auto/${publicIdClean}.jpg`;
+      const thumbUrl = `https://res.cloudinary.com/${CLD_NAME}/image/upload/f_jpg,q_auto,w_400/${publicIdClean}.jpg`;
+
+      // Limpiar nombre: quitar dobles extensiones tipo "foto.png.webp" → "foto"
+      const cleanName = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.jpg';
 
       const fileObj = {
-        publicId: res.public_id,
-        url: jpgUrl,
-        name: file.name.replace(/\.[^/.]+$/, '') + '.jpg',
-        date: new Date().toLocaleDateString('es-ES'),
-        thumb: jpgUrl
+        publicId: publicIdClean,
+        url:   jpgUrl,
+        thumb: thumbUrl,
+        name:  cleanName,
+        date:  new Date().toLocaleDateString('es-ES'),
       };
 
       await window._conv.saveFile('images', fileObj);
       setProgress('img', 100, '¡Listo!');
       setTimeout(() => showProgress('img', false), 1200);
-      showToast('✓ Imagen convertida y guardada', 'ok');
+      showToast('✓ Imagen convertida a JPG', 'ok');
       document.getElementById('img-file-input').value = '';
     } catch(e) {
       showProgress('img', false);
@@ -852,6 +854,7 @@
       console.error(e);
     }
   }
+
 
   // ── Upload videos ─────────────────────────────────────────────
   async function handleVideoUpload(file) {
@@ -881,36 +884,40 @@
       formData.append('file', file);
       formData.append('upload_preset', CLD_PRESET);
       formData.append('folder', 'chmods/videos');
-      formData.append('resource_type', 'video');
+      // resource_type va en la URL, no en el body
 
       setProgress('vid', 20, 'Subiendo video (puede tardar)...');
 
       const res = await uploadWithProgress(
         `https://api.cloudinary.com/v1_1/${CLD_NAME}/video/upload`,
         formData,
-        (pct) => setProgress('vid', 20 + pct * 0.6, 'Subiendo...')
+        (pct) => setProgress('vid', 20 + pct * 0.65, 'Subiendo...')
       );
 
-      setProgress('vid', 82, 'Convirtiendo a GIF...');
+      setProgress('vid', 88, 'Generando link GIF...');
 
-      // URL de GIF: Cloudinary convierte automáticamente
-      const gifUrl = res.secure_url
-        .replace('/upload/', '/upload/f_gif,q_auto/')
-        .replace(/\.[^/.]+$/, '.gif');
+      // URL GIF usando delivery URL de Cloudinary (funciona sin auth)
+      // Sube como video, se entrega como GIF via transformación en la URL
+      const publicIdClean = res.public_id;
+      const gifUrl   = `https://res.cloudinary.com/${CLD_NAME}/video/upload/f_gif,q_auto/${publicIdClean}.gif`;
+      const thumbUrl = `https://res.cloudinary.com/${CLD_NAME}/video/upload/f_jpg,q_auto,w_400,so_0/${publicIdClean}.jpg`;
+
+      // Limpiar nombre: quitar dobles extensiones tipo "video.png.mp4" → "video"
+      const cleanName = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.gif';
 
       const fileObj = {
-        publicId: res.public_id,
-        url: gifUrl,
-        name: file.name.replace(/\.[^/.]+$/, '') + '.gif',
-        date: new Date().toLocaleDateString('es-ES'),
-        thumb: res.secure_url.replace('/upload/', '/upload/so_0,w_200,f_jpg/').replace(/\.[^/.]+$/, '.jpg'),
+        publicId: publicIdClean,
+        url:      gifUrl,
+        thumb:    thumbUrl,
+        name:     cleanName,
+        date:     new Date().toLocaleDateString('es-ES'),
         duration: Math.round(duration) + 's'
       };
 
       setProgress('vid', 100, '¡Listo!');
       await window._conv.saveFile('videos', fileObj);
       setTimeout(() => showProgress('vid', false), 1200);
-      showToast('✓ Video convertido a GIF', 'ok');
+      showToast('✓ Video convertido — link GIF generado', 'ok');
       document.getElementById('vid-file-input').value = '';
     } catch(e) {
       showProgress('vid', false);
@@ -918,6 +925,7 @@
       console.error(e);
     }
   }
+
 
   // ── Render galería ────────────────────────────────────────────
   function renderGallery(type, files) {
