@@ -39,7 +39,8 @@
     // Límites de almacenamiento por usuario
     const LIMITS = {
       images: { count: 30, label: '30 imágenes JPG' },
-      videos: { count: 8,  label: '8 videos GIF'    }
+      videos: { count: 8,  label: '8 videos GIF'    },
+      mp4s:   { count: 10, label: '10 videos MP4'   }
     };
 
     // Cloudinary config
@@ -50,7 +51,7 @@
     };
 
     let _user = null;
-    let _userFiles = { images: [], videos: [] };
+    let _userFiles = { images: [], videos: [], mp4s: [] };
 
     // Exponer al scope global
     window._conv = {
@@ -67,8 +68,9 @@
           _userFiles = snap.data();
           if (!_userFiles.images) _userFiles.images = [];
           if (!_userFiles.videos) _userFiles.videos = [];
+          if (!_userFiles.mp4s)   _userFiles.mp4s   = [];
         } else {
-          _userFiles = { images: [], videos: [] };
+          _userFiles = { images: [], videos: [], mp4s: [] };
           await setDoc(ref, _userFiles);
         }
         window._conv.renderFiles();
@@ -93,6 +95,7 @@
       renderFiles() {
         renderGallery('images', _userFiles.images || []);
         renderGallery('videos', _userFiles.videos || []);
+        renderGallery('mp4s',   _userFiles.mp4s   || []);
         updateCounters();
       },
 
@@ -596,6 +599,7 @@
     <div class="section-tabs">
       <button class="section-tab active" onclick="switchSection('images')">🖼️ Imágenes → JPG</button>
       <button class="section-tab" onclick="switchSection('videos')">🎞️ Videos → GIF</button>
+      <button class="section-tab" onclick="switchSection('mp4s')">🎬 Link de MP4</button>
     </div>
 
     <!-- ── PANEL IMÁGENES ── -->
@@ -695,6 +699,57 @@
       <div id="vid-gallery"></div>
     </div>
 
+    <!-- ── PANEL MP4 ── -->
+    <div class="section-panel" id="panel-mp4s">
+      <div class="sec-header">
+        <div class="sec-header-left">
+          <h2>Generador de link MP4</h2>
+          <p>Subí tu video MP4 y obtenés un link permanente terminado en <code style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--accent)">.mp4</code> listo para compartir o usar.</p>
+        </div>
+        <div class="storage-bar-wrap">
+          <div class="storage-label">
+            <span>Almacenamiento</span>
+            <span id="mp4-count">0 / 10</span>
+          </div>
+          <div class="storage-bar">
+            <div class="storage-fill" id="mp4-fill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload zone MP4 -->
+      <div class="upload-zone" id="mp4-drop-zone">
+        <input type="file" id="mp4-file-input" accept="video/mp4,video/webm,video/quicktime" onchange="handleMp4Upload(this.files[0])" />
+        <div class="upload-icon">🎬</div>
+        <div class="upload-title">Arrastrá o hacé click para subir</div>
+        <div class="upload-sub">Se generará un link permanente terminado en .mp4</div>
+        <div class="upload-formats">
+          <span class="upload-fmt">MP4</span>
+          <span class="upload-fmt">WEBM</span>
+          <span class="upload-fmt">MOV</span>
+        </div>
+      </div>
+
+      <!-- Progreso -->
+      <div id="mp4-progress-wrap" style="display:none;margin-bottom:1.2rem">
+        <div class="progress-label">
+          <span id="mp4-progress-label">Subiendo video...</span>
+          <span id="mp4-progress-pct">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="mp4-progress-fill"></div></div>
+      </div>
+
+      <!-- Nota de espera -->
+      <div style="display:flex;gap:.6rem;background:rgba(232,130,12,.06);border:1px solid rgba(232,130,12,.2);border-radius:9px;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.8rem;color:var(--dim);line-height:1.55">
+        <span style="flex-shrink:0">⏳</span>
+        <span>Luego de generar el link, esperá a que el video aparezca correctamente en la sección <strong>"Ver"</strong> antes de usarlo. Cloudinary puede tardar unos segundos en procesarlo — si abrís el link antes de que esté listo, podría no cargar.</span>
+      </div>
+
+      <!-- Galería -->
+      <div class="gallery-title">Tus videos MP4</div>
+      <div id="mp4-gallery"></div>
+    </div>
+
   </main>
 </div>
 
@@ -786,8 +841,9 @@
 
   // ── Tabs ──────────────────────────────────────────────────────
   function switchSection(sec) {
+    const secs = ['images','videos','mp4s'];
     document.querySelectorAll('.section-tab').forEach((t,i) =>
-      t.classList.toggle('active', ['images','videos'][i] === sec));
+      t.classList.toggle('active', secs[i] === sec));
     document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
     document.getElementById('panel-' + sec).classList.add('active');
   }
@@ -927,7 +983,84 @@
   }
 
 
-  // ── Render galería ────────────────────────────────────────────
+  // ── Upload MP4 (link directo) ─────────────────────────────────
+  async function handleMp4Upload(file) {
+    if (!file) return;
+    const files = window._conv.getUserFiles();
+    const limit = window._conv.limits.mp4s.count;
+    if ((files.mp4s || []).length >= limit) {
+      showToast('Límite alcanzado. Borrá videos para liberar espacio.', 'err'); return;
+    }
+
+    const allowed = ['video/mp4','video/webm','video/quicktime'];
+    if (!allowed.includes(file.type)) {
+      showToast('Solo se aceptan MP4, WEBM o MOV.', 'err'); return;
+    }
+
+    const duration = await getVideoDuration(file);
+    if (duration > 600) {
+      showToast('El video supera los 10 minutos máximos.', 'err'); return;
+    }
+
+    showProgressRaw('mp4', true);
+    setProgressRaw('mp4', 10, 'Preparando video...');
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLD_PRESET);
+      formData.append('folder', 'chmods/mp4s');
+
+      setProgressRaw('mp4', 20, 'Subiendo video...');
+
+      const res = await uploadWithProgress(
+        `https://api.cloudinary.com/v1_1/${CLD_NAME}/video/upload`,
+        formData,
+        (pct) => setProgressRaw('mp4', 20 + pct * 0.75, 'Subiendo...')
+      );
+
+      setProgressRaw('mp4', 97, 'Generando link...');
+
+      const publicIdClean = res.public_id;
+      // URL directa MP4
+      const mp4Url   = `https://res.cloudinary.com/${CLD_NAME}/video/upload/${publicIdClean}.mp4`;
+      const thumbUrl = `https://res.cloudinary.com/${CLD_NAME}/video/upload/f_jpg,q_auto,w_400,so_0/${publicIdClean}.jpg`;
+      const cleanName = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.mp4';
+
+      const fileObj = {
+        publicId: publicIdClean,
+        url:      mp4Url,
+        thumb:    thumbUrl,
+        name:     cleanName,
+        date:     new Date().toLocaleDateString('es-ES'),
+        duration: Math.round(duration) + 's',
+        pending:  true  // marca para mostrar aviso de espera
+      };
+
+      setProgressRaw('mp4', 100, '¡Listo!');
+      await window._conv.saveFile('mp4s', fileObj);
+      setTimeout(() => showProgressRaw('mp4', false), 1200);
+      showToast('✓ Link MP4 generado — esperá antes de usarlo', 'ok');
+      document.getElementById('mp4-file-input').value = '';
+    } catch(e) {
+      showProgressRaw('mp4', false);
+      showToast('Error al subir. Intentá de nuevo.', 'err');
+      console.error(e);
+    }
+  }
+
+  // Helpers de progreso para mp4 (no comparte ID con img/vid)
+  function showProgressRaw(type, show) {
+    document.getElementById(type + '-progress-wrap').style.display = show ? 'block' : 'none';
+  }
+  function setProgressRaw(type, pct, label) {
+    const p = Math.round(pct);
+    document.getElementById(type + '-progress-fill').style.width = p + '%';
+    document.getElementById(type + '-progress-pct').textContent  = p + '%';
+    document.getElementById(type + '-progress-label').textContent = label;
+  }
+
+
   function renderGallery(type, files) {
     const el = document.getElementById(type === 'images' ? 'img-gallery' : 'vid-gallery');
     if (!files || files.length === 0) {
