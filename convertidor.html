@@ -1062,9 +1062,11 @@
 
 
   function renderGallery(type, files) {
-    const el = document.getElementById(type === 'images' ? 'img-gallery' : 'vid-gallery');
+    const elId = type === 'images' ? 'img-gallery' : type === 'videos' ? 'vid-gallery' : 'mp4-gallery';
+    const el = document.getElementById(elId);
+    if (!el) return;
     if (!files || files.length === 0) {
-      el.innerHTML = `<div class="gallery-empty">Todavía no tenés archivos convertidos. ¡Subí uno para empezar!</div>`;
+      el.innerHTML = `<div class="gallery-empty">Todavía no tenés archivos. ¡Subí uno para empezar!</div>`;
       return;
     }
     el.innerHTML = `<div class="gallery-grid">${files.map(f => `
@@ -1074,7 +1076,7 @@
           <div class="gallery-name" title="${f.name}">${f.name}</div>
           <div class="gallery-date">${f.date}${f.duration ? ' · ' + f.duration : ''}</div>
           <div class="gallery-actions">
-            <button class="gal-btn" onclick="openPreview('${f.url}','${f.name}','${type}')">Ver</button>
+            <button class="gal-btn" onclick="openPreview('${f.url}','${f.name}','${type}',${!!f.pending})">Ver</button>
             <button class="gal-btn" onclick="copyLink('${f.url}')">Copiar</button>
             <button class="gal-btn del" onclick="deleteFile('${type}','${f.publicId}')">Borrar</button>
           </div>
@@ -1084,33 +1086,41 @@
 
   function updateCounters() {
     const files = window._conv.getUserFiles();
-    const imgs = (files.images || []).length;
-    const vids = (files.videos || []).length;
-    const imgLimit = window._conv.limits.images.count;
-    const vidLimit = window._conv.limits.videos.count;
+    const imgs  = (files.images || []).length;
+    const vids  = (files.videos || []).length;
+    const mp4s  = (files.mp4s   || []).length;
 
-    document.getElementById('img-count').textContent = `${imgs} / ${imgLimit}`;
-    document.getElementById('vid-count').textContent = `${vids} / ${vidLimit}`;
+    document.getElementById('img-count').textContent = `${imgs} / ${window._conv.limits.images.count}`;
+    document.getElementById('vid-count').textContent = `${vids} / ${window._conv.limits.videos.count}`;
+    document.getElementById('mp4-count').textContent = `${mp4s} / ${window._conv.limits.mp4s.count}`;
 
-    const imgPct = (imgs / imgLimit) * 100;
-    const vidPct = (vids / vidLimit) * 100;
-    const imgFill = document.getElementById('img-fill');
-    const vidFill = document.getElementById('vid-fill');
-    imgFill.style.width = imgPct + '%';
-    vidFill.style.width = vidPct + '%';
-    imgFill.className = 'storage-fill' + (imgPct >= 90 ? ' full' : imgPct >= 70 ? ' warn' : '');
-    vidFill.className = 'storage-fill' + (vidPct >= 90 ? ' full' : vidPct >= 70 ? ' warn' : '');
+    const setPct = (fillId, count, limit) => {
+      const pct  = (count / limit) * 100;
+      const fill = document.getElementById(fillId);
+      if (!fill) return;
+      fill.style.width = pct + '%';
+      fill.className   = 'storage-fill' + (pct >= 90 ? ' full' : pct >= 70 ? ' warn' : '');
+    };
+    setPct('img-fill', imgs, window._conv.limits.images.count);
+    setPct('vid-fill', vids, window._conv.limits.videos.count);
+    setPct('mp4-fill', mp4s, window._conv.limits.mp4s.count);
   }
 
   // ── Acciones de galería ───────────────────────────────────────
-  function openPreview(url, name, type) {
+  function openPreview(url, name, type, pending) {
     const modal = document.getElementById('preview-modal');
     const content = document.getElementById('preview-content');
     document.getElementById('preview-title').textContent = name;
-    const isGif = url.endsWith('.gif');
-    content.innerHTML = `
-      <img src="${url}" alt="${name}" style="max-width:100%;max-height:380px;border-radius:8px;background:var(--bg3)" />
-      <div class="preview-url">
+    const isMp4 = url.endsWith('.mp4');
+    const waitNote = pending || isMp4 ? `
+      <div style="display:flex;gap:.5rem;align-items:flex-start;background:rgba(232,130,12,.07);border:1px solid rgba(232,130,12,.25);border-radius:8px;padding:.65rem .85rem;margin-bottom:.8rem;font-size:.78rem;color:var(--dim);line-height:1.5;text-align:left">
+        <span style="flex-shrink:0">⏳</span>
+        <span>Esperá a que el video aparezca aquí antes de utilizar el link. Si todavía no carga, aguardá unos segundos y volvé a intentar.</span>
+      </div>` : '';
+    content.innerHTML = waitNote + `
+      <img src="${url}" alt="${name}" style="max-width:100%;max-height:340px;border-radius:8px;background:var(--bg3);display:${isMp4?'none':'block'}" />
+      ${isMp4 ? `<video src="${url}" controls style="max-width:100%;max-height:340px;border-radius:8px;background:var(--bg3);display:block;margin:0 auto"></video>` : ''}
+      <div class="preview-url" style="margin-top:.8rem">
         <input type="text" value="${url}" readonly onclick="this.select()" />
         <button class="preview-copy-btn" onclick="copyLink('${url}')">Copiar link</button>
       </div>`;
@@ -1188,7 +1198,7 @@
   }
 
   // ── Drag & Drop ───────────────────────────────────────────────
-  ['img-drop-zone','vid-drop-zone'].forEach(id => {
+  ['img-drop-zone','vid-drop-zone','mp4-drop-zone'].forEach(id => {
     const zone = document.getElementById(id);
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
     zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
@@ -1197,7 +1207,8 @@
       const file = e.dataTransfer.files[0];
       if (!file) return;
       if (id === 'img-drop-zone') handleImageUpload(file);
-      else handleVideoUpload(file);
+      else if (id === 'vid-drop-zone') handleVideoUpload(file);
+      else handleMp4Upload(file);
     });
   });
 </script>
