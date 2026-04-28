@@ -16,7 +16,9 @@
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
       getFirestore, doc, getDoc, setDoc, collection,
-      query, where, getDocs, serverTimestamp
+      query, where, getDocs, serverTimestamp, addDoc,
+      deleteDoc, updateDoc, orderBy, limit, increment,
+      onSnapshot, getCountFromServer
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -91,6 +93,118 @@
       isGuest:    () => _guest,
       setGuest:   v  => { _guest = v; },
       isVerified: () => _user?.emailVerified ?? false,
+
+      // ── Sugerencias ──────────────────────────────────────────
+      async getSuggestions() {
+        const q = query(
+          collection(db, 'suggestions'),
+          orderBy('createdAt', 'desc'),
+          limit(50)
+        );
+        const snap = await getDocs(q);
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      },
+
+      async postSuggestion(text, category) {
+        if (!_user) throw new Error('No autenticado');
+        // Verificar 1 por día
+        const today = new Date().toISOString().slice(0, 10);
+        const q = query(
+          collection(db, 'suggestions'),
+          where('uid', '==', _user.uid),
+          where('dateStr', '==', today)
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) throw { code: 'limit/daily' };
+
+        const username = _user.displayName || _user.email.split('@')[0];
+        return await addDoc(collection(db, 'suggestions'), {
+          uid: _user.uid,
+          username,
+          text: text.trim(),
+          category,
+          dateStr: today,
+          createdAt: serverTimestamp(),
+          likes: 0,
+          likedBy: [],
+          editCount: 0,
+          comments: []
+        });
+      },
+
+      async editSuggestion(id, newText, newCategory) {
+        if (!_user) throw new Error('No autenticado');
+        const ref = doc(db, 'suggestions', id);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) throw new Error('No existe');
+        const data = snap.data();
+        if (data.uid !== _user.uid) throw new Error('Sin permiso');
+        if (data.editCount >= 1) throw { code: 'limit/edit' };
+        await updateDoc(ref, {
+          text: newText.trim(),
+          category: newCategory,
+          editCount: (data.editCount || 0) + 1,
+          editedAt: serverTimestamp()
+        });
+      },
+
+      async deleteSuggestion(id) {
+        if (!_user) throw new Error('No autenticado');
+        const ref = doc(db, 'suggestions', id);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return;
+        if (snap.data().uid !== _user.uid) throw new Error('Sin permiso');
+        await deleteDoc(ref);
+      },
+
+      async toggleLike(id) {
+        if (!_user) throw new Error('No autenticado');
+        const ref = doc(db, 'suggestions', id);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return;
+        const data = snap.data();
+        const liked = (data.likedBy || []).includes(_user.uid);
+        if (liked) {
+          await updateDoc(ref, {
+            likes: Math.max(0, (data.likes || 0) - 1),
+            likedBy: (data.likedBy || []).filter(u => u !== _user.uid)
+          });
+        } else {
+          await updateDoc(ref, {
+            likes: (data.likes || 0) + 1,
+            likedBy: [...(data.likedBy || []), _user.uid]
+          });
+        }
+      },
+
+      async addComment(suggId, text) {
+        if (!_user) throw new Error('No autenticado');
+        const ref = doc(db, 'suggestions', suggId);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return;
+        const data = snap.data();
+        const username = _user.displayName || _user.email.split('@')[0];
+        const comment = {
+          uid: _user.uid,
+          username,
+          text: text.trim(),
+          createdAt: new Date().toISOString()
+        };
+        await updateDoc(ref, {
+          comments: [...(data.comments || []), comment]
+        });
+      },
+
+      async deleteComment(suggId, commentIdx) {
+        if (!_user) throw new Error('No autenticado');
+        const ref = doc(db, 'suggestions', suggId);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return;
+        const comments = [...(snap.data().comments || [])];
+        if (comments[commentIdx]?.uid !== _user.uid) throw new Error('Sin permiso');
+        comments.splice(commentIdx, 1);
+        await updateDoc(ref, { comments });
+      },
     };
 
     onAuthStateChanged(auth, u => {
@@ -692,11 +806,11 @@
         </div>
       </div>
 
-      <div class="mod-card" id="mc-squid" onclick="openMod('squid')">
+      <div class="mod-card mod-card--vip" id="mc-squid" onclick="showVipToast()">
         <div class="card-head">
-          <div class="card-icon">🦑</div>
+          <div class="card-icon" style="background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.3)">🔐</div>
           <div>
-            <div class="card-type">Forge 1.20.1</div>
+            <div class="card-type" style="color:#c9a227">Acceso VIP</div>
             <div class="card-name">CH SquidCraft</div>
           </div>
         </div>
@@ -705,23 +819,27 @@
           <div class="card-tags">
             <span class="card-tag">Forge</span>
             <span class="card-tag">Events</span>
+            <span class="card-tag" style="border-color:rgba(201,162,39,.4);color:#c9a227">VIP</span>
           </div>
-          <span class="card-arrow">↗</span>
+          <span class="card-arrow" style="color:#c9a227">🔒</span>
         </div>
       </div>
 
-      <div class="mod-card" id="mc-wip" onclick="openMod('wip')">
+      <div class="mod-card mod-card--suggest" id="mc-suggest" onclick="openSuggestions()">
         <div class="card-head">
-          <div class="card-icon">⚡</div>
+          <div class="card-icon" style="background:rgba(46,204,113,.1);border-color:rgba(46,204,113,.25)">💡</div>
           <div>
-            <div class="card-type">En desarrollo</div>
-            <div class="card-name">Próximamente</div>
+            <div class="card-type" style="color:#27ae60">Comunidad</div>
+            <div class="card-name">Sugerencias</div>
           </div>
         </div>
-        <p class="card-desc">Nuevo mod en desarrollo. Pronto habrá más información disponible en la wiki y en el servidor de Discord.</p>
+        <p class="card-desc">¿Tenés ideas para nuevos mods, funciones o mejoras? Dejá tu sugerencia y la comunidad puede apoyarla con likes y comentarios.</p>
         <div class="card-foot">
-          <div class="card-tags"><span class="card-tag">WIP</span></div>
-          <span class="card-arrow">↗</span>
+          <div class="card-tags">
+            <span class="card-tag">Ideas</span>
+            <span class="card-tag">Comunidad</span>
+          </div>
+          <span class="card-arrow" style="color:#27ae60">↗</span>
         </div>
       </div>
 
