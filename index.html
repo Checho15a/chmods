@@ -1873,7 +1873,6 @@
       },
       recursos: [
         { label: 'Convertidor', url: 'https://checho15a.github.io/chmods/convertidor.html' },
-        { label: 'Reproductor',  url: '#' },
       ]
     },
 
@@ -2104,8 +2103,723 @@
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && document.getElementById('wiki-screen').classList.contains('show'))
       closeWiki();
+    if (e.key === 'Escape' && document.getElementById('sugg-screen').classList.contains('show'))
+      closeSuggestions();
   });
 </script>
 
+<!-- ═══════════════════════════════════════════════════
+     TOAST VIP
+═══════════════════════════════════════════════════ -->
+<div id="toast-vip" style="
+  position:fixed; top:72px; right:1rem; z-index:300;
+  background:var(--bg2); border:1px solid #c9a227;
+  border-radius:10px; padding:.7rem 1rem .7rem 1.1rem;
+  display:flex; align-items:center; gap:.7rem;
+  min-width:260px; max-width:360px;
+  box-shadow:0 8px 28px rgba(0,0,0,.2);
+  transform:translateX(120%); opacity:0; pointer-events:none;
+  transition:transform .3s cubic-bezier(.4,0,.2,1), opacity .3s;
+  font-family:'Nunito',sans-serif;
+">
+  <span style="font-size:1rem;flex-shrink:0">🔐</span>
+  <span style="flex:1;font-size:.78rem;color:#c9a227;line-height:1.45">
+    <strong style="display:block;font-size:.8rem;margin-bottom:.1rem">Solo acceso VIP</strong>
+    El creador ha limitado el acceso a la información de este mod.
+  </span>
+  <button id="toast-vip-x" style="background:none;border:none;color:#777;font-size:.95rem;cursor:pointer;padding:.1rem .2rem">✕</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     VISTA SUGERENCIAS
+═══════════════════════════════════════════════════ -->
+<style>
+  #sugg-screen {
+    position: fixed; inset: 0; z-index: 60;
+    background: var(--bg);
+    display: none; flex-direction: column;
+    transition: background var(--ease);
+  }
+  #sugg-screen.show { display: flex; }
+
+  /* Navbar sugerencias */
+  .sugg-nav {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 0 clamp(1rem, 4vw, 2.5rem);
+    height: 54px; flex-shrink: 0;
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    transition: background var(--ease), border-color var(--ease);
+  }
+  .sugg-home-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px;
+    border: 1px solid var(--border2); border-radius: 7px;
+    background: var(--bg3); cursor: pointer; font-size: 1rem;
+    transition: all var(--ease); color: var(--dim);
+  }
+  .sugg-home-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .sugg-nav-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+  .sugg-nav-title {
+    font-family: 'Syne', sans-serif; font-size: .92rem; font-weight: 700;
+    color: var(--white); flex: 1;
+  }
+  .sugg-nav-title span { color: #27ae60; }
+
+  /* Cuerpo */
+  .sugg-body {
+    flex: 1; overflow-y: auto;
+    padding: 2rem clamp(1rem, 5vw, 2.5rem) 4rem;
+    max-width: 780px; margin: 0 auto; width: 100%;
+    scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
+  }
+
+  /* Header con descripción */
+  .sugg-header {
+    margin-bottom: 1.8rem;
+  }
+  .sugg-header-tag {
+    font-family: 'DM Mono', monospace; font-size: .62rem;
+    letter-spacing: .18em; text-transform: uppercase;
+    color: #27ae60; margin-bottom: .5rem;
+  }
+  .sugg-header-title {
+    font-family: 'Syne', sans-serif; font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 700; color: var(--white); margin-bottom: .6rem;
+  }
+  .sugg-header-desc {
+    font-size: .88rem; color: var(--dim); line-height: 1.7; max-width: 580px;
+  }
+
+  /* Límite diario */
+  .sugg-limit-note {
+    display: flex; gap: .6rem; align-items: flex-start;
+    background: rgba(39,174,96,.06); border: 1px solid rgba(39,174,96,.2);
+    border-radius: 9px; padding: .7rem .9rem; margin-bottom: 1.5rem;
+    font-size: .8rem; color: var(--dim); line-height: 1.5;
+  }
+  .sugg-limit-note strong { color: var(--text); }
+
+  /* Formulario nueva sugerencia */
+  .sugg-form {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.4rem; margin-bottom: 2rem;
+    transition: background var(--ease), border-color var(--ease);
+  }
+  .sugg-form-title {
+    font-family: 'Syne', sans-serif; font-size: .92rem; font-weight: 700;
+    color: var(--white); margin-bottom: 1rem;
+  }
+  .sugg-cat-row {
+    display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .85rem;
+  }
+  .sugg-cat-btn {
+    padding: .32rem .8rem; border-radius: 999px;
+    border: 1px solid var(--border2); background: var(--bg3);
+    font-family: 'Nunito', sans-serif; font-size: .76rem; font-weight: 600;
+    color: var(--dim); cursor: pointer; transition: all var(--ease);
+  }
+  .sugg-cat-btn.on { border-color: #27ae60; color: #27ae60; background: rgba(39,174,96,.08); }
+  .sugg-textarea {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: var(--r); padding: .75rem .9rem;
+    font-family: 'Nunito', sans-serif; font-size: .9rem; color: var(--white);
+    outline: none; resize: vertical; min-height: 90px;
+    transition: border-color var(--ease), background var(--ease);
+    line-height: 1.6;
+  }
+  .sugg-textarea:focus { border-color: #27ae60; }
+  .sugg-textarea::placeholder { color: var(--dim2); }
+  .sugg-form-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: .7rem; flex-wrap: wrap; gap: .5rem;
+  }
+  .sugg-char-count { font-family: 'DM Mono', monospace; font-size: .62rem; color: var(--dim2); }
+  .sugg-char-count.warn { color: #e67e22; }
+  .sugg-submit-btn {
+    padding: .55rem 1.3rem; background: #27ae60; color: #fff;
+    border: none; border-radius: var(--r); font-family: 'Nunito', sans-serif;
+    font-size: .84rem; font-weight: 700; cursor: pointer;
+    transition: all var(--ease);
+  }
+  .sugg-submit-btn:hover { background: #2ecc71; transform: translateY(-1px); }
+  .sugg-submit-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+  /* Guest notice */
+  .sugg-guest-note {
+    background: rgba(232,130,12,.06); border: 1px solid rgba(232,130,12,.2);
+    border-radius: 9px; padding: .85rem 1rem; margin-bottom: 1.5rem;
+    font-size: .84rem; color: var(--dim); line-height: 1.6; text-align: center;
+  }
+  .sugg-guest-note strong { color: var(--accent); }
+
+  /* Filtros */
+  .sugg-filters {
+    display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1.2rem;
+    align-items: center;
+  }
+  .sugg-filter-label {
+    font-family: 'DM Mono', monospace; font-size: .62rem;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--dim);
+    margin-right: .3rem;
+  }
+  .sugg-filter-btn {
+    padding: .28rem .75rem; border-radius: 999px;
+    border: 1px solid var(--border2); background: transparent;
+    font-family: 'Nunito', sans-serif; font-size: .74rem; font-weight: 600;
+    color: var(--dim); cursor: pointer; transition: all var(--ease);
+  }
+  .sugg-filter-btn.on { border-color: #27ae60; color: #27ae60; background: rgba(39,174,96,.07); }
+  .sugg-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Feed de sugerencias */
+  .sugg-feed { display: flex; flex-direction: column; gap: 1rem; }
+  .sugg-empty {
+    text-align: center; padding: 2.5rem 1rem;
+    font-size: .88rem; color: var(--dim2);
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .sugg-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.2rem 1.3rem;
+    transition: border-color var(--ease), background var(--ease);
+  }
+  .sugg-card:hover { border-color: rgba(39,174,96,.3); }
+
+  .sugg-card-header {
+    display: flex; align-items: center; gap: .7rem; margin-bottom: .7rem;
+  }
+  .sugg-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #27ae60);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: .82rem;
+    font-weight: 800; color: #fff; flex-shrink: 0;
+  }
+  .sugg-meta { flex: 1; }
+  .sugg-username {
+    font-family: 'Syne', sans-serif; font-size: .84rem;
+    font-weight: 700; color: var(--white);
+  }
+  .sugg-date {
+    font-family: 'DM Mono', monospace; font-size: .58rem;
+    color: var(--dim2); letter-spacing: .05em;
+  }
+  .sugg-cat-badge {
+    font-family: 'DM Mono', monospace; font-size: .58rem;
+    letter-spacing: .1em; text-transform: uppercase;
+    padding: .2rem .6rem; border-radius: 999px;
+    border: 1px solid rgba(39,174,96,.3); color: #27ae60;
+    background: rgba(39,174,96,.07);
+  }
+  .sugg-text {
+    font-size: .88rem; color: var(--text); line-height: 1.75;
+    margin-bottom: .9rem; white-space: pre-wrap;
+  }
+  .sugg-edited {
+    font-family: 'DM Mono', monospace; font-size: .58rem;
+    color: var(--dim2); margin-bottom: .6rem;
+  }
+
+  /* Acciones */
+  .sugg-actions {
+    display: flex; align-items: center; gap: .6rem;
+    padding-top: .7rem; border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .sugg-like-btn {
+    display: flex; align-items: center; gap: .35rem;
+    padding: .3rem .75rem; border-radius: 999px;
+    border: 1px solid var(--border2); background: var(--bg3);
+    font-family: 'Nunito', sans-serif; font-size: .78rem; font-weight: 700;
+    color: var(--dim); cursor: pointer; transition: all var(--ease);
+  }
+  .sugg-like-btn.liked {
+    border-color: var(--accent); color: var(--accent); background: rgba(232,130,12,.08);
+  }
+  .sugg-like-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .sugg-action-btn {
+    padding: .28rem .7rem; border-radius: 6px;
+    border: 1px solid var(--border2); background: transparent;
+    font-family: 'DM Mono', monospace; font-size: .6rem;
+    letter-spacing: .06em; text-transform: uppercase;
+    color: var(--dim); cursor: pointer; transition: all var(--ease);
+  }
+  .sugg-action-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .sugg-action-btn.del:hover { border-color: var(--red); color: var(--red); }
+  .sugg-spacer { flex: 1; }
+
+  /* Comentarios */
+  .sugg-comments { margin-top: .9rem; border-top: 1px solid var(--border); padding-top: .9rem; }
+  .sugg-comment {
+    display: flex; gap: .6rem; margin-bottom: .7rem;
+  }
+  .sugg-comment-avatar {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--bg3); border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: .65rem;
+    font-weight: 800; color: var(--accent); flex-shrink: 0;
+  }
+  .sugg-comment-body { flex: 1; }
+  .sugg-comment-user {
+    font-family: 'Nunito', sans-serif; font-size: .75rem;
+    font-weight: 700; color: var(--white); margin-bottom: .1rem;
+  }
+  .sugg-comment-text {
+    font-size: .82rem; color: var(--dim); line-height: 1.6;
+  }
+  .sugg-comment-del {
+    background: none; border: none; color: var(--dim2);
+    font-size: .72rem; cursor: pointer; padding: 0 .3rem;
+    transition: color var(--ease); flex-shrink: 0; align-self: flex-start;
+  }
+  .sugg-comment-del:hover { color: var(--red); }
+  .sugg-comment-input-row {
+    display: flex; gap: .5rem; margin-top: .6rem;
+  }
+  .sugg-comment-input {
+    flex: 1; background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: var(--r); padding: .45rem .75rem;
+    font-family: 'Nunito', sans-serif; font-size: .82rem; color: var(--white);
+    outline: none; transition: border-color var(--ease);
+  }
+  .sugg-comment-input:focus { border-color: #27ae60; }
+  .sugg-comment-input::placeholder { color: var(--dim2); }
+  .sugg-comment-send {
+    padding: .45rem .85rem; background: #27ae60; color: #fff;
+    border: none; border-radius: var(--r); font-family: 'Nunito', sans-serif;
+    font-size: .78rem; font-weight: 700; cursor: pointer;
+    transition: all var(--ease);
+  }
+  .sugg-comment-send:hover { background: #2ecc71; }
+
+  /* Modal editar */
+  #sugg-edit-modal {
+    position: fixed; inset: 0; z-index: 70;
+    background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; padding: 1rem;
+  }
+  #sugg-edit-modal.show { display: flex; }
+  .sugg-edit-box {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1.6rem; width: 100%; max-width: 500px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.3);
+  }
+  .sugg-edit-title {
+    font-family: 'Syne', sans-serif; font-size: 1rem;
+    font-weight: 700; color: var(--white); margin-bottom: 1rem;
+  }
+  .sugg-edit-note {
+    font-size: .76rem; color: #e67e22; background: rgba(230,126,34,.08);
+    border: 1px solid rgba(230,126,34,.25); border-radius: 7px;
+    padding: .5rem .75rem; margin-bottom: .9rem; line-height: 1.5;
+  }
+  .sugg-edit-actions {
+    display: flex; gap: .6rem; justify-content: flex-end; margin-top: .8rem;
+  }
+  .sugg-edit-cancel {
+    padding: .5rem 1rem; background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: var(--r); font-family: 'Nunito', sans-serif; font-size: .82rem;
+    font-weight: 600; color: var(--dim); cursor: pointer; transition: all var(--ease);
+  }
+  .sugg-edit-cancel:hover { border-color: var(--accent); color: var(--accent); }
+  .sugg-edit-save {
+    padding: .5rem 1.1rem; background: #27ae60; color: #fff;
+    border: none; border-radius: var(--r); font-family: 'Nunito', sans-serif;
+    font-size: .82rem; font-weight: 700; cursor: pointer; transition: all var(--ease);
+  }
+  .sugg-edit-save:hover { background: #2ecc71; }
+</style>
+
+<!-- HTML Sugerencias -->
+<div id="sugg-screen">
+  <nav class="sugg-nav">
+    <button class="sugg-home-btn" onclick="closeSuggestions()" title="Volver">🏠</button>
+    <div class="sugg-nav-sep"></div>
+    <div class="sugg-nav-title"><span>CH</span> Mods — Sugerencias</div>
+    <button class="wiki-nav-theme" id="suggThemeBtn" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:all var(--ease)" aria-label="Cambiar tema">☀️</button>
+  </nav>
+
+  <div class="sugg-body">
+
+    <div class="sugg-header">
+      <div class="sugg-header-tag">// Comunidad CH Mods</div>
+      <h2 class="sugg-header-title">Sugerencias</h2>
+      <p class="sugg-header-desc">
+        ¿Tenés ideas para nuevos mods, funciones, mecánicas o mejoras? Publicá tu sugerencia y la comunidad puede apoyarla con likes y comentarios. Las más populares pueden convertirse en realidad.
+      </p>
+    </div>
+
+    <div class="sugg-limit-note">
+      <span>💡</span>
+      <span>Podés publicar <strong>1 sugerencia por día</strong> y editarla <strong>1 vez</strong> después de publicarla. Podés borrarla cuando quieras.</span>
+    </div>
+
+    <!-- Formulario (solo usuarios logueados) -->
+    <div id="sugg-form-area"></div>
+
+    <!-- Filtros -->
+    <div class="sugg-filters">
+      <span class="sugg-filter-label">Filtrar</span>
+      <button class="sugg-filter-btn on" onclick="filterSugg('all', this)">Todos</button>
+      <button class="sugg-filter-btn" onclick="filterSugg('mod', this)">Nuevo mod</button>
+      <button class="sugg-filter-btn" onclick="filterSugg('feature', this)">Función</button>
+      <button class="sugg-filter-btn" onclick="filterSugg('update', this)">Actualización</button>
+      <button class="sugg-filter-btn" onclick="filterSugg('other', this)">Otro</button>
+    </div>
+
+    <!-- Feed -->
+    <div class="sugg-feed" id="sugg-feed">
+      <div class="sugg-empty">Cargando sugerencias...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal editar -->
+<div id="sugg-edit-modal">
+  <div class="sugg-edit-box">
+    <div class="sugg-edit-title">✏️ Editar sugerencia</div>
+    <div class="sugg-edit-note">⚠️ Solo podés editar tu sugerencia <strong>una vez</strong>. Usá bien este cambio.</div>
+    <div class="sugg-cat-row" id="edit-cat-row"></div>
+    <textarea class="sugg-textarea" id="edit-sugg-text" maxlength="600" rows="4"></textarea>
+    <div class="sugg-edit-actions">
+      <button class="sugg-edit-cancel" onclick="closeEditModal()">Cancelar</button>
+      <button class="sugg-edit-save" onclick="submitEdit()">Guardar cambio</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ══════════════════════════════════════════════
+  //  TOAST VIP
+  // ══════════════════════════════════════════════
+  const _vipToast = document.getElementById('toast-vip');
+  let _vipLocked = false, _vipTimer = null;
+  function showVipToast() {
+    if (_vipLocked) return;
+    _vipLocked = true;
+    _vipToast.style.transform = 'translateX(0)';
+    _vipToast.style.opacity = '1';
+    _vipToast.style.pointerEvents = 'all';
+    _vipTimer = setTimeout(hideVipToast, 4000);
+  }
+  function hideVipToast() {
+    clearTimeout(_vipTimer);
+    _vipToast.style.transform = 'translateX(120%)';
+    _vipToast.style.opacity = '0';
+    _vipToast.style.pointerEvents = 'none';
+    setTimeout(() => { _vipLocked = false; }, 320);
+  }
+  document.getElementById('toast-vip-x').addEventListener('click', hideVipToast);
+
+  // ══════════════════════════════════════════════
+  //  SUGERENCIAS
+  // ══════════════════════════════════════════════
+  const CATS = {
+    mod:     '🧩 Nuevo mod',
+    feature: '⚙️ Función',
+    update:  '🔄 Actualización',
+    other:   '💬 Otro'
+  };
+
+  let _suggAll = [];
+  let _suggFilter = 'all';
+  let _editingId = null;
+  let _editCat = 'mod';
+  let _newCat  = 'mod';
+
+  function openSuggestions() {
+    document.getElementById('sugg-screen').classList.add('show');
+    document.body.style.overflow = 'hidden';
+    // Sincronizar tema
+    document.getElementById('suggThemeBtn').textContent =
+      document.body.classList.contains('dark') ? '🌙' : '☀️';
+    loadSuggestions();
+    renderSuggForm();
+  }
+
+  function closeSuggestions() {
+    document.getElementById('sugg-screen').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  // Tema
+  document.getElementById('suggThemeBtn').addEventListener('click', () => {
+    applyTheme(!document.body.classList.contains('dark'));
+    document.getElementById('suggThemeBtn').textContent =
+      document.body.classList.contains('dark') ? '🌙' : '☀️';
+  });
+
+  function applyTheme(dark) {
+    document.body.classList.toggle('dark', dark);
+    const icon = dark ? '🌙' : '☀️';
+    ['themeBtn','authThemeBtn','wikiThemeBtn','suggThemeBtn'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = icon;
+    });
+  }
+
+  // ── Render formulario ──────────────────────────────────────────
+  function renderSuggForm() {
+    const area = document.getElementById('sugg-form-area');
+    const user = window._chm?.user();
+    const isGuest = window._chm?.isGuest();
+
+    if (!user || isGuest) {
+      area.innerHTML = `<div class="sugg-guest-note">
+        🔒 Solo los usuarios con cuenta pueden publicar sugerencias.<br>
+        <strong>Iniciá sesión</strong> para participar.
+      </div>`;
+      return;
+    }
+
+    const catBtns = Object.entries(CATS).map(([k,v]) =>
+      `<button class="sugg-cat-btn${k===_newCat?' on':''}" onclick="setNewCat('${k}',this)">${v}</button>`
+    ).join('');
+
+    area.innerHTML = `
+      <div class="sugg-form">
+        <div class="sugg-form-title">💡 Nueva sugerencia</div>
+        <div class="sugg-cat-row">${catBtns}</div>
+        <textarea class="sugg-textarea" id="new-sugg-text" maxlength="600"
+          placeholder="Describí tu idea con el mayor detalle posible..."
+          oninput="updateCharCount(this,'new-char')"></textarea>
+        <div class="sugg-form-footer">
+          <span class="sugg-char-count" id="new-char">0 / 600</span>
+          <button class="sugg-submit-btn" id="sugg-submit-btn" onclick="submitSugg()">Publicar</button>
+        </div>
+      </div>`;
+  }
+
+  function setNewCat(cat, btn) {
+    _newCat = cat;
+    document.querySelectorAll('#sugg-form-area .sugg-cat-btn').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+  }
+
+  function updateCharCount(ta, countId) {
+    const el = document.getElementById(countId);
+    if (!el) return;
+    const len = ta.value.length;
+    el.textContent = `${len} / 600`;
+    el.className = 'sugg-char-count' + (len > 540 ? ' warn' : '');
+  }
+
+  // ── Cargar y renderizar feed ────────────────────────────────────
+  async function loadSuggestions() {
+    document.getElementById('sugg-feed').innerHTML = '<div class="sugg-empty">Cargando...</div>';
+    try {
+      _suggAll = await window._chm.getSuggestions();
+      renderFeed();
+    } catch(e) {
+      document.getElementById('sugg-feed').innerHTML = '<div class="sugg-empty">Error al cargar. Intentá de nuevo.</div>';
+    }
+  }
+
+  function filterSugg(cat, btn) {
+    _suggFilter = cat;
+    document.querySelectorAll('.sugg-filter-btn').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    renderFeed();
+  }
+
+  function renderFeed() {
+    const feed = document.getElementById('sugg-feed');
+    const user = window._chm?.user();
+    const uid  = user?.uid;
+    let list = _suggFilter === 'all' ? _suggAll : _suggAll.filter(s => s.category === _suggFilter);
+
+    if (!list.length) {
+      feed.innerHTML = '<div class="sugg-empty">No hay sugerencias en esta categoría todavía.</div>';
+      return;
+    }
+
+    feed.innerHTML = list.map(s => {
+      const initial = (s.username || '?')[0].toUpperCase();
+      const liked   = (s.likedBy || []).includes(uid);
+      const isOwner = s.uid === uid;
+      const canEdit = isOwner && (s.editCount || 0) < 1;
+      const catLabel = CATS[s.category] || s.category || '';
+      const editedTag = s.editedAt ? `<div class="sugg-edited">✏️ Editado</div>` : '';
+
+      const comments = (s.comments || []).map((c, i) => `
+        <div class="sugg-comment">
+          <div class="sugg-comment-avatar">${(c.username||'?')[0].toUpperCase()}</div>
+          <div class="sugg-comment-body">
+            <div class="sugg-comment-user">${escHtml(c.username)}</div>
+            <div class="sugg-comment-text">${escHtml(c.text)}</div>
+          </div>
+          ${c.uid === uid ? `<button class="sugg-comment-del" onclick="delComment('${s.id}',${i})">✕</button>` : ''}
+        </div>`).join('');
+
+      const inputRow = uid && !window._chm.isGuest() ? `
+        <div class="sugg-comment-input-row">
+          <input class="sugg-comment-input" id="ci-${s.id}" placeholder="Agregar comentario..." maxlength="300"
+            onkeydown="if(event.key==='Enter')sendComment('${s.id}')" />
+          <button class="sugg-comment-send" onclick="sendComment('${s.id}')">→</button>
+        </div>` : '';
+
+      return `<div class="sugg-card" id="sc-${s.id}">
+        <div class="sugg-card-header">
+          <div class="sugg-avatar">${initial}</div>
+          <div class="sugg-meta">
+            <div class="sugg-username">${escHtml(s.username)}</div>
+            <div class="sugg-date">${fmtDate(s.createdAt)}</div>
+          </div>
+          <span class="sugg-cat-badge">${catLabel}</span>
+        </div>
+        <div class="sugg-text">${escHtml(s.text)}</div>
+        ${editedTag}
+        <div class="sugg-actions">
+          <button class="sugg-like-btn${liked?' liked':''}" onclick="toggleLike('${s.id}')">
+            ♥ <span id="lc-${s.id}">${s.likes || 0}</span>
+          </button>
+          <span class="sugg-filter-label" style="font-size:.6rem;color:var(--dim2)">
+            💬 ${(s.comments||[]).length}
+          </span>
+          <div class="sugg-spacer"></div>
+          ${canEdit ? `<button class="sugg-action-btn" onclick="openEditModal('${s.id}','${escAttr(s.text)}','${s.category}')">Editar</button>` : ''}
+          ${isOwner ? `<button class="sugg-action-btn del" onclick="deleteSugg('${s.id}')">Borrar</button>` : ''}
+        </div>
+        <div class="sugg-comments">
+          <div id="cmts-${s.id}">${comments}</div>
+          ${inputRow}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Publicar sugerencia ────────────────────────────────────────
+  async function submitSugg() {
+    const ta  = document.getElementById('new-sugg-text');
+    const btn = document.getElementById('sugg-submit-btn');
+    if (!ta || !ta.value.trim()) { suggToast('Escribí algo antes de publicar.', 'err'); return; }
+    if (ta.value.trim().length < 10) { suggToast('La sugerencia es muy corta.', 'err'); return; }
+    btn.disabled = true;
+    try {
+      await window._chm.postSuggestion(ta.value, _newCat);
+      ta.value = '';
+      updateCharCount(ta, 'new-char');
+      await loadSuggestions();
+      suggToast('✓ Sugerencia publicada', 'ok');
+    } catch(e) {
+      if (e.code === 'limit/daily') suggToast('Ya publicaste una sugerencia hoy. Volvé mañana.', 'err');
+      else suggToast('Error al publicar. Intentá de nuevo.', 'err');
+    } finally { btn.disabled = false; }
+  }
+
+  // ── Like ───────────────────────────────────────────────────────
+  async function toggleLike(id) {
+    if (!window._chm.user() || window._chm.isGuest()) {
+      suggToast('Iniciá sesión para dar like.', 'err'); return;
+    }
+    try {
+      await window._chm.toggleLike(id);
+      // Actualizar localmente
+      const s = _suggAll.find(x => x.id === id);
+      if (s) {
+        const uid = window._chm.user().uid;
+        const liked = (s.likedBy||[]).includes(uid);
+        s.likes = liked ? Math.max(0,(s.likes||0)-1) : (s.likes||0)+1;
+        s.likedBy = liked ? s.likedBy.filter(u=>u!==uid) : [...(s.likedBy||[]),uid];
+        const btn = document.querySelector(`#sc-${id} .sugg-like-btn`);
+        const cnt = document.getElementById(`lc-${id}`);
+        if (btn) btn.classList.toggle('liked', !liked);
+        if (cnt) cnt.textContent = s.likes;
+      }
+    } catch(e) { suggToast('Error al actualizar.', 'err'); }
+  }
+
+  // ── Comentarios ────────────────────────────────────────────────
+  async function sendComment(suggId) {
+    const input = document.getElementById(`ci-${suggId}`);
+    if (!input || !input.value.trim()) return;
+    try {
+      await window._chm.addComment(suggId, input.value);
+      input.value = '';
+      await loadSuggestions();
+    } catch(e) { suggToast('Error al comentar.', 'err'); }
+  }
+
+  async function delComment(suggId, idx) {
+    if (!confirm('¿Borrar este comentario?')) return;
+    try {
+      await window._chm.deleteComment(suggId, idx);
+      await loadSuggestions();
+    } catch(e) { suggToast('Error al borrar.', 'err'); }
+  }
+
+  // ── Editar ─────────────────────────────────────────────────────
+  function openEditModal(id, text, cat) {
+    _editingId = id; _editCat = cat || 'mod';
+    document.getElementById('edit-sugg-text').value = text;
+    const catBtns = Object.entries(CATS).map(([k,v]) =>
+      `<button class="sugg-cat-btn${k===_editCat?' on':''}"
+        onclick="_editCat='${k}';document.querySelectorAll('#edit-cat-row .sugg-cat-btn').forEach(b=>b.classList.remove('on'));this.classList.add('on')"
+      >${v}</button>`
+    ).join('');
+    document.getElementById('edit-cat-row').innerHTML = catBtns;
+    document.getElementById('sugg-edit-modal').classList.add('show');
+  }
+
+  function closeEditModal() {
+    document.getElementById('sugg-edit-modal').classList.remove('show');
+    _editingId = null;
+  }
+
+  async function submitEdit() {
+    const text = document.getElementById('edit-sugg-text').value.trim();
+    if (!text || text.length < 10) { suggToast('El texto es muy corto.', 'err'); return; }
+    try {
+      await window._chm.editSuggestion(_editingId, text, _editCat);
+      closeEditModal();
+      await loadSuggestions();
+      suggToast('✓ Sugerencia editada', 'ok');
+    } catch(e) {
+      if (e.code === 'limit/edit') suggToast('Solo podés editar una vez.', 'err');
+      else suggToast('Error al editar.', 'err');
+    }
+  }
+
+  // ── Borrar ─────────────────────────────────────────────────────
+  async function deleteSugg(id) {
+    if (!confirm('¿Borrar esta sugerencia? No se puede recuperar.')) return;
+    try {
+      await window._chm.deleteSuggestion(id);
+      await loadSuggestions();
+      suggToast('Sugerencia eliminada', 'ok');
+    } catch(e) { suggToast('Error al borrar.', 'err'); }
+  }
+
+  // ── Toast interno de sugerencias ───────────────────────────────
+  let _stTimer = null;
+  function suggToast(msg, type) {
+    // Reusar el toast-guest con estilos temporales
+    const el = document.getElementById('toast-guest');
+    el.querySelector('.tg-text').textContent = msg;
+    el.classList.add('show');
+    if (type === 'ok') el.style.borderColor = 'var(--green)';
+    else el.style.borderColor = 'var(--red)';
+    clearTimeout(_stTimer);
+    _stTimer = setTimeout(() => {
+      el.classList.remove('show');
+      el.style.borderColor = '';
+    }, 3000);
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────
+  function escHtml(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function escAttr(s) {
+    return String(s||'').replace(/'/g,"\\'").replace(/\n/g,' ');
+  }
+  function fmtDate(ts) {
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
+  }
+</script>
 </body>
 </html>
