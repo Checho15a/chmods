@@ -106,15 +106,16 @@
 
       async postSuggestion(text, category) {
         if (!_user) throw new Error('No autenticado');
-        // Verificar 1 por día
         const today = new Date().toISOString().slice(0, 10);
+
+        // Buscar solo por uid (sin índice compuesto) y filtrar fecha en cliente
         const q = query(
           collection(db, 'suggestions'),
-          where('uid', '==', _user.uid),
-          where('dateStr', '==', today)
+          where('uid', '==', _user.uid)
         );
         const snap = await getDocs(q);
-        if (!snap.empty) throw { code: 'limit/daily' };
+        const alreadyToday = snap.docs.some(d => d.data().dateStr === today);
+        if (alreadyToday) throw { code: 'limit/daily' };
 
         const username = _user.displayName || _user.email.split('@')[0];
         return await addDoc(collection(db, 'suggestions'), {
