@@ -2432,6 +2432,18 @@
   .sugg-edit-save:hover { background: #2ecc71; }
 </style>
 
+<!-- Toast sugerencias propio -->
+<div id="toast-sugg" style="
+  position:fixed; bottom:1.5rem; right:1.5rem; z-index:400;
+  background:var(--bg2); border:1px solid var(--border2);
+  border-radius:10px; padding:.75rem 1.1rem;
+  font-family:'Nunito',sans-serif; font-size:.82rem; font-weight:600;
+  color:var(--text); box-shadow:0 8px 28px rgba(0,0,0,.2);
+  transform:translateY(120%); opacity:0;
+  transition:all .3s cubic-bezier(.4,0,.2,1); pointer-events:none;
+  max-width:340px;
+"></div>
+
 <!-- HTML Sugerencias -->
 <div id="sugg-screen">
   <nav class="sugg-nav">
@@ -2695,18 +2707,38 @@
     const ta  = document.getElementById('new-sugg-text');
     const btn = document.getElementById('sugg-submit-btn');
     if (!ta || !ta.value.trim()) { suggToast('Escribí algo antes de publicar.', 'err'); return; }
-    if (ta.value.trim().length < 10) { suggToast('La sugerencia es muy corta.', 'err'); return; }
+    if (ta.value.trim().length < 5) { suggToast('La sugerencia es muy corta (mín. 5 caracteres).', 'err'); return; }
+
+    // Verificar que el usuario esté logueado
+    const user = window._chm?.user();
+    if (!user) { suggToast('Sesión expirada. Recargá la página e iniciá sesión de nuevo.', 'err'); return; }
+
     btn.disabled = true;
+    btn.textContent = 'Publicando...';
+
     try {
+      console.log('[sugg] Intentando publicar para uid:', user.uid);
       await window._chm.postSuggestion(ta.value, _newCat);
+      console.log('[sugg] Publicado OK');
       ta.value = '';
       updateCharCount(ta, 'new-char');
       await loadSuggestions();
       suggToast('✓ Sugerencia publicada', 'ok');
     } catch(e) {
-      if (e.code === 'limit/daily') suggToast('Ya publicaste una sugerencia hoy. Volvé mañana.', 'err');
-      else suggToast('Error al publicar. Intentá de nuevo.', 'err');
-    } finally { btn.disabled = false; }
+      console.error('[sugg] Error al publicar:', e.code, e.message, e);
+      if (e.code === 'limit/daily') {
+        suggToast('Ya publicaste tu sugerencia de hoy. Volvé mañana 🕐', 'err');
+      } else if (e.code === 'permission-denied') {
+        suggToast('Sin permiso en Firestore. Verificá las reglas.', 'err');
+      } else if (e.code === 'unavailable' || e.code === 'network-request-failed') {
+        suggToast('Error de conexión. Revisá tu internet.', 'err');
+      } else {
+        suggToast('Error: ' + (e.code || e.message || 'desconocido'), 'err');
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Publicar';
+    }
   }
 
   // ── Like ───────────────────────────────────────────────────────
@@ -2795,17 +2827,16 @@
   // ── Toast interno de sugerencias ───────────────────────────────
   let _stTimer = null;
   function suggToast(msg, type) {
-    // Reusar el toast-guest con estilos temporales
-    const el = document.getElementById('toast-guest');
-    el.querySelector('.tg-text').textContent = msg;
-    el.classList.add('show');
-    if (type === 'ok') el.style.borderColor = 'var(--green)';
-    else el.style.borderColor = 'var(--red)';
+    const el = document.getElementById('toast-sugg');
+    el.textContent = msg;
+    el.style.borderColor = type === 'ok' ? 'var(--green)' : type === 'err' ? 'var(--red)' : 'var(--border2)';
+    el.style.transform = 'translateY(0)';
+    el.style.opacity = '1';
     clearTimeout(_stTimer);
     _stTimer = setTimeout(() => {
-      el.classList.remove('show');
-      el.style.borderColor = '';
-    }, 3000);
+      el.style.transform = 'translateY(120%)';
+      el.style.opacity = '0';
+    }, 3500);
   }
 
   // ── Helpers ────────────────────────────────────────────────────
