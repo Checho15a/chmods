@@ -16,13 +16,15 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
       getAuth, onAuthStateChanged, signInWithEmailAndPassword,
-      signOut, createUserWithEmailAndPassword, sendEmailVerification
+      signOut
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
       getFirestore, doc, getDoc, setDoc, collection,
-      query, where, getDocs, updateDoc, deleteDoc,
-      arrayUnion, arrayRemove, serverTimestamp
+      query, where, getDocs
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getStorage, ref, uploadBytes
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey:            "AIzaSyA7roNXDxQGR-lki5Qth7Hqe9Lp5_ig8bk",
@@ -35,9 +37,13 @@
       measurementId:     "G-2WGDQHJVVS"
     };
 
-    const app  = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db   = getFirestore(app);
+    const app     = initializeApp(firebaseConfig);
+    const auth    = getAuth(app);
+    const db      = getFirestore(app);
+    const storage = getStorage(app);
+
+    // Bucket público base para enlaces permanentes de Google Cloud Storage
+    const GCS_BASE = 'https://storage.googleapis.com/chmods-dfbf3.firebasestorage.app';
 
     // Límites de almacenamiento por usuario
     const LIMITS = {
@@ -45,15 +51,24 @@
       videos: { count: 10, label: '10 videos MJPEG'   }
     };
 
-    // Cloudinary config
+    // Cloudinary config (solo imágenes)
     const CLD = {
       cloudName:    'djjl0okdo',
       uploadPreset: 'chmods_upload',
-      apiKey:       '445737495416328'
     };
 
     let _user      = null;
     let _userFiles = { images: [], videos: [] };
+
+    // ── Subida a Firebase Storage con URL pública permanente ──────
+    async function uploadToFirebaseStorage(blob, storagePath) {
+      const storageRef = ref(storage, storagePath);
+      await uploadBytes(storageRef, blob);
+      // Construimos la URL pública permanente de GCS (sin token)
+      // El path en GCS usa %2F como separador de carpetas en la URL
+      const encodedPath = storagePath.split('/').map(encodeURIComponent).join('%2F');
+      return `${GCS_BASE}/${encodedPath}`;
+    }
 
     // Exponer al scope global
     window._conv = {
@@ -62,17 +77,19 @@
       getUser:      () => _user,
       getUserFiles: () => _userFiles,
 
+      uploadToStorage: uploadToFirebaseStorage,
+
       async loadUserFiles() {
         if (!_user) return;
-        const ref  = doc(db, 'converter_files', _user.uid);
-        const snap = await getDoc(ref);
+        const docRef = doc(db, 'converter_files', _user.uid);
+        const snap   = await getDoc(docRef);
         if (snap.exists()) {
           _userFiles = snap.data();
           if (!_userFiles.images) _userFiles.images = [];
           if (!_userFiles.videos) _userFiles.videos = [];
         } else {
           _userFiles = { images: [], videos: [] };
-          await setDoc(ref, _userFiles);
+          await setDoc(docRef, _userFiles);
         }
         window._conv.renderFiles();
       },
@@ -100,9 +117,9 @@
       },
 
       async loginUser(email, pw) {
-        const q = query(collection(db,'users'), where('usernameLower','==', email.toLowerCase()));
         let resolvedEmail = email;
         if (!email.includes('@')) {
+          const q    = query(collection(db,'users'), where('usernameLower','==', email.toLowerCase()));
           const snap = await getDocs(q);
           if (snap.empty) throw { code: 'auth/username-not-found' };
           resolvedEmail = snap.docs[0].data().email;
@@ -425,9 +442,7 @@
       width: 100%; aspect-ratio: 16/10; object-fit: cover;
       background: var(--bg3); display: block;
     }
-    .gallery-info {
-      padding: .7rem .85rem;
-    }
+    .gallery-info { padding: .7rem .85rem; }
     .gallery-name {
       font-family: 'Nunito', sans-serif; font-size: .78rem; font-weight: 700;
       color: var(--white); margin-bottom: .2rem;
@@ -457,6 +472,17 @@
       padding: .12rem .42rem; border-radius: 4px;
       background: rgba(232,130,12,.12); color: var(--accent);
       border: 1px solid rgba(232,130,12,.3); margin-bottom: .5rem;
+    }
+
+    /* Badge WAV en tarjeta */
+    .wav-badge {
+      display: inline-block;
+      font-family: 'DM Mono', monospace; font-size: .52rem;
+      letter-spacing: .08em; text-transform: uppercase;
+      padding: .12rem .42rem; border-radius: 4px;
+      background: rgba(39,174,96,.1); color: var(--green);
+      border: 1px solid rgba(39,174,96,.3); margin-bottom: .5rem;
+      margin-left: .25rem;
     }
 
     /* Toast notificación */
@@ -506,7 +532,7 @@
     }
     .preview-close:hover { border-color: var(--red); color: var(--red); }
     #preview-content { padding: 1rem; text-align: center; }
-    #preview-content img, #preview-content video {
+    #preview-content img {
       max-width: 100%; max-height: 400px; border-radius: 8px;
       background: var(--bg3); display: block; margin: 0 auto;
     }
@@ -535,6 +561,16 @@
       border-radius: 9px; padding: .8rem 1rem;
       margin-bottom: 1.2rem; font-size: .8rem;
       color: var(--dim); line-height: 1.55;
+    }
+
+    /* Links extra en preview de video */
+    .preview-extra-links {
+      margin-top: .6rem; display: flex; flex-direction: column; gap: .4rem;
+    }
+    .preview-extra-label {
+      font-family: 'DM Mono', monospace; font-size: .58rem;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--dim); margin-top: .5rem; text-align: left;
     }
 
     @media (max-width: 600px) {
@@ -610,7 +646,7 @@
   <!-- Main -->
   <main class="main">
 
-    <!-- Tabs: solo 2 opciones -->
+    <!-- Tabs -->
     <div class="section-tabs">
       <button class="section-tab active" onclick="switchSection('images')">🖼️ Imágenes → JPG</button>
       <button class="section-tab" onclick="switchSection('videos')">🎞️ Videos → MJPEG</button>
@@ -664,7 +700,7 @@
       <div class="sec-header">
         <div class="sec-header-left">
           <h2>Convertidor de videos</h2>
-          <p>Subí un video <code style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--accent)">.mp4</code> y obtenés un link permanente terminado en <code style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--accent)">.mjpeg</code> listo para CH Images.</p>
+          <p>Subí un video <code style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--accent)">.mp4</code> y obtenés links permanentes <code style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--accent)">.mjpeg</code> y <code style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--accent)">.wav</code> alojados en Firebase.</p>
         </div>
         <div class="storage-bar-wrap">
           <div class="storage-label">
@@ -677,20 +713,20 @@
         </div>
       </div>
 
-      <!-- Upload zone videos — solo MP4 -->
       <div class="upload-zone" id="vid-drop-zone">
         <input type="file" id="vid-file-input" accept="video/mp4" onchange="handleVideoUpload(this.files[0])" />
         <div class="upload-icon">🎞️</div>
         <div class="upload-title">Arrastrá o hacé click para subir</div>
         <div class="upload-sub">Solo <strong>MP4</strong> — máximo 10 minutos de duración</div>
         <div class="upload-formats">
-          <span class="upload-fmt">MP4</span>
+          <span class="upload-fmt">MP4 → MJPEG</span>
+          <span class="upload-fmt">Audio → WAV</span>
         </div>
       </div>
 
       <div id="vid-progress-wrap">
         <div class="progress-label">
-          <span id="vid-progress-label">Subiendo video...</span>
+          <span id="vid-progress-label">Preparando...</span>
           <span id="vid-progress-pct">0%</span>
         </div>
         <div class="progress-bar"><div class="progress-fill" id="vid-progress-fill"></div></div>
@@ -698,7 +734,7 @@
 
       <div class="info-note">
         <span style="flex-shrink:0">ℹ️</span>
-        <span>Al subir el MP4, tu navegador lo convierte localmente a MJPEG y WAV, y se suben a Catbox. Solo verás y podrás copiar el link MJPEG.</span>
+        <span>El video se convierte localmente en tu navegador a <strong>.mjpeg</strong> y <strong>.wav</strong>, y se sube a Firebase Storage. Los links son permanentes y accesibles públicamente, listos para CH Images y Minecraft.</span>
       </div>
 
       <div class="gallery-title">Tus videos convertidos</div>
@@ -709,7 +745,7 @@
 </div>
 
 <script>
-  // ── Cloudinary config ──────────────────────────────────────────
+  // ── Cloudinary config (imágenes) ──────────────────────────────
   const CLD_NAME   = 'djjl0okdo';
   const CLD_PRESET = 'chmods_upload';
 
@@ -772,7 +808,7 @@
     }[code] || 'Error inesperado. Intentá de nuevo.';
   }
 
-  // ── Callbacks de Firebase ─────────────────────────────────────
+  // ── Callbacks de Firebase Auth ────────────────────────────────
   window._onUserReady = function(user) {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app-screen').style.display  = 'block';
@@ -798,7 +834,7 @@
     document.getElementById('panel-' + sec).classList.add('active');
   }
 
-  // ── Upload imágenes ───────────────────────────────────────────
+  // ── Upload imágenes (Cloudinary) ──────────────────────────────
   async function handleImageUpload(file) {
     if (!file) return;
     const files = window._conv.getUserFiles();
@@ -856,7 +892,7 @@
     }
   }
 
-  // ── Upload video MP4 → FFmpeg Local → Catbox.moe (MJPEG + WAV) ──
+  // ── Upload video MP4 → FFmpeg Local → Firebase Storage ────────
   async function handleVideoUpload(file) {
     if (!file) return;
     const files = window._conv.getUserFiles();
@@ -865,7 +901,6 @@
       showToast('Límite alcanzado. Borrá videos para liberar espacio.', 'err'); return;
     }
 
-    // Solo MP4
     if (file.type !== 'video/mp4') {
       showToast('Solo se aceptan archivos MP4.', 'err'); return;
     }
@@ -879,61 +914,97 @@
     setProgress('vid', 5, 'Cargando motor de conversión...');
 
     try {
-      // 1. Cargar FFmpeg
+      // 1. Cargar FFmpeg.wasm
       const { createFFmpeg, fetchFile } = FFmpeg;
       if (!window.ffmpeg) {
-        window.ffmpeg = createFFmpeg({ log: true });
+        window.ffmpeg = createFFmpeg({ log: false });
         await window.ffmpeg.load();
       }
       const ffmpeg = window.ffmpeg;
 
-      // 2. Escribir archivo en memoria virtual
+      // 2. Nombre base único compartido entre .mjpeg y .wav
+      const timestamp = Date.now();
+      const baseName  = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const uid       = `${timestamp}_${baseName}`;
+
+      // Nombres de archivo en Firebase Storage
+      const mjpegStoragePath = `public_videos/${uid}.mjpeg`;
+      const wavStoragePath   = `public_videos/${uid}.wav`;
+      const thumbStoragePath = `public_videos/${uid}_thumb.jpg`;
+
+      // 3. Escribir MP4 en memoria virtual de FFmpeg
       ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(file));
 
-      setProgress('vid', 20, 'Convirtiendo a MJPEG (Esto puede tardar)...');
-      
-      // 3. Convertir a MJPEG (24 FPS, calidad buena)
-      await ffmpeg.run('-i', 'input.mp4', '-vcodec', 'mjpeg', '-q:v', '5', '-r', '24', 'output.mjpeg');
-      
-      setProgress('vid', 60, 'Extrayendo audio WAV...');
-      
-      // 4. Convertir a WAV
-      await ffmpeg.run('-i', 'input.mp4', '-vn', '-acodec', 'pcm_s16le', '-ar', '44100', '-ac', '2', 'output.wav');
+      setProgress('vid', 20, 'Convirtiendo a MJPEG (puede tardar)...');
 
-      setProgress('vid', 75, 'Extrayendo miniatura...');
-      // 5. Extraer 1 frame para la miniatura
-      await ffmpeg.run('-i', 'input.mp4', '-ss', '00:00:00', '-vframes', '1', 'thumb.jpg');
+      // 4. Convertir a MJPEG — 24 FPS, calidad buena (q:v 5)
+      await ffmpeg.run(
+        '-i', 'input.mp4',
+        '-vcodec', 'mjpeg',
+        '-q:v', '5',
+        '-r', '24',
+        'output.mjpeg'
+      );
 
-      setProgress('vid', 85, 'Subiendo archivos a la nube...');
+      setProgress('vid', 55, 'Extrayendo audio WAV...');
 
-      // 6. Leer archivos de memoria
+      // 5. Extraer audio a WAV (PCM 16-bit, 44100 Hz, estéreo)
+      //    Formato que lee nativamente el motor de Java / Minecraft
+      await ffmpeg.run(
+        '-i', 'input.mp4',
+        '-vn',
+        '-acodec', 'pcm_s16le',
+        '-ar', '44100',
+        '-ac', '2',
+        'output.wav'
+      );
+
+      setProgress('vid', 70, 'Extrayendo miniatura...');
+
+      // 6. Extraer primer frame como thumbnail
+      await ffmpeg.run(
+        '-i', 'input.mp4',
+        '-ss', '00:00:00',
+        '-vframes', '1',
+        'thumb.jpg'
+      );
+
+      setProgress('vid', 80, 'Subiendo a Firebase Storage...');
+
+      // 7. Leer archivos desde la memoria virtual de FFmpeg
       const mjpegData = ffmpeg.FS('readFile', 'output.mjpeg');
-      const wavData = ffmpeg.FS('readFile', 'output.wav');
+      const wavData   = ffmpeg.FS('readFile', 'output.wav');
       const thumbData = ffmpeg.FS('readFile', 'thumb.jpg');
 
       const mjpegBlob = new Blob([mjpegData.buffer], { type: 'video/x-motion-jpeg' });
-      const wavBlob = new Blob([wavData.buffer], { type: 'audio/wav' });
+      const wavBlob   = new Blob([wavData.buffer],   { type: 'audio/wav' });
       const thumbBlob = new Blob([thumbData.buffer], { type: 'image/jpeg' });
 
-      // 7. Subir a Catbox
-      const mjpegUrl = await uploadToCatbox(mjpegBlob, 'video.mjpeg');
-      const wavUrl = await uploadToCatbox(wavBlob, 'audio.wav');
-      const thumbUrl = await uploadToCatbox(thumbBlob, 'thumb.jpg');
+      // 8. Subir los tres archivos a Firebase Storage
+      //    y obtener URLs públicas permanentes de Google Cloud Storage
+      setProgress('vid', 82, 'Subiendo MJPEG...');
+      const mjpegUrl = await window._conv.uploadToStorage(mjpegBlob, mjpegStoragePath);
 
-      // 8. Limpiar memoria virtual
+      setProgress('vid', 88, 'Subiendo WAV...');
+      const wavUrl   = await window._conv.uploadToStorage(wavBlob, wavStoragePath);
+
+      setProgress('vid', 93, 'Subiendo miniatura...');
+      const thumbUrl = await window._conv.uploadToStorage(thumbBlob, thumbStoragePath);
+
+      // 9. Limpiar memoria virtual de FFmpeg
       ffmpeg.FS('unlink', 'input.mp4');
       ffmpeg.FS('unlink', 'output.mjpeg');
       ffmpeg.FS('unlink', 'output.wav');
       ffmpeg.FS('unlink', 'thumb.jpg');
 
-      const cleanName = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.mjpeg';
-
+      // 10. Guardar en Firestore
       const fileObj = {
-        publicId:  Date.now().toString(),
-        url:       mjpegUrl,
-        wavUrl:    wavUrl, 
-        thumb:     thumbUrl,
-        name:      cleanName,
+        publicId:  uid,
+        url:       mjpegUrl,   // link permanente .mjpeg
+        wavUrl:    wavUrl,     // link permanente .wav
+        thumb:     thumbUrl,   // miniatura
+        name:      `${baseName}.mjpeg`,
+        wavName:   `${baseName}.wav`,
         date:      new Date().toLocaleDateString('es-ES'),
         duration:  Math.round(duration) + 's'
       };
@@ -941,29 +1012,14 @@
       setProgress('vid', 100, '¡Listo!');
       await window._conv.saveFile('videos', fileObj);
       setTimeout(() => showProgress('vid', false), 1200);
-      showToast('✓ Video procesado nativamente', 'ok');
+      showToast('✓ Video procesado y subido a Firebase', 'ok');
       document.getElementById('vid-file-input').value = '';
 
     } catch(e) {
       showProgress('vid', false);
-      showToast('Error al procesar el video. Intentá de nuevo.', 'err');
+      showToast('Error al procesar el video. Revisá la consola.', 'err');
       console.error(e);
     }
-  }
-
-  // Helper para subir a Catbox.moe
-  async function uploadToCatbox(blob, filename) {
-    const formData = new FormData();
-    formData.append('reqtype', 'fileupload');
-    formData.append('fileToUpload', blob, filename);
-
-    const res = await fetch('https://catbox.moe/user/api.php', {
-        method: 'POST',
-        body: formData
-    });
-    
-    if (!res.ok) throw new Error('Error al subir a Catbox');
-    return await res.text(); 
   }
 
   // ── Render galerías ───────────────────────────────────────────
@@ -981,11 +1037,11 @@
       <div class="gallery-card">
         <img class="gallery-thumb" src="${f.thumb || f.url}" alt="${f.name}" loading="lazy" onerror="this.style.background='var(--bg3)'" />
         <div class="gallery-info">
-          ${isMjpeg ? `<div class="mjpeg-badge">MJPEG</div>` : ''}
+          ${isMjpeg ? `<span class="mjpeg-badge">MJPEG</span><span class="wav-badge">WAV</span>` : ''}
           <div class="gallery-name" title="${f.name}">${f.name}</div>
           <div class="gallery-date">${f.date}${f.duration ? ' · ' + f.duration : ''}</div>
           <div class="gallery-actions">
-            <button class="gal-btn" onclick="openPreview('${f.url}','${f.name}','${type}')">Ver</button>
+            <button class="gal-btn" onclick="openPreview(${JSON.stringify(f)}, '${type}')">Ver</button>
             <button class="gal-btn" onclick="copyLink('${f.url}')">Copiar</button>
             <button class="gal-btn del" onclick="deleteFile('${type}','${f.publicId}')">Borrar</button>
           </div>
@@ -1014,27 +1070,45 @@
   }
 
   // ── Acciones de galería ───────────────────────────────────────
-  function openPreview(url, name, type) {
+  function openPreview(fileData, type) {
+    // fileData puede llegar como objeto (desde renderGallery con JSON.stringify)
+    const f = typeof fileData === 'string' ? JSON.parse(fileData) : fileData;
     const modal   = document.getElementById('preview-modal');
     const content = document.getElementById('preview-content');
-    document.getElementById('preview-title').textContent = name;
+    document.getElementById('preview-title').textContent = f.name;
 
-    // Para MJPEG mostramos el video original (thumb) como referencia visual,
-    // y el link copiable es el MJPEG. No se expone el OGG en ningún momento.
     const isMjpeg = type === 'videos';
-    content.innerHTML = `
-      <img src="${url}" alt="${name}"
-        style="max-width:100%;max-height:340px;border-radius:8px;background:var(--bg3);display:block;margin:0 auto"
-        onerror="this.style.display='none';document.getElementById('vid-fallback-note').style.display='flex'" />
-      ${isMjpeg ? `
-        <div id="vid-fallback-note" style="display:none;gap:.5rem;align-items:flex-start;background:rgba(232,130,12,.07);border:1px solid rgba(232,130,12,.25);border-radius:8px;padding:.65rem .85rem;margin-bottom:.8rem;font-size:.78rem;color:var(--dim);line-height:1.5;text-align:left">
+
+    if (isMjpeg) {
+      content.innerHTML = `
+        <img src="${f.thumb}" alt="${f.name}"
+          style="max-width:100%;max-height:280px;border-radius:8px;background:var(--bg3);display:block;margin:0 auto"
+          onerror="this.style.display='none'" />
+        <div style="display:flex;gap:.4rem;align-items:flex-start;background:rgba(232,130,12,.07);border:1px solid rgba(232,130,12,.25);border-radius:8px;padding:.65rem .85rem;margin:.8rem 0;font-size:.78rem;color:var(--dim);line-height:1.5;text-align:left">
           <span style="flex-shrink:0">ℹ️</span>
-          <span>La previsualización MJPEG no está disponible en el navegador. Usá el link directamente en CH Images.</span>
-        </div>` : ''}
-      <div class="preview-url" style="margin-top:.8rem">
-        <input type="text" value="${url}" readonly onclick="this.select()" />
-        <button class="preview-copy-btn" onclick="copyLink('${url}')">Copiar link</button>
-      </div>`;
+          <span>La previsualización MJPEG no está disponible en el navegador. Usá el link directamente en CH Images o Minecraft.</span>
+        </div>
+        <div class="preview-extra-label">Link MJPEG (video)</div>
+        <div class="preview-url">
+          <input type="text" value="${f.url}" readonly onclick="this.select()" />
+          <button class="preview-copy-btn" onclick="copyLink('${f.url}')">Copiar</button>
+        </div>
+        ${f.wavUrl ? `
+        <div class="preview-extra-label" style="margin-top:.6rem">Link WAV (audio para Minecraft)</div>
+        <div class="preview-url">
+          <input type="text" value="${f.wavUrl}" readonly onclick="this.select()" />
+          <button class="preview-copy-btn" onclick="copyLink('${f.wavUrl}')">Copiar</button>
+        </div>` : ''}`;
+    } else {
+      content.innerHTML = `
+        <img src="${f.url}" alt="${f.name}"
+          style="max-width:100%;max-height:340px;border-radius:8px;background:var(--bg3);display:block;margin:0 auto" />
+        <div class="preview-url" style="margin-top:.8rem">
+          <input type="text" value="${f.url}" readonly onclick="this.select()" />
+          <button class="preview-copy-btn" onclick="copyLink('${f.url}')">Copiar link</button>
+        </div>`;
+    }
+
     modal.classList.add('show');
   }
 
@@ -1050,9 +1124,9 @@
   }
 
   async function deleteFile(type, publicId) {
-    if (!confirm('¿Borrar este archivo? Se eliminará de tu almacenamiento.')) return;
+    if (!confirm('¿Borrar este archivo? Se eliminará de tu listado (el archivo en Firebase Storage permanece).')) return;
     await window._conv.deleteFile(type, publicId);
-    showToast('Archivo eliminado', 'ok');
+    showToast('Archivo eliminado del listado', 'ok');
   }
 
   // ── Helpers ───────────────────────────────────────────────────
