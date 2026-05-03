@@ -38,39 +38,37 @@
 
     // Límites de almacenamiento por usuario
     const LIMITS = {
-      images: { count: 30, label: '30 imágenes JPG' },
-      videos: { count: 8,  label: '8 videos GIF'    },
-      mp4s:   { count: 10, label: '10 videos MP4'   }
+      images: { count: 30, label: '30 imágenes JPG'   },
+      videos: { count: 10, label: '10 videos MJPEG'   }
     };
 
     // Cloudinary config
     const CLD = {
-      cloudName:  'djjl0okdo',
+      cloudName:    'djjl0okdo',
       uploadPreset: 'chmods_upload',
-      apiKey: '445737495416328'
+      apiKey:       '445737495416328'
     };
 
-    let _user = null;
-    let _userFiles = { images: [], videos: [], mp4s: [] };
+    let _user      = null;
+    let _userFiles = { images: [], videos: [] };
 
     // Exponer al scope global
     window._conv = {
-      cld: CLD,
-      limits: LIMITS,
-      getUser: () => _user,
+      cld:          CLD,
+      limits:       LIMITS,
+      getUser:      () => _user,
       getUserFiles: () => _userFiles,
 
       async loadUserFiles() {
         if (!_user) return;
-        const ref = doc(db, 'converter_files', _user.uid);
+        const ref  = doc(db, 'converter_files', _user.uid);
         const snap = await getDoc(ref);
         if (snap.exists()) {
           _userFiles = snap.data();
           if (!_userFiles.images) _userFiles.images = [];
           if (!_userFiles.videos) _userFiles.videos = [];
-          if (!_userFiles.mp4s)   _userFiles.mp4s   = [];
         } else {
-          _userFiles = { images: [], videos: [], mp4s: [] };
+          _userFiles = { images: [], videos: [] };
           await setDoc(ref, _userFiles);
         }
         window._conv.renderFiles();
@@ -95,7 +93,6 @@
       renderFiles() {
         renderGallery('images', _userFiles.images || []);
         renderGallery('videos', _userFiles.videos || []);
-        renderGallery('mp4s',   _userFiles.mp4s   || []);
         updateCounters();
       },
 
@@ -189,13 +186,6 @@
       background: var(--bg); padding: 1rem;
       transition: background var(--ease);
     }
-    .auth-back-link {
-      font-family: 'DM Mono', monospace; font-size: .7rem;
-      letter-spacing: .1em; text-transform: uppercase;
-      color: var(--dim); display: flex; align-items: center; gap: .4rem;
-      margin-bottom: .5rem; cursor: pointer; transition: color var(--ease);
-    }
-    .auth-back-link:hover { color: var(--accent); }
     .auth-wrap { width: 100%; max-width: 380px; }
     .auth-logo-top { text-align: center; margin-bottom: 1.4rem; }
     .auth-logo-top h1 {
@@ -456,6 +446,16 @@
     .gal-btn:hover { border-color: var(--accent); color: var(--accent); }
     .gal-btn.del:hover { border-color: var(--red); color: var(--red); }
 
+    /* Badge MJPEG en tarjeta */
+    .mjpeg-badge {
+      display: inline-block;
+      font-family: 'DM Mono', monospace; font-size: .52rem;
+      letter-spacing: .08em; text-transform: uppercase;
+      padding: .12rem .42rem; border-radius: 4px;
+      background: rgba(232,130,12,.12); color: var(--accent);
+      border: 1px solid rgba(232,130,12,.3); margin-bottom: .5rem;
+    }
+
     /* Toast notificación */
     #toast {
       position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100;
@@ -524,6 +524,16 @@
     }
     .preview-copy-btn:hover { background: var(--accent2); }
 
+    /* Nota info mjpeg */
+    .info-note {
+      display: flex; gap: .6rem;
+      background: rgba(232,130,12,.06);
+      border: 1px solid rgba(232,130,12,.2);
+      border-radius: 9px; padding: .8rem 1rem;
+      margin-bottom: 1.2rem; font-size: .8rem;
+      color: var(--dim); line-height: 1.55;
+    }
+
     @media (max-width: 600px) {
       .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
       .topbar-user { display: none; }
@@ -549,7 +559,7 @@
 
 <!-- ── AUTH SCREEN ── -->
 <div id="auth-screen">
-  <button class="auth-theme-btn" id="authThemeBtn"
+  <button id="authThemeBtn"
     style="position:absolute;top:1rem;right:1rem;width:32px;height:32px;border-radius:50%;border:1px solid var(--border2);background:var(--bg2);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:all var(--ease)"
     aria-label="Cambiar tema">☀️</button>
 
@@ -574,7 +584,9 @@
       <button class="auth-btn" id="auth-submit" onclick="doLogin()">Iniciar sesión</button>
     </div>
     <div style="margin-top:.8rem;text-align:center">
-      <a href="https://checho15a.github.io/chmods/" style="font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);text-decoration:none;transition:color var(--ease)" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--dim)'">← Volver a CH Mods</a>
+      <a href="https://checho15a.github.io/chmods/"
+        style="font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);transition:color var(--ease)"
+        onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--dim)'">← Volver a CH Mods</a>
     </div>
   </div>
 </div>
@@ -595,11 +607,10 @@
   <!-- Main -->
   <main class="main">
 
-    <!-- Tabs -->
+    <!-- Tabs: solo 2 opciones -->
     <div class="section-tabs">
       <button class="section-tab active" onclick="switchSection('images')">🖼️ Imágenes → JPG</button>
-      <button class="section-tab" onclick="switchSection('videos')">🎞️ Videos → GIF</button>
-      <button class="section-tab" onclick="switchSection('mp4s')">🎬 Link de MP4</button>
+      <button class="section-tab" onclick="switchSection('videos')">🎞️ Videos → MJPEG</button>
     </div>
 
     <!-- ── PANEL IMÁGENES ── -->
@@ -620,7 +631,6 @@
         </div>
       </div>
 
-      <!-- Upload zone imágenes -->
       <div class="upload-zone" id="img-drop-zone">
         <input type="file" id="img-file-input" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/tiff,image/avif" onchange="handleImageUpload(this.files[0])" />
         <div class="upload-icon">🖼️</div>
@@ -634,7 +644,6 @@
         </div>
       </div>
 
-      <!-- Progreso -->
       <div id="img-progress-wrap">
         <div class="progress-label">
           <span id="img-progress-label">Convirtiendo...</span>
@@ -643,22 +652,21 @@
         <div class="progress-bar"><div class="progress-fill" id="img-progress-fill"></div></div>
       </div>
 
-      <!-- Galería -->
       <div class="gallery-title">Tus imágenes convertidas</div>
       <div id="img-gallery"></div>
     </div>
 
-    <!-- ── PANEL VIDEOS ── -->
+    <!-- ── PANEL VIDEOS → MJPEG ── -->
     <div class="section-panel" id="panel-videos">
       <div class="sec-header">
         <div class="sec-header-left">
           <h2>Convertidor de videos</h2>
-          <p>Subí un video MP4 (máx. 10 min) y obtenés un link permanente terminado en <code style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--accent)">.gif</code> listo para CH Images.</p>
+          <p>Subí un video <code style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--accent)">.mp4</code> y obtenés un link permanente terminado en <code style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--accent)">.mjpeg</code> listo para CH Images.</p>
         </div>
         <div class="storage-bar-wrap">
           <div class="storage-label">
             <span>Almacenamiento</span>
-            <span id="vid-count">0 / 8</span>
+            <span id="vid-count">0 / 10</span>
           </div>
           <div class="storage-bar">
             <div class="storage-fill" id="vid-fill" style="width:0%"></div>
@@ -666,20 +674,17 @@
         </div>
       </div>
 
-      <!-- Upload zone videos -->
+      <!-- Upload zone videos — solo MP4 -->
       <div class="upload-zone" id="vid-drop-zone">
-        <input type="file" id="vid-file-input" accept="video/mp4,video/webm,video/mov" onchange="handleVideoUpload(this.files[0])" />
+        <input type="file" id="vid-file-input" accept="video/mp4" onchange="handleVideoUpload(this.files[0])" />
         <div class="upload-icon">🎞️</div>
         <div class="upload-title">Arrastrá o hacé click para subir</div>
-        <div class="upload-sub">MP4 / WEBM / MOV — máximo 10 minutos de duración</div>
+        <div class="upload-sub">Solo <strong>MP4</strong> — máximo 10 minutos de duración</div>
         <div class="upload-formats">
           <span class="upload-fmt">MP4</span>
-          <span class="upload-fmt">WEBM</span>
-          <span class="upload-fmt">MOV</span>
         </div>
       </div>
 
-      <!-- Progreso -->
       <div id="vid-progress-wrap">
         <div class="progress-label">
           <span id="vid-progress-label">Subiendo video...</span>
@@ -688,66 +693,13 @@
         <div class="progress-bar"><div class="progress-fill" id="vid-progress-fill"></div></div>
       </div>
 
-      <!-- Nota -->
-      <div style="display:flex;gap:.6rem;background:rgba(232,130,12,.06);border:1px solid rgba(232,130,12,.2);border-radius:9px;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.8rem;color:var(--dim);line-height:1.55">
-        <span style="flex-shrink:0">⏳</span>
-        <span>La conversión de video a GIF puede tardar varios minutos dependiendo del tamaño y duración del video. No cerrés la página hasta que el proceso termine.</span>
+      <div class="info-note">
+        <span style="flex-shrink:0">ℹ️</span>
+        <span>Al subir el MP4 se generan dos recursos en Cloudinary: el <strong>link .mjpeg</strong> (visible y copiable) y el <strong>audio .ogg</strong> (procesado internamente). Solo verás y podrás copiar el link MJPEG.</span>
       </div>
 
-      <!-- Galería -->
       <div class="gallery-title">Tus videos convertidos</div>
       <div id="vid-gallery"></div>
-    </div>
-
-    <!-- ── PANEL MP4 ── -->
-    <div class="section-panel" id="panel-mp4s">
-      <div class="sec-header">
-        <div class="sec-header-left">
-          <h2>Generador de link MP4</h2>
-          <p>Subí tu video MP4 y obtenés un link permanente terminado en <code style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--accent)">.mp4</code> listo para compartir o usar.</p>
-        </div>
-        <div class="storage-bar-wrap">
-          <div class="storage-label">
-            <span>Almacenamiento</span>
-            <span id="mp4-count">0 / 10</span>
-          </div>
-          <div class="storage-bar">
-            <div class="storage-fill" id="mp4-fill" style="width:0%"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Upload zone MP4 -->
-      <div class="upload-zone" id="mp4-drop-zone">
-        <input type="file" id="mp4-file-input" accept="video/mp4,video/webm,video/quicktime" onchange="handleMp4Upload(this.files[0])" />
-        <div class="upload-icon">🎬</div>
-        <div class="upload-title">Arrastrá o hacé click para subir</div>
-        <div class="upload-sub">Se generará un link permanente terminado en .mp4</div>
-        <div class="upload-formats">
-          <span class="upload-fmt">MP4</span>
-          <span class="upload-fmt">WEBM</span>
-          <span class="upload-fmt">MOV</span>
-        </div>
-      </div>
-
-      <!-- Progreso -->
-      <div id="mp4-progress-wrap" style="display:none;margin-bottom:1.2rem">
-        <div class="progress-label">
-          <span id="mp4-progress-label">Subiendo video...</span>
-          <span id="mp4-progress-pct">0%</span>
-        </div>
-        <div class="progress-bar"><div class="progress-fill" id="mp4-progress-fill"></div></div>
-      </div>
-
-      <!-- Nota de espera -->
-      <div style="display:flex;gap:.6rem;background:rgba(232,130,12,.06);border:1px solid rgba(232,130,12,.2);border-radius:9px;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.8rem;color:var(--dim);line-height:1.55">
-        <span style="flex-shrink:0">⏳</span>
-        <span>Luego de generar el link, esperá a que el video aparezca correctamente en la sección <strong>"Ver"</strong> antes de usarlo. Cloudinary puede tardar unos segundos en procesarlo — si abrís el link antes de que esté listo, podría no cargar.</span>
-      </div>
-
-      <!-- Galería -->
-      <div class="gallery-title">Tus videos MP4</div>
-      <div id="mp4-gallery"></div>
     </div>
 
   </main>
@@ -768,7 +720,6 @@
     });
     localStorage.setItem('chTheme', dark ? 'dark' : 'light');
   }
-  // Aplicar tema guardado
   applyTheme(localStorage.getItem('chTheme') === 'dark');
 
   document.getElementById('themeBtn').addEventListener('click', () =>
@@ -799,16 +750,13 @@
         showMsg('Verificá tu correo antes de ingresar.', 'err');
         btn.disabled = false; return;
       }
-      // onAuthStateChanged se encarga del resto
     } catch(e) {
       showMsg(authErr(e.code), 'err');
       btn.disabled = false;
     }
   }
 
-  async function doLogout() {
-    await window._conv.logout();
-  }
+  async function doLogout() { await window._conv.logout(); }
 
   function authErr(code) {
     return {
@@ -834,14 +782,13 @@
     document.getElementById('auth-submit').disabled = false;
   };
 
-  // Enter para login
   document.getElementById('auth-pw').addEventListener('keydown', e => {
     if (e.key === 'Enter') doLogin();
   });
 
   // ── Tabs ──────────────────────────────────────────────────────
   function switchSection(sec) {
-    const secs = ['images','videos','mp4s'];
+    const secs = ['images','videos'];
     document.querySelectorAll('.section-tab').forEach((t,i) =>
       t.classList.toggle('active', secs[i] === sec));
     document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
@@ -866,7 +813,6 @@
     setProgress('img', 10, 'Preparando archivo...');
 
     try {
-      // Subir la imagen original — sin parámetros extra (unsigned preset no los acepta)
       const formData = new FormData();
       formData.append('file', file);
       formData.append('upload_preset', CLD_PRESET);
@@ -882,21 +828,17 @@
 
       setProgress('img', 92, 'Generando link JPG...');
 
-      // Construir URL JPG usando delivery URL de Cloudinary
-      // Formato: /upload/f_jpg,q_auto/<public_id> — sin extensión original
-      const publicIdClean = res.public_id; // ya sin extensión
-      const jpgUrl = `https://res.cloudinary.com/${CLD_NAME}/image/upload/f_jpg,q_auto/${publicIdClean}.jpg`;
+      const publicIdClean = res.public_id;
+      const jpgUrl   = `https://res.cloudinary.com/${CLD_NAME}/image/upload/f_jpg,q_auto/${publicIdClean}.jpg`;
       const thumbUrl = `https://res.cloudinary.com/${CLD_NAME}/image/upload/f_jpg,q_auto,w_400/${publicIdClean}.jpg`;
-
-      // Limpiar nombre: quitar dobles extensiones tipo "foto.png.webp" → "foto"
       const cleanName = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.jpg';
 
       const fileObj = {
         publicId: publicIdClean,
-        url:   jpgUrl,
-        thumb: thumbUrl,
-        name:  cleanName,
-        date:  new Date().toLocaleDateString('es-ES'),
+        url:      jpgUrl,
+        thumb:    thumbUrl,
+        name:     cleanName,
+        date:     new Date().toLocaleDateString('es-ES'),
       };
 
       await window._conv.saveFile('images', fileObj);
@@ -911,8 +853,7 @@
     }
   }
 
-
-  // ── Upload videos ─────────────────────────────────────────────
+  // ── Upload video MP4 → genera link MJPEG (visible) + OGG (oculto) ──
   async function handleVideoUpload(file) {
     if (!file) return;
     const files = window._conv.getUserFiles();
@@ -921,9 +862,9 @@
       showToast('Límite alcanzado. Borrá videos para liberar espacio.', 'err'); return;
     }
 
-    const allowed = ['video/mp4','video/webm','video/quicktime'];
-    if (!allowed.includes(file.type)) {
-      showToast('Solo se aceptan MP4, WEBM o MOV.', 'err'); return;
+    // Solo MP4
+    if (file.type !== 'video/mp4') {
+      showToast('Solo se aceptan archivos MP4.', 'err'); return;
     }
 
     // Verificar duración máxima (10 min)
@@ -933,47 +874,53 @@
     }
 
     showProgress('vid', true);
-    setProgress('vid', 10, 'Preparando video...');
+    setProgress('vid', 5, 'Preparando video...');
 
     try {
+      // ── 1. Subir el MP4 original a Cloudinary ──
       const formData = new FormData();
       formData.append('file', file);
       formData.append('upload_preset', CLD_PRESET);
       formData.append('folder', 'chmods/videos');
-      // resource_type va en la URL, no en el body
 
-      setProgress('vid', 20, 'Subiendo video (puede tardar)...');
+      setProgress('vid', 15, 'Subiendo MP4...');
 
       const res = await uploadWithProgress(
         `https://api.cloudinary.com/v1_1/${CLD_NAME}/video/upload`,
         formData,
-        (pct) => setProgress('vid', 20 + pct * 0.65, 'Subiendo...')
+        (pct) => setProgress('vid', 15 + pct * 0.72, 'Subiendo...')
       );
 
-      setProgress('vid', 88, 'Generando link GIF...');
-
-      // URL GIF usando delivery URL de Cloudinary (funciona sin auth)
-      // Sube como video, se entrega como GIF via transformación en la URL
       const publicIdClean = res.public_id;
-      const gifUrl   = `https://res.cloudinary.com/${CLD_NAME}/video/upload/f_gif,q_auto/${publicIdClean}.gif`;
+      setProgress('vid', 90, 'Generando links...');
+
+      // ── 2. Construir URL MJPEG (entrega via Cloudinary transformation) ──
+      //    Usa f_mjpeg sobre el video subido — Cloudinary lo sirve al vuelo
+      const mjpegUrl = `https://res.cloudinary.com/${CLD_NAME}/video/upload/f_mjpeg,q_auto/${publicIdClean}.mjpg`;
+
+      // ── 3. Construir URL OGG (audio extraído) — se guarda pero NO se muestra ──
+      //    Usamos f_ogg (audio-only delivery) de Cloudinary
+      const oggUrl = `https://res.cloudinary.com/${CLD_NAME}/video/upload/f_ogg,q_auto/${publicIdClean}.ogg`;
+
+      // ── 4. Thumbnail del video ──
       const thumbUrl = `https://res.cloudinary.com/${CLD_NAME}/video/upload/f_jpg,q_auto,w_400,so_0/${publicIdClean}.jpg`;
 
-      // Limpiar nombre: quitar dobles extensiones tipo "video.png.mp4" → "video"
-      const cleanName = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.gif';
+      const cleanName = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.mjpeg';
 
       const fileObj = {
-        publicId: publicIdClean,
-        url:      gifUrl,
-        thumb:    thumbUrl,
-        name:     cleanName,
-        date:     new Date().toLocaleDateString('es-ES'),
-        duration: Math.round(duration) + 's'
+        publicId:  publicIdClean,
+        url:       mjpegUrl,   // link MJPEG — visible
+        oggUrl:    oggUrl,     // link OGG — guardado, NO visible en UI
+        thumb:     thumbUrl,
+        name:      cleanName,
+        date:      new Date().toLocaleDateString('es-ES'),
+        duration:  Math.round(duration) + 's'
       };
 
       setProgress('vid', 100, '¡Listo!');
       await window._conv.saveFile('videos', fileObj);
       setTimeout(() => showProgress('vid', false), 1200);
-      showToast('✓ Video convertido — link GIF generado', 'ok');
+      showToast('✓ Video procesado — link MJPEG generado', 'ok');
       document.getElementById('vid-file-input').value = '';
     } catch(e) {
       showProgress('vid', false);
@@ -982,117 +929,41 @@
     }
   }
 
-
-  // ── Upload MP4 (link directo) ─────────────────────────────────
-  async function handleMp4Upload(file) {
-    if (!file) return;
-    const files = window._conv.getUserFiles();
-    const limit = window._conv.limits.mp4s.count;
-    if ((files.mp4s || []).length >= limit) {
-      showToast('Límite alcanzado. Borrá videos para liberar espacio.', 'err'); return;
-    }
-
-    const allowed = ['video/mp4','video/webm','video/quicktime'];
-    if (!allowed.includes(file.type)) {
-      showToast('Solo se aceptan MP4, WEBM o MOV.', 'err'); return;
-    }
-
-    const duration = await getVideoDuration(file);
-    if (duration > 600) {
-      showToast('El video supera los 10 minutos máximos.', 'err'); return;
-    }
-
-    showProgressRaw('mp4', true);
-    setProgressRaw('mp4', 10, 'Preparando video...');
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', CLD_PRESET);
-      formData.append('folder', 'chmods/mp4s');
-
-      setProgressRaw('mp4', 20, 'Subiendo video...');
-
-      const res = await uploadWithProgress(
-        `https://api.cloudinary.com/v1_1/${CLD_NAME}/video/upload`,
-        formData,
-        (pct) => setProgressRaw('mp4', 20 + pct * 0.75, 'Subiendo...')
-      );
-
-      setProgressRaw('mp4', 97, 'Generando link...');
-
-      const publicIdClean = res.public_id;
-      // URL directa MP4
-      const mp4Url   = `https://res.cloudinary.com/${CLD_NAME}/video/upload/${publicIdClean}.mp4`;
-      const thumbUrl = `https://res.cloudinary.com/${CLD_NAME}/video/upload/f_jpg,q_auto,w_400,so_0/${publicIdClean}.jpg`;
-      const cleanName = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.mp4';
-
-      const fileObj = {
-        publicId: publicIdClean,
-        url:      mp4Url,
-        thumb:    thumbUrl,
-        name:     cleanName,
-        date:     new Date().toLocaleDateString('es-ES'),
-        duration: Math.round(duration) + 's',
-        pending:  true  // marca para mostrar aviso de espera
-      };
-
-      setProgressRaw('mp4', 100, '¡Listo!');
-      await window._conv.saveFile('mp4s', fileObj);
-      setTimeout(() => showProgressRaw('mp4', false), 1200);
-      showToast('✓ Link MP4 generado — esperá antes de usarlo', 'ok');
-      document.getElementById('mp4-file-input').value = '';
-    } catch(e) {
-      showProgressRaw('mp4', false);
-      showToast('Error al subir. Intentá de nuevo.', 'err');
-      console.error(e);
-    }
-  }
-
-  // Helpers de progreso para mp4 (no comparte ID con img/vid)
-  function showProgressRaw(type, show) {
-    document.getElementById(type + '-progress-wrap').style.display = show ? 'block' : 'none';
-  }
-  function setProgressRaw(type, pct, label) {
-    const p = Math.round(pct);
-    document.getElementById(type + '-progress-fill').style.width = p + '%';
-    document.getElementById(type + '-progress-pct').textContent  = p + '%';
-    document.getElementById(type + '-progress-label').textContent = label;
-  }
-
-
+  // ── Render galerías ───────────────────────────────────────────
   function renderGallery(type, files) {
-    const elId = type === 'images' ? 'img-gallery' : type === 'videos' ? 'vid-gallery' : 'mp4-gallery';
-    const el = document.getElementById(elId);
+    const elId = type === 'images' ? 'img-gallery' : 'vid-gallery';
+    const el   = document.getElementById(elId);
     if (!el) return;
     if (!files || files.length === 0) {
       el.innerHTML = `<div class="gallery-empty">Todavía no tenés archivos. ¡Subí uno para empezar!</div>`;
       return;
     }
-    el.innerHTML = `<div class="gallery-grid">${files.map(f => `
+    el.innerHTML = `<div class="gallery-grid">${files.map(f => {
+      const isMjpeg = type === 'videos';
+      return `
       <div class="gallery-card">
         <img class="gallery-thumb" src="${f.thumb || f.url}" alt="${f.name}" loading="lazy" onerror="this.style.background='var(--bg3)'" />
         <div class="gallery-info">
+          ${isMjpeg ? `<div class="mjpeg-badge">MJPEG</div>` : ''}
           <div class="gallery-name" title="${f.name}">${f.name}</div>
           <div class="gallery-date">${f.date}${f.duration ? ' · ' + f.duration : ''}</div>
           <div class="gallery-actions">
-            <button class="gal-btn" onclick="openPreview('${f.url}','${f.name}','${type}',${!!f.pending})">Ver</button>
+            <button class="gal-btn" onclick="openPreview('${f.url}','${f.name}','${type}')">Ver</button>
             <button class="gal-btn" onclick="copyLink('${f.url}')">Copiar</button>
             <button class="gal-btn del" onclick="deleteFile('${type}','${f.publicId}')">Borrar</button>
           </div>
         </div>
-      </div>`).join('')}</div>`;
+      </div>`;
+    }).join('')}</div>`;
   }
 
   function updateCounters() {
     const files = window._conv.getUserFiles();
     const imgs  = (files.images || []).length;
     const vids  = (files.videos || []).length;
-    const mp4s  = (files.mp4s   || []).length;
 
     document.getElementById('img-count').textContent = `${imgs} / ${window._conv.limits.images.count}`;
     document.getElementById('vid-count').textContent = `${vids} / ${window._conv.limits.videos.count}`;
-    document.getElementById('mp4-count').textContent = `${mp4s} / ${window._conv.limits.mp4s.count}`;
 
     const setPct = (fillId, count, limit) => {
       const pct  = (count / limit) * 100;
@@ -1103,23 +974,26 @@
     };
     setPct('img-fill', imgs, window._conv.limits.images.count);
     setPct('vid-fill', vids, window._conv.limits.videos.count);
-    setPct('mp4-fill', mp4s, window._conv.limits.mp4s.count);
   }
 
   // ── Acciones de galería ───────────────────────────────────────
-  function openPreview(url, name, type, pending) {
-    const modal = document.getElementById('preview-modal');
+  function openPreview(url, name, type) {
+    const modal   = document.getElementById('preview-modal');
     const content = document.getElementById('preview-content');
     document.getElementById('preview-title').textContent = name;
-    const isMp4 = url.endsWith('.mp4');
-    const waitNote = pending || isMp4 ? `
-      <div style="display:flex;gap:.5rem;align-items:flex-start;background:rgba(232,130,12,.07);border:1px solid rgba(232,130,12,.25);border-radius:8px;padding:.65rem .85rem;margin-bottom:.8rem;font-size:.78rem;color:var(--dim);line-height:1.5;text-align:left">
-        <span style="flex-shrink:0">⏳</span>
-        <span>Esperá a que el video aparezca aquí antes de utilizar el link. Si todavía no carga, aguardá unos segundos y volvé a intentar.</span>
-      </div>` : '';
-    content.innerHTML = waitNote + `
-      <img src="${url}" alt="${name}" style="max-width:100%;max-height:340px;border-radius:8px;background:var(--bg3);display:${isMp4?'none':'block'}" />
-      ${isMp4 ? `<video src="${url}" controls style="max-width:100%;max-height:340px;border-radius:8px;background:var(--bg3);display:block;margin:0 auto"></video>` : ''}
+
+    // Para MJPEG mostramos el video original (thumb) como referencia visual,
+    // y el link copiable es el MJPEG. No se expone el OGG en ningún momento.
+    const isMjpeg = type === 'videos';
+    content.innerHTML = `
+      <img src="${url}" alt="${name}"
+        style="max-width:100%;max-height:340px;border-radius:8px;background:var(--bg3);display:block;margin:0 auto"
+        onerror="this.style.display='none';document.getElementById('vid-fallback-note').style.display='flex'" />
+      ${isMjpeg ? `
+        <div id="vid-fallback-note" style="display:none;gap:.5rem;align-items:flex-start;background:rgba(232,130,12,.07);border:1px solid rgba(232,130,12,.25);border-radius:8px;padding:.65rem .85rem;margin-bottom:.8rem;font-size:.78rem;color:var(--dim);line-height:1.5;text-align:left">
+          <span style="flex-shrink:0">ℹ️</span>
+          <span>La previsualización MJPEG no está disponible en el navegador. Usá el link directamente en CH Images.</span>
+        </div>` : ''}
       <div class="preview-url" style="margin-top:.8rem">
         <input type="text" value="${url}" readonly onclick="this.select()" />
         <button class="preview-copy-btn" onclick="copyLink('${url}')">Copiar link</button>
@@ -1153,11 +1027,8 @@
         if (e.lengthComputable) onProgress(e.loaded / e.total);
       });
       xhr.addEventListener('load', () => {
-        if (xhr.status === 200) {
-          resolve(JSON.parse(xhr.responseText));
-        } else {
-          reject(new Error('Upload failed: ' + xhr.status));
-        }
+        if (xhr.status === 200) resolve(JSON.parse(xhr.responseText));
+        else reject(new Error('Upload failed: ' + xhr.status));
       });
       xhr.addEventListener('error', reject);
       xhr.send(formData);
@@ -1168,10 +1039,7 @@
     return new Promise(resolve => {
       const video = document.createElement('video');
       video.preload = 'metadata';
-      video.onloadedmetadata = () => {
-        URL.revokeObjectURL(video.src);
-        resolve(video.duration);
-      };
+      video.onloadedmetadata = () => { URL.revokeObjectURL(video.src); resolve(video.duration); };
       video.onerror = () => resolve(0);
       video.src = URL.createObjectURL(file);
     });
@@ -1198,7 +1066,7 @@
   }
 
   // ── Drag & Drop ───────────────────────────────────────────────
-  ['img-drop-zone','vid-drop-zone','mp4-drop-zone'].forEach(id => {
+  ['img-drop-zone','vid-drop-zone'].forEach(id => {
     const zone = document.getElementById(id);
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
     zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
@@ -1207,8 +1075,7 @@
       const file = e.dataTransfer.files[0];
       if (!file) return;
       if (id === 'img-drop-zone') handleImageUpload(file);
-      else if (id === 'vid-drop-zone') handleVideoUpload(file);
-      else handleMp4Upload(file);
+      else handleVideoUpload(file);
     });
   });
 </script>
