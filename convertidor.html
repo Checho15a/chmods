@@ -8,6 +8,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
+  <!-- FFmpeg.wasm para conversión local sin servidores -->
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -695,7 +698,7 @@
 
       <div class="info-note">
         <span style="flex-shrink:0">ℹ️</span>
-        <span>Al subir el MP4 se generan dos recursos en Cloudinary: el <strong>link .mjpeg</strong> (visible y copiable) y el <strong>audio .ogg</strong> (procesado internamente). Solo verás y podrás copiar el link MJPEG.</span>
+        <span>Al subir el MP4, tu navegador lo convierte localmente a MJPEG y WAV, y se suben a Catbox. Solo verás y podrás copiar el link MJPEG.</span>
       </div>
 
       <div class="gallery-title">Tus videos convertidos</div>
@@ -853,7 +856,7 @@
     }
   }
 
-  // ── Upload video MP4 → genera link MJPEG (visible) + OGG (oculto) ──
+  // ── Upload video MP4 → FFmpeg Local → Catbox.moe (MJPEG + WAV) ──
   async function handleVideoUpload(file) {
     if (!file) return;
     const files = window._conv.getUserFiles();
@@ -867,50 +870,68 @@
       showToast('Solo se aceptan archivos MP4.', 'err'); return;
     }
 
-    // Verificar duración máxima (10 min)
     const duration = await getVideoDuration(file);
     if (duration > 600) {
       showToast('El video supera los 10 minutos máximos.', 'err'); return;
     }
 
     showProgress('vid', true);
-    setProgress('vid', 5, 'Preparando video...');
+    setProgress('vid', 5, 'Cargando motor de conversión...');
 
     try {
-      // ── 1. Subir el MP4 original a Cloudinary ──
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', CLD_PRESET);
-      formData.append('folder', 'chmods/videos');
+      // 1. Cargar FFmpeg
+      const { createFFmpeg, fetchFile } = FFmpeg;
+      if (!window.ffmpeg) {
+        window.ffmpeg = createFFmpeg({ log: true });
+        await window.ffmpeg.load();
+      }
+      const ffmpeg = window.ffmpeg;
 
-      setProgress('vid', 15, 'Subiendo MP4...');
+      // 2. Escribir archivo en memoria virtual
+      ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(file));
 
-      const res = await uploadWithProgress(
-        `https://api.cloudinary.com/v1_1/${CLD_NAME}/video/upload`,
-        formData,
-        (pct) => setProgress('vid', 15 + pct * 0.72, 'Subiendo...')
-      );
+      setProgress('vid', 20, 'Convirtiendo a MJPEG (Esto puede tardar)...');
+      
+      // 3. Convertir a MJPEG (24 FPS, calidad buena)
+      await ffmpeg.run('-i', 'input.mp4', '-vcodec', 'mjpeg', '-q:v', '5', '-r', '24', 'output.mjpeg');
+      
+      setProgress('vid', 60, 'Extrayendo audio WAV...');
+      
+      // 4. Convertir a WAV
+      await ffmpeg.run('-i', 'input.mp4', '-vn', '-acodec', 'pcm_s16le', '-ar', '44100', '-ac', '2', 'output.wav');
 
-      const publicIdClean = res.public_id;
-      setProgress('vid', 90, 'Generando links...');
+      setProgress('vid', 75, 'Extrayendo miniatura...');
+      // 5. Extraer 1 frame para la miniatura
+      await ffmpeg.run('-i', 'input.mp4', '-ss', '00:00:00', '-vframes', '1', 'thumb.jpg');
 
-      // ── 2. Construir URL MJPEG (entrega via Cloudinary transformation) ──
-      //    Usa f_mjpeg sobre el video subido — Cloudinary lo sirve al vuelo
-      const mjpegUrl = `https://res.cloudinary.com/${CLD_NAME}/video/upload/f_mjpeg,q_auto/${publicIdClean}.mjpg`;
+      setProgress('vid', 85, 'Subiendo archivos a la nube...');
 
-      // ── 3. Construir URL OGG (audio extraído) — se guarda pero NO se muestra ──
-      //    Usamos f_ogg (audio-only delivery) de Cloudinary
-      const oggUrl = `https://res.cloudinary.com/${CLD_NAME}/video/upload/f_ogg,q_auto/${publicIdClean}.ogg`;
+      // 6. Leer archivos de memoria
+      const mjpegData = ffmpeg.FS('readFile', 'output.mjpeg');
+      const wavData = ffmpeg.FS('readFile', 'output.wav');
+      const thumbData = ffmpeg.FS('readFile', 'thumb.jpg');
 
-      // ── 4. Thumbnail del video ──
-      const thumbUrl = `https://res.cloudinary.com/${CLD_NAME}/video/upload/f_jpg,q_auto,w_400,so_0/${publicIdClean}.jpg`;
+      const mjpegBlob = new Blob([mjpegData.buffer], { type: 'video/x-motion-jpeg' });
+      const wavBlob = new Blob([wavData.buffer], { type: 'audio/wav' });
+      const thumbBlob = new Blob([thumbData.buffer], { type: 'image/jpeg' });
+
+      // 7. Subir a Catbox
+      const mjpegUrl = await uploadToCatbox(mjpegBlob, 'video.mjpeg');
+      const wavUrl = await uploadToCatbox(wavBlob, 'audio.wav');
+      const thumbUrl = await uploadToCatbox(thumbBlob, 'thumb.jpg');
+
+      // 8. Limpiar memoria virtual
+      ffmpeg.FS('unlink', 'input.mp4');
+      ffmpeg.FS('unlink', 'output.mjpeg');
+      ffmpeg.FS('unlink', 'output.wav');
+      ffmpeg.FS('unlink', 'thumb.jpg');
 
       const cleanName = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.mjpeg';
 
       const fileObj = {
-        publicId:  publicIdClean,
-        url:       mjpegUrl,   // link MJPEG — visible
-        oggUrl:    oggUrl,     // link OGG — guardado, NO visible en UI
+        publicId:  Date.now().toString(),
+        url:       mjpegUrl,
+        wavUrl:    wavUrl, 
         thumb:     thumbUrl,
         name:      cleanName,
         date:      new Date().toLocaleDateString('es-ES'),
@@ -920,13 +941,29 @@
       setProgress('vid', 100, '¡Listo!');
       await window._conv.saveFile('videos', fileObj);
       setTimeout(() => showProgress('vid', false), 1200);
-      showToast('✓ Video procesado — link MJPEG generado', 'ok');
+      showToast('✓ Video procesado nativamente', 'ok');
       document.getElementById('vid-file-input').value = '';
+
     } catch(e) {
       showProgress('vid', false);
-      showToast('Error al procesar. Intentá de nuevo.', 'err');
+      showToast('Error al procesar el video. Intentá de nuevo.', 'err');
       console.error(e);
     }
+  }
+
+  // Helper para subir a Catbox.moe
+  async function uploadToCatbox(blob, filename) {
+    const formData = new FormData();
+    formData.append('reqtype', 'fileupload');
+    formData.append('fileToUpload', blob, filename);
+
+    const res = await fetch('https://catbox.moe/user/api.php', {
+        method: 'POST',
+        body: formData
+    });
+    
+    if (!res.ok) throw new Error('Error al subir a Catbox');
+    return await res.text(); 
   }
 
   // ── Render galerías ───────────────────────────────────────────
