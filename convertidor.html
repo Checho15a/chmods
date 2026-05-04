@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- FFmpeg V12 (La versión moderna que soluciona el problema de SharedArrayBuffer de raíz) -->
+  <!-- FFmpeg V12 (Nativo, sin problemas de SharedArrayBuffer) -->
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js"></script>
   <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
 
@@ -856,8 +856,8 @@
     setProgress('vid', 5, 'Cargando motor FFmpeg en el navegador...');
 
     try {
-      // 1. Cargar el motor V12 nativo
-      const { FFmpeg } = window.FFmpeg;
+      // 1. Cargar el motor nativo V12
+      const { FFmpeg } = window.FFmpegWASM; // ¡El error de nombre de variable estaba aquí!
       const { fetchFile } = window.FFmpegUtil;
       
       if (!window.ffmpeg) {
@@ -873,12 +873,12 @@
 
       const baseName  = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
 
-      // 2. Escribir MP4 en memoria
+      // 2. Escribir MP4 en memoria virtual
       await ffmpeg.writeFile('input.mp4', await fetchFile(file));
 
       setProgress('vid', 20, 'Convirtiendo a MJPEG (Esto usará el CPU de tu PC)...');
 
-      // 3. Ejecutar conversión de video
+      // 3. Ejecutar comando de video
       await ffmpeg.exec([
         '-i', 'input.mp4',
         '-vcodec', 'mjpeg',
@@ -889,7 +889,7 @@
 
       setProgress('vid', 70, 'Extrayendo audio a formato WAV...');
 
-      // 4. Ejecutar conversión de audio
+      // 4. Ejecutar comando de audio
       await ffmpeg.exec([
         '-i', 'input.mp4',
         '-vn',
@@ -901,14 +901,14 @@
 
       setProgress('vid', 90, 'Preparando tus descargas...');
 
-      // 5. Leer archivos
+      // 5. Extraer archivos creados
       const mjpegData = await ffmpeg.readFile('output.mjpeg');
       const wavData   = await ffmpeg.readFile('output.wav');
 
-      const mjpegBlob = new Blob([mjpegData.buffer], { type: 'video/x-motion-jpeg' });
-      const wavBlob   = new Blob([wavData.buffer],   { type: 'audio/wav' });
+      const mjpegBlob = new Blob([mjpegData], { type: 'video/x-motion-jpeg' });
+      const wavBlob   = new Blob([wavData],   { type: 'audio/wav' });
 
-      // 6. Generar enlaces locales
+      // 6. Generar enlaces locales (Object URLs)
       const mjpegUrl = URL.createObjectURL(mjpegBlob);
       const wavUrl   = URL.createObjectURL(wavBlob);
 
@@ -919,7 +919,7 @@
 
       setProgress('vid', 100, '¡Descargando!');
       
-      // 8. Descarga 1
+      // 8. Forzar la descarga del video (.mjpeg)
       const a1 = document.createElement('a');
       a1.href = mjpegUrl;
       a1.download = `${baseName}.mjpeg`;
@@ -927,7 +927,7 @@
       a1.click();
       document.body.removeChild(a1);
 
-      // 9. Descarga 2
+      // 9. Forzar la descarga del audio (.wav)
       setTimeout(() => {
         const a2 = document.createElement('a');
         a2.href = wavUrl;
