@@ -8,15 +8,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- EL ENGAÑO JEDI: Obligatorio para que GitHub Pages no crashee -->
-  <script>
-    if (typeof SharedArrayBuffer === 'undefined') {
-      window.SharedArrayBuffer = ArrayBuffer;
-    }
-  </script>
-
-  <!-- FFmpeg.wasm (Versión Clásica 0.9.8 - 100% compatible con el parche de arriba) -->
-  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.9.8/dist/ffmpeg.min.js"></script>
+  <!-- FFmpeg V12 (La versión moderna que soluciona el problema de SharedArrayBuffer de raíz) -->
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js"></script>
+  <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
 
   <!-- Firebase (Solo Auth y Base de datos para Imágenes) -->
   <script type="module">
@@ -862,66 +856,70 @@
     setProgress('vid', 5, 'Cargando motor FFmpeg en el navegador...');
 
     try {
-      // 1. Cargar FFmpeg.wasm (Pareja dorada: 0.9.8 con núcleo 0.8.5)
-      const { createFFmpeg, fetchFile } = FFmpeg;
+      // 1. Cargar el motor V12 nativo
+      const { FFmpeg } = window.FFmpeg;
+      const { fetchFile } = window.FFmpegUtil;
+      
       if (!window.ffmpeg) {
-        window.ffmpeg = createFFmpeg({
-          log: true,
-          corePath: 'https://unpkg.com/@ffmpeg/core@0.8.5/dist/ffmpeg-core.js'
+        window.ffmpeg = new FFmpeg();
+        window.ffmpeg.on('log', ({ message }) => console.log(message));
+        
+        await window.ffmpeg.load({
+          coreURL: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js',
+          wasmURL: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm'
         });
-        await window.ffmpeg.load();
       }
       const ffmpeg = window.ffmpeg;
 
       const baseName  = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
 
-      // 2. Escribir MP4 en memoria virtual de FFmpeg
-      ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(file));
+      // 2. Escribir MP4 en memoria
+      await ffmpeg.writeFile('input.mp4', await fetchFile(file));
 
       setProgress('vid', 20, 'Convirtiendo a MJPEG (Esto usará el CPU de tu PC)...');
 
-      // 3. Convertir a MJPEG — 24 FPS, calidad buena (q:v 5)
-      await ffmpeg.run(
+      // 3. Ejecutar conversión de video
+      await ffmpeg.exec([
         '-i', 'input.mp4',
         '-vcodec', 'mjpeg',
         '-q:v', '5',
         '-r', '24',
         'output.mjpeg'
-      );
+      ]);
 
       setProgress('vid', 70, 'Extrayendo audio a formato WAV...');
 
-      // 4. Extraer audio a WAV (PCM 16-bit, 44100 Hz, estéreo)
-      await ffmpeg.run(
+      // 4. Ejecutar conversión de audio
+      await ffmpeg.exec([
         '-i', 'input.mp4',
         '-vn',
         '-acodec', 'pcm_s16le',
         '-ar', '44100',
         '-ac', '2',
         'output.wav'
-      );
+      ]);
 
       setProgress('vid', 90, 'Preparando tus descargas...');
 
-      // 5. Leer archivos desde la memoria virtual (Retorna Uint8Array en 0.9.8)
-      const mjpegData = ffmpeg.FS('readFile', 'output.mjpeg');
-      const wavData   = ffmpeg.FS('readFile', 'output.wav');
+      // 5. Leer archivos
+      const mjpegData = await ffmpeg.readFile('output.mjpeg');
+      const wavData   = await ffmpeg.readFile('output.wav');
 
       const mjpegBlob = new Blob([mjpegData.buffer], { type: 'video/x-motion-jpeg' });
       const wavBlob   = new Blob([wavData.buffer],   { type: 'audio/wav' });
 
-      // 6. Generar enlaces locales (Object URLs)
+      // 6. Generar enlaces locales
       const mjpegUrl = URL.createObjectURL(mjpegBlob);
       const wavUrl   = URL.createObjectURL(wavBlob);
 
-      // 7. Limpiar memoria virtual de FFmpeg
-      ffmpeg.FS('unlink', 'input.mp4');
-      ffmpeg.FS('unlink', 'output.mjpeg');
-      ffmpeg.FS('unlink', 'output.wav');
+      // 7. Limpiar
+      await ffmpeg.deleteFile('input.mp4');
+      await ffmpeg.deleteFile('output.mjpeg');
+      await ffmpeg.deleteFile('output.wav');
 
       setProgress('vid', 100, '¡Descargando!');
       
-      // 8. Forzar la descarga del primer archivo (.mjpeg)
+      // 8. Descarga 1
       const a1 = document.createElement('a');
       a1.href = mjpegUrl;
       a1.download = `${baseName}.mjpeg`;
@@ -929,7 +927,7 @@
       a1.click();
       document.body.removeChild(a1);
 
-      // 9. Forzar la descarga del segundo archivo (.wav) con un ligero retraso
+      // 9. Descarga 2
       setTimeout(() => {
         const a2 = document.createElement('a');
         a2.href = wavUrl;
@@ -938,7 +936,6 @@
         a2.click();
         document.body.removeChild(a2);
         
-        // Finalizar proceso UI
         setTimeout(() => {
             showProgress('vid', false);
             document.getElementById('vid-success-action').style.display = 'block';
