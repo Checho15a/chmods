@@ -9,7 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <!-- FFmpeg v0.11.6 wrapper + core SINGLE-THREAD explícito -->
-  <!-- v0.11 corre en el hilo principal, sin Workers, sin CORS -->
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 
   <!-- Firebase (Solo Auth y Base de datos para Imágenes) -->
@@ -844,93 +843,83 @@
   // ── Convertir video MP4 → Localmente a .mjpeg y .wav ────────
   async function handleVideoUpload(file) {
     if (!file) return;
+
     if (file.type !== 'video/mp4') {
       showToast('Solo se aceptan archivos MP4.', 'err'); return;
     }
+
     document.getElementById('vid-success-action').style.display = 'none';
     showProgress('vid', true);
     setProgress('vid', 5, 'Cargando motor FFmpeg en el navegador...');
-    
+
     try {
-      // ── 1. API de v0.11: viene directo de window.FFmpeg ──────────
-      //   window.FFmpeg es el objeto que expone ffmpeg.min.js de v0.11
       const { createFFmpeg, fetchFile } = window.FFmpeg;
-      
-      // ── 2. Instanciar UNA SOLA VEZ ───────────────────────────────
+
       if (!window._ffmpegInstance) {
         window._ffmpegInstance = createFFmpeg({
-          // ★ CLAVE: apuntar al core SINGLE-THREAD de v0.11
-          // Esto evita Workers y SharedArrayBuffer completamente
+          // El núcleo single-thread
           corePath: 'https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js',
+          // LA MAGIA QUE ARREGLA EL ERROR PROXY_MAIN:
+          mainName: 'main', 
           log: false,
         });
       }
       const ffmpeg = window._ffmpegInstance;
-      
-      // ── 3. Cargar solo si no está listo ──────────────────────────
+
       if (!ffmpeg.isLoaded()) {
         setProgress('vid', 10, 'Descargando núcleo WASM (~30 MB, solo la primera vez)...');
         await ffmpeg.load();
       }
-      
-      // ── 4. Nombre base limpio ────────────────────────────────────
+
       const baseName = file.name
         .replace(/(\.[a-zA-Z0-9]+)+$/, '')
         .replace(/[^a-zA-Z0-9_-]/g, '_');
-        
-      // ── 5. Escribir MP4 en el FS virtual ─────────────────────────
+
       setProgress('vid', 20, 'Leyendo archivo de entrada...');
       ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(file));
-      
-      // ── 6. Convertir a MJPEG ─────────────────────────────────────
+
       setProgress('vid', 30, 'Convirtiendo a MJPEG (esto usa el CPU de tu PC)...');
       await ffmpeg.run(
-        '-i',
-        'input.mp4',
+        '-i', 'input.mp4',
         '-vcodec', 'mjpeg',
-        '-q:v',    '5',
-        '-r',      '24',
+        '-q:v', '5',
+        '-r', '24',
         'output.mjpeg'
       );
-      
-      // ── 7. Extraer audio a WAV ───────────────────────────────────
+
       setProgress('vid', 70, 'Extrayendo audio a WAV...');
       await ffmpeg.run(
-        '-i',
-        'input.mp4',
+        '-i', 'input.mp4',
         '-vn',
         '-acodec', 'pcm_s16le',
-        '-ar',     '44100',
-        '-ac',     '2',
+        '-ar', '44100',
+        '-ac', '2',
         'output.wav'
       );
-      
-      // ── 8. Leer archivos generados ───────────────────────────────
+
       setProgress('vid', 88, 'Preparando archivos para descarga...');
       const mjpegData = ffmpeg.FS('readFile', 'output.mjpeg');
       const wavData   = ffmpeg.FS('readFile', 'output.wav');
-      
-      // ── 9. Crear Blob URLs ───────────────────────────────────────
+
       const mjpegBlob = new Blob([mjpegData.buffer], { type: 'video/x-motion-jpeg' });
       const wavBlob   = new Blob([wavData.buffer],   { type: 'audio/wav' });
+      
       const mjpegUrl  = URL.createObjectURL(mjpegBlob);
       const wavUrl    = URL.createObjectURL(wavBlob);
-      
-      // ── 10. Limpiar FS virtual ───────────────────────────────────
+
       ffmpeg.FS('unlink', 'input.mp4');
       ffmpeg.FS('unlink', 'output.mjpeg');
       ffmpeg.FS('unlink', 'output.wav');
-      
-      // ── 11. Descargar MJPEG ──────────────────────────────────────
+
       setProgress('vid', 95, '¡Descargando archivos!');
+      
       const a1 = document.createElement('a');
       a1.href     = mjpegUrl;
       a1.download = `${baseName}.mjpeg`;
       document.body.appendChild(a1);
       a1.click();
       document.body.removeChild(a1);
-      
-      // ── 12. Descargar WAV con 500 ms de delay ───────────────────
+
       setTimeout(() => {
         const a2 = document.createElement('a');
         a2.href     = wavUrl;
@@ -938,10 +927,12 @@
         document.body.appendChild(a2);
         a2.click();
         document.body.removeChild(a2);
+
         setTimeout(() => {
           URL.revokeObjectURL(mjpegUrl);
           URL.revokeObjectURL(wavUrl);
         }, 5000);
+
         setTimeout(() => {
           setProgress('vid', 100, '¡Listo!');
           setTimeout(() => {
@@ -951,7 +942,9 @@
           }, 600);
         }, 300);
       }, 500);
+
       document.getElementById('vid-file-input').value = '';
+
     } catch(e) {
       showProgress('vid', false);
       showToast('Error al convertir el video. Revisá la consola.', 'err');
@@ -961,7 +954,7 @@
 
   // ── Render galerías (Solo imágenes ahora) ─────────────────────────
   function renderGallery(type, files) {
-    if(type === 'videos') return; // Ya no mostramos galería de videos
+    if(type === 'videos') return;
 
     const elId = 'img-gallery';
     const el   = document.getElementById(elId);
