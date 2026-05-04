@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- FFmpeg.wasm (Versión principal compatible con Single-Thread) -->
-  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+  <!-- FFmpeg.wasm (Versión 0.9.8 Clásica - 100% compatible con GitHub Pages) -->
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.9.8/dist/ffmpeg.min.js"></script>
 
   <!-- Firebase (Solo Auth y Base de datos para Imágenes) -->
   <script type="module">
@@ -855,12 +855,12 @@
     setProgress('vid', 5, 'Cargando motor FFmpeg en el navegador...');
 
     try {
-      // 1. Cargar FFmpeg.wasm (Versión súper compatible Single-Thread)
+      // 1. Cargar FFmpeg.wasm (Pareja dorada 0.9.8 con 0.8.5)
       const { createFFmpeg, fetchFile } = FFmpeg;
       if (!window.ffmpeg) {
         window.ffmpeg = createFFmpeg({
           log: true,
-          corePath: 'https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js'
+          corePath: 'https://unpkg.com/@ffmpeg/core@0.8.5/dist/ffmpeg-core.js'
         });
         await window.ffmpeg.load();
       }
