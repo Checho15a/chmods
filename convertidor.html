@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- FFmpeg V12 NATIVO + Utilidades para burlar el CORS (toBlobURL) -->
+  <!-- FFmpeg V12 NATIVO + Utilidades -->
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js"></script>
   <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
 
@@ -575,14 +575,19 @@
       }
       const ffmpeg = window._ffmpegInstance;
 
-      // 2. EL TRUCO MAGICO: Descargar los archivos y convertirlos en blobs locales 
+      // 2. EL TRUCO MAGICO: Descargar los archivos, INCLUIDO el Worker, y convertirlos en blobs locales 
       // Esto hace que el navegador NO bloquee el Worker por razones de CORS
       if (!ffmpeg.loaded) {
         setProgress('vid', 10, 'Descargando núcleo (solo la primera vez)...');
-        const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+        
+        const coreBaseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+        const ffmpegBaseURL = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/umd';
+        
         await ffmpeg.load({
-          coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-          wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
+          coreURL: await toBlobURL(`${coreBaseURL}/ffmpeg-core.js`, 'text/javascript'),
+          wasmURL: await toBlobURL(`${coreBaseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+          // ¡ESTA ES LA LÍNEA QUE ARREGLA EL ERROR DEL WORKER CORS!
+          classWorkerURL: await toBlobURL(`${ffmpegBaseURL}/814.ffmpeg.js`, 'text/javascript')
         });
       }
 
