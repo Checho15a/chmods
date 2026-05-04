@@ -8,7 +8,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- FFmpeg.wasm (Versión Clásica 0.9.8 - 100% compatible con GitHub Pages) -->
+  <!-- EL ENGAÑO JEDI: Obligatorio para que GitHub Pages no crashee -->
+  <script>
+    if (typeof SharedArrayBuffer === 'undefined') {
+      window.SharedArrayBuffer = ArrayBuffer;
+    }
+  </script>
+
+  <!-- FFmpeg.wasm (Versión Clásica 0.9.8 - 100% compatible con el parche de arriba) -->
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.9.8/dist/ffmpeg.min.js"></script>
 
   <!-- Firebase (Solo Auth y Base de datos para Imágenes) -->
@@ -684,7 +691,7 @@
 
       <div class="info-note">
         <span style="flex-shrink:0">ℹ️</span>
-        <span>El proceso de conversion de video usa los recursos de tu computadora. Si el video es muy largo o tu PC es lenta, ten paciencia hasta que llegue al 100%.</span>
+        <span>El proceso de conversión de video usa los recursos de tu computadora. Si el video es muy largo o tu PC es lenta, ten paciencia hasta que llegue al 100%.</span>
       </div>
 
     </div>
