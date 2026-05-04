@@ -8,11 +8,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- FFmpeg V12 (Nativo, sin problemas de SharedArrayBuffer) -->
+  <!-- FFmpeg v0.12.6 — UMD single-thread, sin SharedArrayBuffer, funciona en GitHub Pages -->
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js"></script>
   <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
 
-  <!-- Firebase (Solo Auth y Base de datos para Imágenes) -->
+  <!-- Firebase (Solo Auth y Firestore para imágenes) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
@@ -39,12 +39,10 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    // Límites de almacenamiento (Solo para imágenes)
     const LIMITS = {
-      images: { count: 30, label: '30 imágenes JPG'   }
+      images: { count: 30, label: '30 imágenes JPG' }
     };
 
-    // Cloudinary config (solo imágenes)
     const CLD = {
       cloudName:    'djjl0okdo',
       uploadPreset: 'chmods_upload',
@@ -53,7 +51,6 @@
     let _user      = null;
     let _userFiles = { images: [] };
 
-    // Exponer al scope global
     window._conv = {
       cld:          CLD,
       limits:       LIMITS,
@@ -98,7 +95,7 @@
       async loginUser(email, pw) {
         let resolvedEmail = email;
         if (!email.includes('@')) {
-          const q    = query(collection(db,'users'), where('usernameLower','==', email.toLowerCase()));
+          const q    = query(collection(db, 'users'), where('usernameLower', '==', email.toLowerCase()));
           const snap = await getDocs(q);
           if (snap.empty) throw { code: 'auth/username-not-found' };
           resolvedEmail = snap.docs[0].data().email;
@@ -133,7 +130,6 @@
       --white:   #111111;
       --accent:  #e8820c;
       --accent2: #f5a030;
-      --aglow:   rgba(232,130,12,.15);
       --red:     #c0392b;
       --green:   #27ae60;
       --r:       8px;
@@ -177,7 +173,7 @@
           rgba(255,255,255,.008) 120px, rgba(255,255,255,.008) 122px);
     }
 
-    /* ── AUTH SCREEN ── */
+    /* ── AUTH ── */
     #auth-screen {
       position: fixed; inset: 0; z-index: 50;
       display: flex; align-items: center; justify-content: center;
@@ -292,16 +288,16 @@
     }
     .logout-btn:hover { border-color: var(--red); color: var(--red); }
 
-    /* ── Main content ── */
+    /* Main */
     .main {
       max-width: 1000px; margin: 0 auto;
       padding: 2.5rem clamp(1rem, 4vw, 2rem) 5rem;
     }
 
-    /* Tabs de sección */
+    /* Tabs */
     .section-tabs {
       display: flex; gap: .5rem; margin-bottom: 2rem;
-      border-bottom: 1px solid var(--border); padding-bottom: 0;
+      border-bottom: 1px solid var(--border);
     }
     .section-tab {
       font-family: 'Nunito', sans-serif; font-size: .84rem; font-weight: 700;
@@ -311,11 +307,10 @@
     }
     .section-tab:hover { color: var(--text); }
     .section-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
     .section-panel { display: none; }
     .section-panel.active { display: block; }
 
-    /* Header de sección */
+    /* Sec header */
     .sec-header {
       display: flex; align-items: flex-start; justify-content: space-between;
       gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
@@ -332,9 +327,7 @@
       color: var(--dim); margin-bottom: .35rem;
       display: flex; justify-content: space-between;
     }
-    .storage-bar {
-      height: 5px; background: var(--bg3); border-radius: 999px; overflow: hidden;
-    }
+    .storage-bar { height: 5px; background: var(--bg3); border-radius: 999px; overflow: hidden; }
     .storage-fill {
       height: 100%; background: var(--accent); border-radius: 999px;
       transition: width .4s ease;
@@ -371,25 +364,21 @@
       background: var(--bg3); color: var(--dim2); border: 1px solid var(--border);
     }
 
-    /* Barra de progreso de upload */
-    #img-progress-wrap, #vid-progress-wrap {
-      display: none; margin-bottom: 1.2rem;
-    }
+    /* Progress */
+    #img-progress-wrap, #vid-progress-wrap { display: none; margin-bottom: 1.2rem; }
     .progress-label {
       font-family: 'DM Mono', monospace; font-size: .65rem;
       letter-spacing: .08em; text-transform: uppercase;
       color: var(--dim); margin-bottom: .4rem;
       display: flex; justify-content: space-between;
     }
-    .progress-bar {
-      height: 6px; background: var(--bg3); border-radius: 999px; overflow: hidden;
-    }
+    .progress-bar { height: 6px; background: var(--bg3); border-radius: 999px; overflow: hidden; }
     .progress-fill {
       height: 100%; width: 0%; background: var(--accent);
       border-radius: 999px; transition: width .2s ease;
     }
 
-    /* Success Panel */
+    /* Success panel */
     #vid-success-action {
       display: none;
       background: rgba(39,174,96,.08);
@@ -400,9 +389,22 @@
       margin-bottom: 1.5rem;
       animation: fadeIn 0.5s ease;
     }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
-    /* Galería de archivos */
+    /* Info note */
+    .info-note {
+      display: flex; gap: .6rem;
+      background: rgba(232,130,12,.06);
+      border: 1px solid rgba(232,130,12,.2);
+      border-radius: 9px; padding: .8rem 1rem;
+      margin-bottom: 1.2rem; font-size: .8rem;
+      color: var(--dim); line-height: 1.55;
+    }
+
+    /* Gallery */
     .gallery-title {
       font-family: 'DM Mono', monospace; font-size: .65rem;
       letter-spacing: .12em; text-transform: uppercase;
@@ -417,13 +419,13 @@
       border-radius: 10px;
     }
     .gallery-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 1rem;
     }
     .gallery-card {
       background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 10px; overflow: hidden;
-      transition: all var(--ease);
+      border-radius: 10px; overflow: hidden; transition: all var(--ease);
     }
     .gallery-card:hover {
       border-color: rgba(232,130,12,.35);
@@ -456,7 +458,7 @@
     .gal-btn:hover { border-color: var(--accent); color: var(--accent); }
     .gal-btn.del:hover { border-color: var(--red); color: var(--red); }
 
-    /* Toast notificación */
+    /* Toast */
     #toast {
       position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100;
       background: var(--bg2); border: 1px solid var(--border2);
@@ -472,7 +474,7 @@
     #toast.ok  { border-color: var(--green); }
     #toast.err { border-color: var(--red); }
 
-    /* Modal de preview */
+    /* Preview modal */
     #preview-modal {
       position: fixed; inset: 0; z-index: 200;
       background: rgba(0,0,0,.75); backdrop-filter: blur(6px);
@@ -507,9 +509,7 @@
       max-width: 100%; max-height: 400px; border-radius: 8px;
       background: var(--bg3); display: block; margin: 0 auto;
     }
-    .preview-url {
-      margin-top: .8rem; display: flex; gap: .5rem;
-    }
+    .preview-url { margin-top: .8rem; display: flex; gap: .5rem; }
     .preview-url input {
       flex: 1; background: var(--bg3); border: 1px solid var(--border2);
       border-radius: var(--r); padding: .5rem .75rem;
@@ -536,7 +536,7 @@
 <!-- Toast -->
 <div id="toast"></div>
 
-<!-- Preview Modal para Imágenes -->
+<!-- Preview Modal -->
 <div id="preview-modal">
   <div class="preview-box">
     <div class="preview-header">
@@ -584,7 +584,6 @@
 <!-- ── APP SCREEN ── -->
 <div id="app-screen">
 
-  <!-- Topbar -->
   <header class="topbar">
     <a href="https://checho15a.github.io/chmods/" class="topbar-back">← CH Images</a>
     <div class="topbar-sep"></div>
@@ -594,10 +593,8 @@
     <button class="logout-btn" onclick="doLogout()">Salir</button>
   </header>
 
-  <!-- Main -->
   <main class="main">
 
-    <!-- Tabs -->
     <div class="section-tabs">
       <button class="section-tab active" onclick="switchSection('images')">🖼️ Imágenes → JPG</button>
       <button class="section-tab" onclick="switchSection('videos')">🎞️ Videos → MJPEG</button>
@@ -622,7 +619,9 @@
       </div>
 
       <div class="upload-zone" id="img-drop-zone">
-        <input type="file" id="img-file-input" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/tiff,image/avif" onchange="handleImageUpload(this.files[0])" />
+        <input type="file" id="img-file-input"
+          accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/tiff,image/avif"
+          onchange="handleImageUpload(this.files[0])" />
         <div class="upload-icon">🖼️</div>
         <div class="upload-title">Arrastrá o hacé click para subir</div>
         <div class="upload-sub">Se convertirá automáticamente a JPG con link permanente</div>
@@ -646,7 +645,7 @@
       <div id="img-gallery"></div>
     </div>
 
-    <!-- ── PANEL VIDEOS → LOCAL CONVERT ── -->
+    <!-- ── PANEL VIDEOS ── -->
     <div class="section-panel" id="panel-videos">
       <div class="sec-header">
         <div class="sec-header-left">
@@ -656,7 +655,8 @@
       </div>
 
       <div class="upload-zone" id="vid-drop-zone">
-        <input type="file" id="vid-file-input" accept="video/mp4" onchange="handleVideoUpload(this.files[0])" />
+        <input type="file" id="vid-file-input" accept="video/mp4"
+          onchange="handleVideoUpload(this.files[0])" />
         <div class="upload-icon">🎞️</div>
         <div class="upload-title">Arrastrá o hacé click para convertir</div>
         <div class="upload-sub">Solo <strong>MP4</strong> — máximo 10 minutos recomendados</div>
@@ -674,27 +674,31 @@
         <div class="progress-bar"><div class="progress-fill" id="vid-progress-fill"></div></div>
       </div>
 
-      <!-- PANEL DE ÉXITO Y BOTÓN A LITTERBOX -->
+      <!-- Panel de éxito -->
       <div id="vid-success-action">
-        <h3 style="color: var(--green); margin-bottom: 0.5rem; font-family: 'Syne', sans-serif;">¡Archivos generados con éxito! 🎉</h3>
-        <p style="color: var(--dim); font-size: 0.9rem; margin-bottom: 1.2rem;">Tus archivos <strong style="color:var(--text)">.mjpeg</strong> y <strong style="color:var(--text)">.wav</strong> se están descargando a tu PC. Ahora súbelos gratis para obtener tus enlaces multijugador.</p>
-        <a href="https://litterbox.catbox.moe/" target="_blank" style="display: inline-block; background: var(--green); color: #fff; padding: 0.8rem 1.5rem; border-radius: 8px; font-family: 'Nunito', sans-serif; font-weight: 700; text-decoration: none; transition: background var(--ease);">
-           ☁️ Abrir Litterbox para Subir Archivos
+        <h3 style="color:var(--green);margin-bottom:.5rem;font-family:'Syne',sans-serif;">¡Archivos generados con éxito! 🎉</h3>
+        <p style="color:var(--dim);font-size:.9rem;margin-bottom:1.2rem;">
+          Tus archivos <strong style="color:var(--text)">.mjpeg</strong> y
+          <strong style="color:var(--text)">.wav</strong> se están descargando a tu PC.
+          Ahora súbelos gratis para obtener tus enlaces multijugador.
+        </p>
+        <a href="https://litterbox.catbox.moe/" target="_blank"
+          style="display:inline-block;background:var(--green);color:#fff;padding:.8rem 1.5rem;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;text-decoration:none;">
+          ☁️ Abrir Litterbox para subir archivos
         </a>
       </div>
 
       <div class="info-note">
         <span style="flex-shrink:0">ℹ️</span>
-        <span>El proceso de conversión de video usa los recursos de tu computadora. Si el video es muy largo o tu PC es lenta, ten paciencia hasta que llegue al 100%.</span>
+        <span>El proceso de conversión usa los recursos de tu computadora. La <strong>primera vez</strong> descarga el motor FFmpeg (~30 MB una sola vez). Si el video es largo, ten paciencia hasta que llegue al 100%.</span>
       </div>
-
     </div>
 
   </main>
 </div>
 
 <script>
-  // ── Cloudinary config (imágenes) ──────────────────────────────
+  // ── Cloudinary config (solo imágenes) ─────────────────────────
   const CLD_NAME   = 'djjl0okdo';
   const CLD_PRESET = 'chmods_upload';
 
@@ -702,14 +706,13 @@
   function applyTheme(dark) {
     document.body.classList.toggle('dark', dark);
     const icon = dark ? '🌙' : '☀️';
-    ['themeBtn','authThemeBtn'].forEach(id => {
+    ['themeBtn', 'authThemeBtn'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.textContent = icon;
     });
     localStorage.setItem('chTheme', dark ? 'dark' : 'light');
   }
   applyTheme(localStorage.getItem('chTheme') === 'dark');
-
   document.getElementById('themeBtn').addEventListener('click', () =>
     applyTheme(!document.body.classList.contains('dark')));
   document.getElementById('authThemeBtn').addEventListener('click', () =>
@@ -757,7 +760,6 @@
     }[code] || 'Error inesperado. Intentá de nuevo.';
   }
 
-  // ── Callbacks de Firebase Auth ────────────────────────────────
   window._onUserReady = function(user) {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app-screen').style.display  = 'block';
@@ -776,10 +778,11 @@
 
   // ── Tabs ──────────────────────────────────────────────────────
   function switchSection(sec) {
-    const secs = ['images','videos'];
-    document.querySelectorAll('.section-tab').forEach((t,i) =>
+    const secs = ['images', 'videos'];
+    document.querySelectorAll('.section-tab').forEach((t, i) =>
       t.classList.toggle('active', secs[i] === sec));
-    document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.section-panel').forEach(p =>
+      p.classList.remove('active'));
     document.getElementById('panel-' + sec).classList.add('active');
   }
 
@@ -791,8 +794,10 @@
     if ((files.images || []).length >= limit) {
       showToast('Límite de imágenes alcanzado. Borrá algunas.', 'err'); return;
     }
-
-    const allowedTypes = ['image/png','image/jpeg','image/webp','image/gif','image/bmp','image/tiff','image/avif'];
+    const allowedTypes = [
+      'image/png','image/jpeg','image/webp',
+      'image/gif','image/bmp','image/tiff','image/avif'
+    ];
     if (!allowedTypes.includes(file.type)) {
       showToast('Formato de imagen no soportado.', 'err'); return;
     }
@@ -807,7 +812,6 @@
       formData.append('folder', 'chmods/images');
 
       setProgress('img', 30, 'Subiendo imagen a la nube...');
-
       const res = await uploadWithProgress(
         `https://api.cloudinary.com/v1_1/${CLD_NAME}/image/upload`,
         formData,
@@ -815,21 +819,19 @@
       );
 
       setProgress('img', 92, 'Generando link JPG permanente...');
-
       const publicIdClean = res.public_id;
       const jpgUrl   = `https://res.cloudinary.com/${CLD_NAME}/image/upload/f_jpg,q_auto/${publicIdClean}.jpg`;
       const thumbUrl = `https://res.cloudinary.com/${CLD_NAME}/image/upload/f_jpg,q_auto,w_400/${publicIdClean}.jpg`;
       const cleanName = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.jpg';
 
-      const fileObj = {
+      await window._conv.saveFile('images', {
         publicId: publicIdClean,
         url:      jpgUrl,
         thumb:    thumbUrl,
         name:     cleanName,
         date:     new Date().toLocaleDateString('es-ES'),
-      };
+      });
 
-      await window._conv.saveFile('images', fileObj);
       setProgress('img', 100, '¡Listo!');
       setTimeout(() => showProgress('img', false), 1200);
       showToast('✓ Imagen subida y convertida a JPG', 'ok');
@@ -841,7 +843,12 @@
     }
   }
 
-  // ── Convertir video MP4 → Localmente a .mjpeg y .wav ────────
+  // ── Convertir video MP4 → MJPEG + WAV ────────────────────────
+  //
+  //   ★ Usa @ffmpeg/ffmpeg@0.12.6 (UMD) + @ffmpeg/core-st@0.12.6
+  //   ★ core-st = Single-Thread: NUNCA pide SharedArrayBuffer
+  //   ★ Funciona en GitHub Pages sin headers COOP/COEP
+  //
   async function handleVideoUpload(file) {
     if (!file) return;
 
@@ -849,169 +856,181 @@
       showToast('Solo se aceptan archivos MP4.', 'err'); return;
     }
 
-    // Ocultar panel de éxito si estaba visible
+    // Resetear UI
     document.getElementById('vid-success-action').style.display = 'none';
-
     showProgress('vid', true);
     setProgress('vid', 5, 'Cargando motor FFmpeg en el navegador...');
 
     try {
-      // 1. Cargar el motor nativo V12
-      const { FFmpeg } = window.FFmpegWASM; // ¡El error de nombre de variable estaba aquí!
+      // 1. Obtener clases del UMD global
+      //    window.FFmpegWASM  → lo inyecta ffmpeg@0.12.6/dist/umd/ffmpeg.js
+      //    window.FFmpegUtil  → lo inyecta util@0.12.1/dist/umd/index.js
+      const { FFmpeg }    = window.FFmpegWASM;
       const { fetchFile } = window.FFmpegUtil;
-      
-      if (!window.ffmpeg) {
-        window.ffmpeg = new FFmpeg();
-        window.ffmpeg.on('log', ({ message }) => console.log(message));
-        
-        await window.ffmpeg.load({
-          coreURL: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js',
-          wasmURL: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm'
+
+      // 2. Instanciar UNA SOLA VEZ; reutilizar en conversiones sucesivas
+      if (!window._ffmpegInstance) {
+        window._ffmpegInstance = new FFmpeg();
+        window._ffmpegInstance.on('log', ({ message }) =>
+          console.log('[ffmpeg]', message));
+      }
+      const ffmpeg = window._ffmpegInstance;
+
+      // 3. Cargar el core SINGLE-THREAD si todavía no está cargado
+      //    @ffmpeg/core-st compila sin Pthreads → nunca usa SharedArrayBuffer
+      if (!ffmpeg.loaded) {
+        setProgress('vid', 10, 'Descargando núcleo WASM (~30 MB, solo la primera vez)...');
+        await ffmpeg.load({
+          coreURL: 'https://unpkg.com/@ffmpeg/core-st@0.12.6/dist/umd/ffmpeg-core.js',
+          wasmURL: 'https://unpkg.com/@ffmpeg/core-st@0.12.6/dist/umd/ffmpeg-core.wasm',
         });
       }
-      const ffmpeg = window.ffmpeg;
 
-      const baseName  = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+      // 4. Nombre base seguro para los archivos de salida
+      const baseName = file.name
+        .replace(/(\.[a-zA-Z0-9]+)+$/, '')
+        .replace(/[^a-zA-Z0-9_-]/g, '_');
 
-      // 2. Escribir MP4 en memoria virtual
+      // 5. Escribir el MP4 en el sistema de archivos virtual de FFmpeg
+      setProgress('vid', 20, 'Leyendo archivo de entrada...');
       await ffmpeg.writeFile('input.mp4', await fetchFile(file));
 
-      setProgress('vid', 20, 'Convirtiendo a MJPEG (Esto usará el CPU de tu PC)...');
-
-      // 3. Ejecutar comando de video
+      // 6. Convertir a MJPEG (24 FPS, calidad q:v 5)
+      setProgress('vid', 30, 'Convirtiendo a MJPEG (esto usa el CPU de tu PC)...');
       await ffmpeg.exec([
-        '-i', 'input.mp4',
+        '-i',      'input.mp4',
         '-vcodec', 'mjpeg',
-        '-q:v', '5',
-        '-r', '24',
+        '-q:v',    '5',
+        '-r',      '24',
         'output.mjpeg'
       ]);
 
-      setProgress('vid', 70, 'Extrayendo audio a formato WAV...');
-
-      // 4. Ejecutar comando de audio
+      // 7. Extraer audio a WAV (PCM 16-bit, 44100 Hz, estéreo)
+      //    Formato nativo que lee el motor de Java / Minecraft
+      setProgress('vid', 70, 'Extrayendo audio a WAV...');
       await ffmpeg.exec([
-        '-i', 'input.mp4',
+        '-i',      'input.mp4',
         '-vn',
         '-acodec', 'pcm_s16le',
-        '-ar', '44100',
-        '-ac', '2',
+        '-ar',     '44100',
+        '-ac',     '2',
         'output.wav'
       ]);
 
-      setProgress('vid', 90, 'Preparando tus descargas...');
-
-      // 5. Extraer archivos creados
+      // 8. Leer los archivos generados desde el FS virtual
+      setProgress('vid', 88, 'Preparando archivos para descarga...');
       const mjpegData = await ffmpeg.readFile('output.mjpeg');
       const wavData   = await ffmpeg.readFile('output.wav');
 
+      // 9. Crear Blob URLs
       const mjpegBlob = new Blob([mjpegData], { type: 'video/x-motion-jpeg' });
       const wavBlob   = new Blob([wavData],   { type: 'audio/wav' });
+      const mjpegUrl  = URL.createObjectURL(mjpegBlob);
+      const wavUrl    = URL.createObjectURL(wavBlob);
 
-      // 6. Generar enlaces locales (Object URLs)
-      const mjpegUrl = URL.createObjectURL(mjpegBlob);
-      const wavUrl   = URL.createObjectURL(wavBlob);
-
-      // 7. Limpiar
+      // 10. Limpiar FS virtual para liberar memoria
       await ffmpeg.deleteFile('input.mp4');
       await ffmpeg.deleteFile('output.mjpeg');
       await ffmpeg.deleteFile('output.wav');
 
-      setProgress('vid', 100, '¡Descargando!');
-      
-      // 8. Forzar la descarga del video (.mjpeg)
+      // 11. Descargar MJPEG
+      setProgress('vid', 95, '¡Descargando archivos!');
       const a1 = document.createElement('a');
-      a1.href = mjpegUrl;
+      a1.href     = mjpegUrl;
       a1.download = `${baseName}.mjpeg`;
       document.body.appendChild(a1);
       a1.click();
       document.body.removeChild(a1);
 
-      // 9. Forzar la descarga del audio (.wav)
+      // 12. Descargar WAV con 500 ms de delay
+      //     (algunos navegadores bloquean dos descargas simultáneas)
       setTimeout(() => {
         const a2 = document.createElement('a');
-        a2.href = wavUrl;
+        a2.href     = wavUrl;
         a2.download = `${baseName}.wav`;
         document.body.appendChild(a2);
         a2.click();
         document.body.removeChild(a2);
-        
+
+        // Revocar Object URLs a los 5 s para no interrumpir la descarga
         setTimeout(() => {
+          URL.revokeObjectURL(mjpegUrl);
+          URL.revokeObjectURL(wavUrl);
+        }, 5000);
+
+        // Actualizar UI al finalizar
+        setTimeout(() => {
+          setProgress('vid', 100, '¡Listo!');
+          setTimeout(() => {
             showProgress('vid', false);
             document.getElementById('vid-success-action').style.display = 'block';
             showToast('✓ Archivos convertidos y descargados', 'ok');
-        }, 800);
+          }, 600);
+        }, 300);
+
       }, 500);
 
       document.getElementById('vid-file-input').value = '';
 
     } catch(e) {
       showProgress('vid', false);
-      showToast('Error al convertir el video. Revisa la consola o intenta con un video más pequeño.', 'err');
-      console.error(e);
+      showToast('Error al convertir el video. Revisá la consola.', 'err');
+      console.error('[handleVideoUpload]', e);
     }
   }
 
-  // ── Render galerías (Solo imágenes ahora) ─────────────────────────
+  // ── Render galería (solo imágenes) ────────────────────────────
   function renderGallery(type, files) {
-    if(type === 'videos') return; // Ya no mostramos galería de videos
-
-    const elId = 'img-gallery';
-    const el   = document.getElementById(elId);
+    if (type === 'videos') return; // Videos son descarga local, sin galería
+    const el = document.getElementById('img-gallery');
     if (!el) return;
     if (!files || files.length === 0) {
       el.innerHTML = `<div class="gallery-empty">Todavía no tenés imágenes. ¡Subí una para empezar!</div>`;
       return;
     }
-    el.innerHTML = `<div class="gallery-grid">${files.map(f => {
-      return `
+    el.innerHTML = `<div class="gallery-grid">${files.map(f => `
       <div class="gallery-card">
-        <img class="gallery-thumb" src="${f.thumb || f.url}" alt="${f.name}" loading="lazy" onerror="this.style.background='var(--bg3)'" />
+        <img class="gallery-thumb" src="${f.thumb || f.url}" alt="${f.name}" loading="lazy"
+          onerror="this.style.background='var(--bg3)'" />
         <div class="gallery-info">
           <div class="gallery-name" title="${f.name}">${f.name}</div>
           <div class="gallery-date">${f.date}</div>
           <div class="gallery-actions">
-            <button class="gal-btn" onclick="openPreview(${JSON.stringify(f)})">Ver</button>
+            <button class="gal-btn" onclick='openPreview(${JSON.stringify(f)})'>Ver</button>
             <button class="gal-btn" onclick="copyLink('${f.url}')">Copiar</button>
             <button class="gal-btn del" onclick="deleteFile('images','${f.publicId}')">Borrar</button>
           </div>
         </div>
-      </div>`;
-    }).join('')}</div>`;
+      </div>`).join('')}</div>`;
   }
 
   function updateCounters() {
     const files = window._conv.getUserFiles();
     const imgs  = (files.images || []).length;
-    
-    document.getElementById('img-count').textContent = `${imgs} / ${window._conv.limits.images.count}`;
-
-    const setPct = (fillId, count, limit) => {
-      const pct  = (count / limit) * 100;
-      const fill = document.getElementById(fillId);
-      if (!fill) return;
+    document.getElementById('img-count').textContent =
+      `${imgs} / ${window._conv.limits.images.count}`;
+    const pct  = (imgs / window._conv.limits.images.count) * 100;
+    const fill = document.getElementById('img-fill');
+    if (fill) {
       fill.style.width = pct + '%';
-      fill.className   = 'storage-fill' + (pct >= 90 ? ' full' : pct >= 70 ? ' warn' : '');
-    };
-    setPct('img-fill', imgs, window._conv.limits.images.count);
+      fill.className   = 'storage-fill' +
+        (pct >= 90 ? ' full' : pct >= 70 ? ' warn' : '');
+    }
   }
 
-  // ── Acciones de galería ───────────────────────────────────────
+  // ── Acciones galería ──────────────────────────────────────────
   function openPreview(fileData) {
     const f = typeof fileData === 'string' ? JSON.parse(fileData) : fileData;
-    const modal   = document.getElementById('preview-modal');
-    const content = document.getElementById('preview-content');
     document.getElementById('preview-title').textContent = f.name;
-
-    content.innerHTML = `
+    document.getElementById('preview-content').innerHTML = `
       <img src="${f.url}" alt="${f.name}"
-        style="max-width:100%;max-height:340px;border-radius:8px;background:var(--bg3);display:block;margin:0 auto" />
+        style="max-width:100%;max-height:340px;border-radius:8px;
+               background:var(--bg3);display:block;margin:0 auto" />
       <div class="preview-url" style="margin-top:.8rem">
         <input type="text" value="${f.url}" readonly onclick="this.select()" />
         <button class="preview-copy-btn" onclick="copyLink('${f.url}')">Copiar link</button>
       </div>`;
-
-    modal.classList.add('show');
+    document.getElementById('preview-modal').classList.add('show');
   }
 
   function closePreview() {
@@ -1031,7 +1050,7 @@
     showToast('Archivo eliminado del listado', 'ok');
   }
 
-  // ── Helpers ───────────────────────────────────────────────────
+  // ── Helpers generales ─────────────────────────────────────────
   function uploadWithProgress(url, formData, onProgress) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -1049,7 +1068,8 @@
   }
 
   function showProgress(type, show) {
-    document.getElementById(type + '-progress-wrap').style.display = show ? 'block' : 'none';
+    document.getElementById(type + '-progress-wrap').style.display =
+      show ? 'block' : 'none';
   }
 
   function setProgress(type, pct, label) {
@@ -1069,9 +1089,11 @@
   }
 
   // ── Drag & Drop ───────────────────────────────────────────────
-  ['img-drop-zone','vid-drop-zone'].forEach(id => {
+  ['img-drop-zone', 'vid-drop-zone'].forEach(id => {
     const zone = document.getElementById(id);
-    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragover', e => {
+      e.preventDefault(); zone.classList.add('dragover');
+    });
     zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
     zone.addEventListener('drop', e => {
       e.preventDefault(); zone.classList.remove('dragover');
