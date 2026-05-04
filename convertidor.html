@@ -8,10 +8,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- FFmpeg v0.11.6 wrapper + core SINGLE-THREAD explícito -->
-  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+  <!-- FFmpeg V12 NATIVO + Utilidades para burlar el CORS (toBlobURL) -->
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js"></script>
+  <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
 
-  <!-- Firebase (Solo Auth y Base de datos para Imágenes) -->
+  <!-- Firebase (Auth y Firestore) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
@@ -38,21 +39,12 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    // Límites de almacenamiento (Solo para imágenes)
-    const LIMITS = {
-      images: { count: 30, label: '30 imágenes JPG'   }
-    };
-
-    // Cloudinary config (solo imágenes)
-    const CLD = {
-      cloudName:    'djjl0okdo',
-      uploadPreset: 'chmods_upload',
-    };
+    const LIMITS = { images: { count: 30, label: '30 imágenes JPG' } };
+    const CLD = { cloudName: 'djjl0okdo', uploadPreset: 'chmods_upload' };
 
     let _user      = null;
     let _userFiles = { images: [] };
 
-    // Exponer al scope global
     window._conv = {
       cld:          CLD,
       limits:       LIMITS,
@@ -104,7 +96,6 @@
         }
         return (await signInWithEmailAndPassword(auth, resolvedEmail, pw)).user;
       },
-
       async logout() { await signOut(auth); }
     };
 
@@ -121,33 +112,16 @@
 
   <style>
     :root {
-      --bg:      #f4f4f2;
-      --bg2:     #ffffff;
-      --bg3:     #ebebeb;
-      --border:  #e0e0e0;
-      --border2: #cccccc;
-      --text:    #2a2a2a;
-      --dim:     #777;
-      --dim2:    #aaa;
-      --white:   #111111;
-      --accent:  #e8820c;
-      --accent2: #f5a030;
-      --aglow:   rgba(232,130,12,.15);
-      --red:     #c0392b;
-      --green:   #27ae60;
-      --r:       8px;
-      --ease:    .28s cubic-bezier(.4,0,.2,1);
+      --bg:      #f4f4f2; --bg2:     #ffffff; --bg3:     #ebebeb;
+      --border:  #e0e0e0; --border2: #cccccc; --text:    #2a2a2a;
+      --dim:     #777;    --dim2:    #aaa;    --white:   #111111;
+      --accent:  #e8820c; --accent2: #f5a030; --red:     #c0392b;
+      --green:   #27ae60; --r:       8px;     --ease:    .28s cubic-bezier(.4,0,.2,1);
     }
     .dark {
-      --bg:      #0e0e0e;
-      --bg2:     #161616;
-      --bg3:     #1e1e1e;
-      --border:  #2a2a2a;
-      --border2: #383838;
-      --text:    #e0e0e0;
-      --dim:     #a8a8a8;
-      --dim2:    #777;
-      --white:   #f0eeea;
+      --bg:      #0e0e0e; --bg2:     #161616; --bg3:     #1e1e1e;
+      --border:  #2a2a2a; --border2: #383838; --text:    #e0e0e0;
+      --dim:     #a8a8a8; --dim2:    #777;    --white:   #f0eeea;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -186,16 +160,9 @@
     }
     .auth-wrap { width: 100%; max-width: 380px; }
     .auth-logo-top { text-align: center; margin-bottom: 1.4rem; }
-    .auth-logo-top h1 {
-      font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800;
-      color: var(--white); line-height: 1;
-    }
+    .auth-logo-top h1 { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--white); line-height: 1; }
     .auth-logo-top h1 span { color: var(--accent); }
-    .auth-logo-top p {
-      font-family: 'DM Mono', monospace; font-size: .58rem;
-      letter-spacing: .18em; text-transform: uppercase; color: var(--dim);
-      margin-top: .35rem;
-    }
+    .auth-logo-top p { font-family: 'DM Mono', monospace; font-size: .58rem; letter-spacing: .18em; text-transform: uppercase; color: var(--dim); margin-top: .35rem; }
     .auth-card {
       background: var(--bg2); border: 1px solid var(--border);
       border-radius: 14px; padding: 1.8rem 1.6rem;
@@ -234,17 +201,12 @@
     }
     .auth-btn:hover { background: var(--accent2); transform: translateY(-1px); }
     .auth-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
-    .auth-msg {
-      font-size: .76rem; padding: .48rem .72rem;
-      border-radius: 6px; margin-bottom: .8rem; display: none;
-    }
+    .auth-msg { font-size: .76rem; padding: .48rem .72rem; border-radius: 6px; margin-bottom: .8rem; display: none; }
     .auth-msg.err { background: rgba(192,57,43,.1); border: 1px solid var(--red); color: var(--red); display: block; }
-    .auth-msg.ok  { background: rgba(39,174,96,.08); border: 1px solid var(--green); color: var(--green); display: block; }
 
     /* ── APP ── */
     #app-screen { display: none; position: relative; z-index: 1; min-height: 100vh; }
 
-    /* Topbar */
     .topbar {
       position: sticky; top: 0; z-index: 20;
       height: 54px; display: flex; align-items: center; gap: 1rem;
@@ -264,49 +226,30 @@
     }
     .topbar-back:hover { color: var(--accent); border-color: var(--accent); }
     .topbar-sep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
-    .topbar-title {
-      font-family: 'Syne', sans-serif; font-size: .92rem; font-weight: 700;
-      color: var(--white); flex: 1;
-    }
+    .topbar-title { font-family: 'Syne', sans-serif; font-size: .92rem; font-weight: 700; color: var(--white); flex: 1; }
     .topbar-title span { color: var(--accent); }
-    .topbar-user {
-      font-family: 'DM Mono', monospace; font-size: .6rem;
-      letter-spacing: .08em; text-transform: uppercase; color: var(--dim);
-    }
+    .topbar-user { font-family: 'DM Mono', monospace; font-size: .6rem; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
     .topbar-user b { color: var(--accent); font-weight: 500; }
     .theme-btn {
-      width: 32px; height: 32px; border-radius: 50%;
-      border: 1px solid var(--border2); background: var(--bg3);
-      cursor: pointer; display: flex; align-items: center;
-      justify-content: center; font-size: .9rem;
+      width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border2); background: var(--bg3);
+      cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: .9rem;
       transition: all var(--ease); flex-shrink: 0;
     }
     .theme-btn:hover { border-color: var(--accent); }
     .logout-btn {
-      font-family: 'DM Mono', monospace; font-size: .58rem;
-      letter-spacing: .08em; border: 1px solid var(--border2);
-      border-radius: 5px; padding: .22rem .6rem;
-      color: var(--dim); cursor: pointer; background: none;
+      font-family: 'DM Mono', monospace; font-size: .58rem; letter-spacing: .08em; border: 1px solid var(--border2);
+      border-radius: 5px; padding: .22rem .6rem; color: var(--dim); cursor: pointer; background: none;
       transition: all var(--ease); flex-shrink: 0;
     }
     .logout-btn:hover { border-color: var(--red); color: var(--red); }
 
-    /* ── Main content ── */
-    .main {
-      max-width: 1000px; margin: 0 auto;
-      padding: 2.5rem clamp(1rem, 4vw, 2rem) 5rem;
-    }
+    .main { max-width: 1000px; margin: 0 auto; padding: 2.5rem clamp(1rem, 4vw, 2rem) 5rem; }
 
-    /* Tabs de sección */
-    .section-tabs {
-      display: flex; gap: .5rem; margin-bottom: 2rem;
-      border-bottom: 1px solid var(--border); padding-bottom: 0;
-    }
+    .section-tabs { display: flex; gap: .5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0; }
     .section-tab {
       font-family: 'Nunito', sans-serif; font-size: .84rem; font-weight: 700;
-      padding: .55rem 1.1rem; border: none; background: none;
-      color: var(--dim); cursor: pointer; border-bottom: 2px solid transparent;
-      margin-bottom: -1px; transition: all var(--ease);
+      padding: .55rem 1.1rem; border: none; background: none; color: var(--dim); cursor: pointer;
+      border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all var(--ease);
     }
     .section-tab:hover { color: var(--text); }
     .section-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
@@ -314,213 +257,76 @@
     .section-panel { display: none; }
     .section-panel.active { display: block; }
 
-    /* Header de sección */
-    .sec-header {
-      display: flex; align-items: flex-start; justify-content: space-between;
-      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
-    }
-    .sec-header-left h2 {
-      font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 700;
-      color: var(--white); margin-bottom: .25rem;
-    }
+    .sec-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .sec-header-left h2 { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--white); margin-bottom: .25rem; }
     .sec-header-left p { font-size: .82rem; color: var(--dim); line-height: 1.55; }
     .storage-bar-wrap { min-width: 180px; }
-    .storage-label {
-      font-family: 'DM Mono', monospace; font-size: .6rem;
-      letter-spacing: .1em; text-transform: uppercase;
-      color: var(--dim); margin-bottom: .35rem;
-      display: flex; justify-content: space-between;
-    }
-    .storage-bar {
-      height: 5px; background: var(--bg3); border-radius: 999px; overflow: hidden;
-    }
-    .storage-fill {
-      height: 100%; background: var(--accent); border-radius: 999px;
-      transition: width .4s ease;
-    }
+    .storage-label { font-family: 'DM Mono', monospace; font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin-bottom: .35rem; display: flex; justify-content: space-between; }
+    .storage-bar { height: 5px; background: var(--bg3); border-radius: 999px; overflow: hidden; }
+    .storage-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width .4s ease; }
     .storage-fill.warn { background: #e67e22; }
     .storage-fill.full { background: var(--red); }
 
-    /* Upload zone */
     .upload-zone {
-      border: 2px dashed var(--border2); border-radius: 12px;
-      padding: 2.5rem 1.5rem; text-align: center;
-      cursor: pointer; transition: all var(--ease);
-      background: var(--bg2); margin-bottom: 1.5rem; position: relative;
+      border: 2px dashed var(--border2); border-radius: 12px; padding: 2.5rem 1.5rem; text-align: center;
+      cursor: pointer; transition: all var(--ease); background: var(--bg2); margin-bottom: 1.5rem; position: relative;
     }
-    .upload-zone:hover, .upload-zone.dragover {
-      border-color: var(--accent); background: rgba(232,130,12,.04);
-    }
-    .upload-zone input[type=file] {
-      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
-    }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: rgba(232,130,12,.04); }
+    .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
     .upload-icon { font-size: 2.2rem; margin-bottom: .6rem; }
-    .upload-title {
-      font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
-      color: var(--white); margin-bottom: .3rem;
-    }
+    .upload-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: .3rem; }
     .upload-sub { font-size: .8rem; color: var(--dim); }
-    .upload-formats {
-      margin-top: .6rem; display: flex; justify-content: center;
-      flex-wrap: wrap; gap: .3rem;
-    }
-    .upload-fmt {
-      font-family: 'DM Mono', monospace; font-size: .6rem;
-      padding: .18rem .5rem; border-radius: 4px;
-      background: var(--bg3); color: var(--dim2); border: 1px solid var(--border);
-    }
+    .upload-formats { margin-top: .6rem; display: flex; justify-content: center; flex-wrap: wrap; gap: .3rem; }
+    .upload-fmt { font-family: 'DM Mono', monospace; font-size: .6rem; padding: .18rem .5rem; border-radius: 4px; background: var(--bg3); color: var(--dim2); border: 1px solid var(--border); }
 
-    /* Barra de progreso de upload */
-    #img-progress-wrap, #vid-progress-wrap {
-      display: none; margin-bottom: 1.2rem;
-    }
-    .progress-label {
-      font-family: 'DM Mono', monospace; font-size: .65rem;
-      letter-spacing: .08em; text-transform: uppercase;
-      color: var(--dim); margin-bottom: .4rem;
-      display: flex; justify-content: space-between;
-    }
-    .progress-bar {
-      height: 6px; background: var(--bg3); border-radius: 999px; overflow: hidden;
-    }
-    .progress-fill {
-      height: 100%; width: 0%; background: var(--accent);
-      border-radius: 999px; transition: width .2s ease;
-    }
+    #img-progress-wrap, #vid-progress-wrap { display: none; margin-bottom: 1.2rem; }
+    .progress-label { font-family: 'DM Mono', monospace; font-size: .65rem; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin-bottom: .4rem; display: flex; justify-content: space-between; }
+    .progress-bar { height: 6px; background: var(--bg3); border-radius: 999px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 999px; transition: width .2s ease; }
 
-    /* Success Panel */
     #vid-success-action {
-      display: none;
-      background: rgba(39,174,96,.08);
-      border: 1px solid var(--green);
-      border-radius: 12px;
-      padding: 2rem;
-      text-align: center;
-      margin-bottom: 1.5rem;
-      animation: fadeIn 0.5s ease;
+      display: none; background: rgba(39,174,96,.08); border: 1px solid var(--green); border-radius: 12px;
+      padding: 2rem; text-align: center; margin-bottom: 1.5rem; animation: fadeIn 0.5s ease;
     }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Galería de archivos */
-    .gallery-title {
-      font-family: 'DM Mono', monospace; font-size: .65rem;
-      letter-spacing: .12em; text-transform: uppercase;
-      color: var(--dim); margin-bottom: 1rem;
-      display: flex; align-items: center; gap: .6rem;
-    }
+    .gallery-title { font-family: 'DM Mono', monospace; font-size: .65rem; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin-bottom: 1rem; display: flex; align-items: center; gap: .6rem; }
     .gallery-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-    .gallery-empty {
-      text-align: center; padding: 2rem;
-      font-size: .85rem; color: var(--dim2);
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 10px;
-    }
-    .gallery-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1rem;
-    }
-    .gallery-card {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 10px; overflow: hidden;
-      transition: all var(--ease);
-    }
-    .gallery-card:hover {
-      border-color: rgba(232,130,12,.35);
-      box-shadow: 0 8px 24px rgba(0,0,0,.1);
-      transform: translateY(-2px);
-    }
-    .gallery-thumb {
-      width: 100%; aspect-ratio: 16/10; object-fit: cover;
-      background: var(--bg3); display: block;
-    }
+    .gallery-empty { text-align: center; padding: 2rem; font-size: .85rem; color: var(--dim2); background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    .gallery-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all var(--ease); }
+    .gallery-card:hover { border-color: rgba(232,130,12,.35); box-shadow: 0 8px 24px rgba(0,0,0,.1); transform: translateY(-2px); }
+    .gallery-thumb { width: 100%; aspect-ratio: 16/10; object-fit: cover; background: var(--bg3); display: block; }
     .gallery-info { padding: .7rem .85rem; }
-    .gallery-name {
-      font-family: 'Nunito', sans-serif; font-size: .78rem; font-weight: 700;
-      color: var(--white); margin-bottom: .2rem;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .gallery-date {
-      font-family: 'DM Mono', monospace; font-size: .58rem;
-      color: var(--dim2); margin-bottom: .6rem;
-    }
+    .gallery-name { font-family: 'Nunito', sans-serif; font-size: .78rem; font-weight: 700; color: var(--white); margin-bottom: .2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gallery-date { font-family: 'DM Mono', monospace; font-size: .58rem; color: var(--dim2); margin-bottom: .6rem; }
     .gallery-actions { display: flex; gap: .4rem; }
-    .gal-btn {
-      flex: 1; padding: .32rem .5rem; border-radius: 5px;
-      font-family: 'DM Mono', monospace; font-size: .6rem;
-      letter-spacing: .06em; text-transform: uppercase;
-      border: 1px solid var(--border2); background: var(--bg3);
-      color: var(--dim); cursor: pointer; transition: all var(--ease);
-      text-align: center;
-    }
+    .gal-btn { flex: 1; padding: .32rem .5rem; border-radius: 5px; font-family: 'DM Mono', monospace; font-size: .6rem; letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--border2); background: var(--bg3); color: var(--dim); cursor: pointer; transition: all var(--ease); text-align: center; }
     .gal-btn:hover { border-color: var(--accent); color: var(--accent); }
     .gal-btn.del:hover { border-color: var(--red); color: var(--red); }
 
-    /* Toast notificación */
     #toast {
-      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100;
-      background: var(--bg2); border: 1px solid var(--border2);
-      border-radius: 10px; padding: .75rem 1.1rem;
-      font-family: 'Nunito', sans-serif; font-size: .82rem;
-      font-weight: 600; color: var(--text);
-      box-shadow: 0 8px 28px rgba(0,0,0,.15);
-      transform: translateY(120%); opacity: 0;
-      transition: all .3s var(--ease); pointer-events: none;
-      display: flex; align-items: center; gap: .6rem; max-width: 320px;
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100; background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 10px; padding: .75rem 1.1rem; font-family: 'Nunito', sans-serif; font-size: .82rem; font-weight: 600;
+      color: var(--text); box-shadow: 0 8px 28px rgba(0,0,0,.15); transform: translateY(120%); opacity: 0;
+      transition: all .3s var(--ease); pointer-events: none; display: flex; align-items: center; gap: .6rem; max-width: 320px;
     }
     #toast.show { transform: translateY(0); opacity: 1; }
     #toast.ok  { border-color: var(--green); }
     #toast.err { border-color: var(--red); }
 
-    /* Modal de preview */
-    #preview-modal {
-      position: fixed; inset: 0; z-index: 200;
-      background: rgba(0,0,0,.75); backdrop-filter: blur(6px);
-      display: none; align-items: center; justify-content: center;
-      padding: 1rem;
-    }
+    #preview-modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.75); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 1rem; }
     #preview-modal.show { display: flex; }
-    .preview-box {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 14px; overflow: hidden;
-      max-width: 700px; width: 100%;
-      box-shadow: 0 32px 80px rgba(0,0,0,.4);
-    }
-    .preview-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: .75rem 1.1rem; border-bottom: 1px solid var(--border);
-      background: var(--bg3);
-    }
-    .preview-header-title {
-      font-family: 'Syne', sans-serif; font-size: .9rem; font-weight: 700;
-      color: var(--white);
-    }
-    .preview-close {
-      background: none; border: 1px solid var(--border2);
-      border-radius: 6px; padding: .22rem .6rem;
-      font-family: 'DM Mono', monospace; font-size: .6rem;
-      color: var(--dim); cursor: pointer; transition: all var(--ease);
-    }
+    .preview-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; max-width: 700px; width: 100%; box-shadow: 0 32px 80px rgba(0,0,0,.4); }
+    .preview-header { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1.1rem; border-bottom: 1px solid var(--border); background: var(--bg3); }
+    .preview-header-title { font-family: 'Syne', sans-serif; font-size: .9rem; font-weight: 700; color: var(--white); }
+    .preview-close { background: none; border: 1px solid var(--border2); border-radius: 6px; padding: .22rem .6rem; font-family: 'DM Mono', monospace; font-size: .6rem; color: var(--dim); cursor: pointer; transition: all var(--ease); }
     .preview-close:hover { border-color: var(--red); color: var(--red); }
     #preview-content { padding: 1rem; text-align: center; }
-    #preview-content img {
-      max-width: 100%; max-height: 400px; border-radius: 8px;
-      background: var(--bg3); display: block; margin: 0 auto;
-    }
-    .preview-url {
-      margin-top: .8rem; display: flex; gap: .5rem;
-    }
-    .preview-url input {
-      flex: 1; background: var(--bg3); border: 1px solid var(--border2);
-      border-radius: var(--r); padding: .5rem .75rem;
-      font-family: 'DM Mono', monospace; font-size: .72rem;
-      color: var(--accent); outline: none;
-    }
-    .preview-copy-btn {
-      padding: .5rem 1rem; background: var(--accent); color: #0c0c0c;
-      border: none; border-radius: var(--r); font-family: 'Nunito', sans-serif;
-      font-size: .8rem; font-weight: 700; cursor: pointer;
-      transition: all var(--ease);
-    }
+    #preview-content img { max-width: 100%; max-height: 400px; border-radius: 8px; background: var(--bg3); display: block; margin: 0 auto; }
+    .preview-url { margin-top: .8rem; display: flex; gap: .5rem; }
+    .preview-url input { flex: 1; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r); padding: .5rem .75rem; font-family: 'DM Mono', monospace; font-size: .72rem; color: var(--accent); outline: none; }
+    .preview-copy-btn { padding: .5rem 1rem; background: var(--accent); color: #0c0c0c; border: none; border-radius: var(--r); font-family: 'Nunito', sans-serif; font-size: .8rem; font-weight: 700; cursor: pointer; transition: all var(--ease); }
     .preview-copy-btn:hover { background: var(--accent2); }
 
     @media (max-width: 600px) {
@@ -532,10 +338,8 @@
 </head>
 <body>
 
-<!-- Toast -->
 <div id="toast"></div>
 
-<!-- Preview Modal para Imágenes -->
 <div id="preview-modal">
   <div class="preview-box">
     <div class="preview-header">
@@ -548,42 +352,25 @@
 
 <!-- ── AUTH SCREEN ── -->
 <div id="auth-screen">
-  <button id="authThemeBtn"
-    style="position:absolute;top:1rem;right:1rem;width:32px;height:32px;border-radius:50%;border:1px solid var(--border2);background:var(--bg2);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:all var(--ease)"
-    aria-label="Cambiar tema">☀️</button>
-
+  <button id="authThemeBtn" style="position:absolute;top:1rem;right:1rem;width:32px;height:32px;border-radius:50%;border:1px solid var(--border2);background:var(--bg2);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:all var(--ease)" aria-label="Cambiar tema">☀️</button>
   <div class="auth-wrap">
     <div class="auth-logo-top">
       <h1><span>CH</span> Images</h1>
       <p>// Convertidor de archivos</p>
     </div>
     <div class="auth-card">
-      <div class="auth-redirect-note">
-        🔒 Para acceder al Convertidor necesitás iniciar sesión en <strong>CH Mods</strong>. Tu cuenta es la misma.
-      </div>
+      <div class="auth-redirect-note">🔒 Para acceder al Convertidor necesitás iniciar sesión en <strong>CH Mods</strong>. Tu cuenta es la misma.</div>
       <div class="auth-msg" id="auth-msg"></div>
-      <div class="auth-field">
-        <label>Correo electrónico o usuario</label>
-        <input type="text" id="auth-email" placeholder="tu@correo.com o Usuario123" autocomplete="off" />
-      </div>
-      <div class="auth-field">
-        <label>Contraseña</label>
-        <input type="password" id="auth-pw" placeholder="••••••••" />
-      </div>
+      <div class="auth-field"><label>Correo electrónico o usuario</label><input type="text" id="auth-email" placeholder="tu@correo.com o Usuario123" autocomplete="off" /></div>
+      <div class="auth-field"><label>Contraseña</label><input type="password" id="auth-pw" placeholder="••••••••" /></div>
       <button class="auth-btn" id="auth-submit" onclick="doLogin()">Iniciar sesión</button>
     </div>
-    <div style="margin-top:.8rem;text-align:center">
-      <a href="https://checho15a.github.io/chmods/"
-        style="font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);transition:color var(--ease)"
-        onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--dim)'">← Volver a CH Mods</a>
-    </div>
+    <div style="margin-top:.8rem;text-align:center"><a href="https://checho15a.github.io/chmods/" style="font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);transition:color var(--ease)" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--dim)'">← Volver a CH Mods</a></div>
   </div>
 </div>
 
 <!-- ── APP SCREEN ── -->
 <div id="app-screen">
-
-  <!-- Topbar -->
   <header class="topbar">
     <a href="https://checho15a.github.io/chmods/" class="topbar-back">← CH Images</a>
     <div class="topbar-sep"></div>
@@ -593,110 +380,69 @@
     <button class="logout-btn" onclick="doLogout()">Salir</button>
   </header>
 
-  <!-- Main -->
   <main class="main">
-
-    <!-- Tabs -->
     <div class="section-tabs">
       <button class="section-tab active" onclick="switchSection('images')">🖼️ Imágenes → JPG</button>
       <button class="section-tab" onclick="switchSection('videos')">🎞️ Videos → MJPEG</button>
     </div>
 
-    <!-- ── PANEL IMÁGENES ── -->
+    <!-- PANEL IMÁGENES -->
     <div class="section-panel active" id="panel-images">
       <div class="sec-header">
         <div class="sec-header-left">
           <h2>Convertidor de imágenes</h2>
-          <p>Subí tu imagen y obtenés un link permanente alojado en la nube, listo para usar en el mod.</p>
+          <p>Subí tu imagen y obtenés un link permanente alojado en la nube.</p>
         </div>
         <div class="storage-bar-wrap">
-          <div class="storage-label">
-            <span>Almacenamiento</span>
-            <span id="img-count">0 / 30</span>
-          </div>
-          <div class="storage-bar">
-            <div class="storage-fill" id="img-fill" style="width:0%"></div>
-          </div>
+          <div class="storage-label"><span>Almacenamiento</span><span id="img-count">0 / 30</span></div>
+          <div class="storage-bar"><div class="storage-fill" id="img-fill" style="width:0%"></div></div>
         </div>
       </div>
-
       <div class="upload-zone" id="img-drop-zone">
         <input type="file" id="img-file-input" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/tiff,image/avif" onchange="handleImageUpload(this.files[0])" />
         <div class="upload-icon">🖼️</div>
         <div class="upload-title">Arrastrá o hacé click para subir</div>
-        <div class="upload-sub">Se convertirá automáticamente a JPG con link permanente</div>
-        <div class="upload-formats">
-          <span class="upload-fmt">PNG</span><span class="upload-fmt">WEBP</span>
-          <span class="upload-fmt">JPEG</span><span class="upload-fmt">BMP</span>
-          <span class="upload-fmt">TIFF</span><span class="upload-fmt">AVIF</span>
-          <span class="upload-fmt">GIF</span>
-        </div>
+        <div class="upload-sub">Se convertirá automáticamente a JPG</div>
+        <div class="upload-formats"><span class="upload-fmt">PNG</span><span class="upload-fmt">WEBP</span><span class="upload-fmt">JPEG</span><span class="upload-fmt">GIF</span></div>
       </div>
-
       <div id="img-progress-wrap">
-        <div class="progress-label">
-          <span id="img-progress-label">Convirtiendo...</span>
-          <span id="img-progress-pct">0%</span>
-        </div>
+        <div class="progress-label"><span id="img-progress-label">Convirtiendo...</span><span id="img-progress-pct">0%</span></div>
         <div class="progress-bar"><div class="progress-fill" id="img-progress-fill"></div></div>
       </div>
-
       <div class="gallery-title">Tus imágenes subidas</div>
       <div id="img-gallery"></div>
     </div>
 
-    <!-- ── PANEL VIDEOS → LOCAL CONVERT ── -->
+    <!-- PANEL VIDEOS -->
     <div class="section-panel" id="panel-videos">
       <div class="sec-header">
         <div class="sec-header-left">
           <h2>Convertidor de videos Local</h2>
-          <p>Convierte tu video usando tu propia PC (sin límite de peso ni servidores). Tu navegador generará los archivos y se descargarán automáticamente.</p>
+          <p>Convierte tu video usando tu propia PC sin problemas de servidores web.</p>
         </div>
       </div>
-
       <div class="upload-zone" id="vid-drop-zone">
         <input type="file" id="vid-file-input" accept="video/mp4" onchange="handleVideoUpload(this.files[0])" />
         <div class="upload-icon">🎞️</div>
         <div class="upload-title">Arrastrá o hacé click para convertir</div>
         <div class="upload-sub">Solo <strong>MP4</strong> — máximo 10 minutos recomendados</div>
-        <div class="upload-formats">
-          <span class="upload-fmt">MP4 → MJPEG</span>
-          <span class="upload-fmt">Audio → WAV</span>
-        </div>
+        <div class="upload-formats"><span class="upload-fmt">MP4 → MJPEG</span><span class="upload-fmt">Audio → WAV</span></div>
       </div>
-
       <div id="vid-progress-wrap">
-        <div class="progress-label">
-          <span id="vid-progress-label">Preparando motor...</span>
-          <span id="vid-progress-pct">0%</span>
-        </div>
+        <div class="progress-label"><span id="vid-progress-label">Preparando motor...</span><span id="vid-progress-pct">0%</span></div>
         <div class="progress-bar"><div class="progress-fill" id="vid-progress-fill"></div></div>
       </div>
-
-      <!-- PANEL DE ÉXITO Y BOTÓN A LITTERBOX -->
       <div id="vid-success-action">
         <h3 style="color: var(--green); margin-bottom: 0.5rem; font-family: 'Syne', sans-serif;">¡Archivos generados con éxito! 🎉</h3>
-        <p style="color: var(--dim); font-size: 0.9rem; margin-bottom: 1.2rem;">Tus archivos <strong style="color:var(--text)">.mjpeg</strong> y <strong style="color:var(--text)">.wav</strong> se están descargando a tu PC. Ahora súbelos gratis para obtener tus enlaces multijugador.</p>
-        <a href="https://litterbox.catbox.moe/" target="_blank" style="display: inline-block; background: var(--green); color: #fff; padding: 0.8rem 1.5rem; border-radius: 8px; font-family: 'Nunito', sans-serif; font-weight: 700; text-decoration: none; transition: background var(--ease);">
-           ☁️ Abrir Litterbox para Subir Archivos
-        </a>
+        <p style="color: var(--dim); font-size: 0.9rem; margin-bottom: 1.2rem;">Tus archivos se descargaron. Ahora súbelos gratis para obtener tus enlaces.</p>
+        <a href="https://litterbox.catbox.moe/" target="_blank" style="display: inline-block; background: var(--green); color: #fff; padding: 0.8rem 1.5rem; border-radius: 8px; font-family: 'Nunito', sans-serif; font-weight: 700; text-decoration: none;">☁️ Abrir Litterbox para Subir Archivos</a>
       </div>
-
-      <div class="info-note">
-        <span style="flex-shrink:0">ℹ️</span>
-        <span>El proceso de conversión de video usa los recursos de tu computadora. Si el video es muy largo o tu PC es lenta, ten paciencia hasta que llegue al 100%.</span>
-      </div>
-
+      <div class="info-note"><span>ℹ️</span><span>El proceso de conversión usa el CPU de tu computadora.</span></div>
     </div>
-
   </main>
 </div>
 
 <script>
-  // ── Cloudinary config (imágenes) ──────────────────────────────
-  const CLD_NAME   = 'djjl0okdo';
-  const CLD_PRESET = 'chmods_upload';
-
   // ── Tema ──────────────────────────────────────────────────────
   function applyTheme(dark) {
     document.body.classList.toggle('dark', dark);
@@ -708,22 +454,13 @@
     localStorage.setItem('chTheme', dark ? 'dark' : 'light');
   }
   applyTheme(localStorage.getItem('chTheme') === 'dark');
+  document.getElementById('themeBtn').addEventListener('click', () => applyTheme(!document.body.classList.contains('dark')));
+  document.getElementById('authThemeBtn').addEventListener('click', () => applyTheme(!document.body.classList.contains('dark')));
 
-  document.getElementById('themeBtn').addEventListener('click', () =>
-    applyTheme(!document.body.classList.contains('dark')));
-  document.getElementById('authThemeBtn').addEventListener('click', () =>
-    applyTheme(!document.body.classList.contains('dark')));
-
-  // ── Auth ──────────────────────────────────────────────────────
-  function showMsg(txt, type) {
-    const el = document.getElementById('auth-msg');
-    el.textContent = txt; el.className = 'auth-msg ' + type;
-  }
-  function clearMsg() {
-    const el = document.getElementById('auth-msg');
-    el.className = 'auth-msg'; el.textContent = '';
-  }
-
+  // ── UI Helpers ────────────────────────────────────────────────
+  function showMsg(txt, type) { const el = document.getElementById('auth-msg'); el.textContent = txt; el.className = 'auth-msg ' + type; }
+  function clearMsg() { const el = document.getElementById('auth-msg'); el.className = 'auth-msg'; el.textContent = ''; }
+  
   async function doLogin() {
     clearMsg();
     const email = document.getElementById('auth-email').value.trim();
@@ -733,30 +470,20 @@
     btn.disabled = true;
     try {
       const user = await window._conv.loginUser(email, pw);
-      if (!user.emailVerified) {
-        showMsg('Verificá tu correo antes de ingresar.', 'err');
-        btn.disabled = false; return;
-      }
+      if (!user.emailVerified) { showMsg('Verificá tu correo antes de ingresar.', 'err'); btn.disabled = false; return; }
     } catch(e) {
-      showMsg(authErr(e.code), 'err');
+      const codes = {
+        'auth/invalid-credential':     'Correo/usuario o contraseña incorrectos.',
+        'auth/user-not-found':         'No existe cuenta con ese correo.',
+        'auth/wrong-password':         'Contraseña incorrecta.',
+      };
+      showMsg(codes[e.code] || 'Error inesperado.', 'err');
       btn.disabled = false;
     }
   }
 
   async function doLogout() { await window._conv.logout(); }
 
-  function authErr(code) {
-    return {
-      'auth/invalid-credential':     'Correo/usuario o contraseña incorrectos.',
-      'auth/user-not-found':         'No existe cuenta con ese correo.',
-      'auth/wrong-password':         'Contraseña incorrecta.',
-      'auth/too-many-requests':      'Demasiados intentos. Esperá.',
-      'auth/network-request-failed': 'Error de red.',
-      'auth/username-not-found':     'Usuario no encontrado.',
-    }[code] || 'Error inesperado. Intentá de nuevo.';
-  }
-
-  // ── Callbacks de Firebase Auth ────────────────────────────────
   window._onUserReady = function(user) {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app-screen').style.display  = 'block';
@@ -769,31 +496,21 @@
     document.getElementById('auth-submit').disabled = false;
   };
 
-  document.getElementById('auth-pw').addEventListener('keydown', e => {
-    if (e.key === 'Enter') doLogin();
-  });
+  document.getElementById('auth-pw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
-  // ── Tabs ──────────────────────────────────────────────────────
   function switchSection(sec) {
     const secs = ['images','videos'];
-    document.querySelectorAll('.section-tab').forEach((t,i) =>
-      t.classList.toggle('active', secs[i] === sec));
+    document.querySelectorAll('.section-tab').forEach((t,i) => t.classList.toggle('active', secs[i] === sec));
     document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
     document.getElementById('panel-' + sec).classList.add('active');
   }
 
-  // ── Upload imágenes (Cloudinary) ──────────────────────────────
+  // ── Imágenes ──────────────────────────────────────────────────
   async function handleImageUpload(file) {
     if (!file) return;
     const files = window._conv.getUserFiles();
-    const limit = window._conv.limits.images.count;
-    if ((files.images || []).length >= limit) {
+    if ((files.images || []).length >= window._conv.limits.images.count) {
       showToast('Límite de imágenes alcanzado. Borrá algunas.', 'err'); return;
-    }
-
-    const allowedTypes = ['image/png','image/jpeg','image/webp','image/gif','image/bmp','image/tiff','image/avif'];
-    if (!allowedTypes.includes(file.type)) {
-      showToast('Formato de imagen no soportado.', 'err'); return;
     }
 
     showProgress('img', true);
@@ -802,119 +519,115 @@
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('upload_preset', CLD_PRESET);
+      formData.append('upload_preset', window._conv.cld.uploadPreset);
       formData.append('folder', 'chmods/images');
 
       setProgress('img', 30, 'Subiendo imagen a la nube...');
 
-      const res = await uploadWithProgress(
-        `https://api.cloudinary.com/v1_1/${CLD_NAME}/image/upload`,
-        formData,
-        (pct) => setProgress('img', 30 + pct * 0.6, 'Subiendo...')
-      );
+      const res = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `https://api.cloudinary.com/v1_1/${window._conv.cld.cloudName}/image/upload`);
+        xhr.upload.addEventListener('progress', e => { if (e.lengthComputable) setProgress('img', 30 + (e.loaded / e.total) * 0.6, 'Subiendo...'); });
+        xhr.addEventListener('load', () => { if (xhr.status === 200) resolve(JSON.parse(xhr.responseText)); else reject(new Error()); });
+        xhr.addEventListener('error', reject);
+        xhr.send(formData);
+      });
 
-      setProgress('img', 92, 'Generando link JPG permanente...');
+      setProgress('img', 92, 'Generando link permanente...');
 
-      const publicIdClean = res.public_id;
-      const jpgUrl   = `https://res.cloudinary.com/${CLD_NAME}/image/upload/f_jpg,q_auto/${publicIdClean}.jpg`;
-      const thumbUrl = `https://res.cloudinary.com/${CLD_NAME}/image/upload/f_jpg,q_auto,w_400/${publicIdClean}.jpg`;
-      const cleanName = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.jpg';
-
+      const pId = res.public_id;
       const fileObj = {
-        publicId: publicIdClean,
-        url:      jpgUrl,
-        thumb:    thumbUrl,
-        name:     cleanName,
-        date:     new Date().toLocaleDateString('es-ES'),
+        publicId: pId,
+        url:   `https://res.cloudinary.com/${window._conv.cld.cloudName}/image/upload/f_jpg,q_auto/${pId}.jpg`,
+        thumb: `https://res.cloudinary.com/${window._conv.cld.cloudName}/image/upload/f_jpg,q_auto,w_400/${pId}.jpg`,
+        name:  file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.jpg',
+        date:  new Date().toLocaleDateString('es-ES'),
       };
 
       await window._conv.saveFile('images', fileObj);
       setProgress('img', 100, '¡Listo!');
       setTimeout(() => showProgress('img', false), 1200);
-      showToast('✓ Imagen subida y convertida a JPG', 'ok');
+      showToast('✓ Imagen subida a JPG', 'ok');
       document.getElementById('img-file-input').value = '';
     } catch(e) {
       showProgress('img', false);
-      showToast('Error al subir la imagen. Intentá de nuevo.', 'err');
-      console.error(e);
+      showToast('Error al subir la imagen.', 'err');
     }
   }
 
-  // ── Convertir video MP4 → Localmente a .mjpeg y .wav ────────
+  // ── Convertir Video V12 con TOBLOBURL ─────────────────────────
   async function handleVideoUpload(file) {
     if (!file) return;
-
-    if (file.type !== 'video/mp4') {
-      showToast('Solo se aceptan archivos MP4.', 'err'); return;
-    }
+    if (file.type !== 'video/mp4') { showToast('Solo MP4.', 'err'); return; }
 
     document.getElementById('vid-success-action').style.display = 'none';
     showProgress('vid', true);
-    setProgress('vid', 5, 'Cargando motor FFmpeg en el navegador...');
+    setProgress('vid', 5, 'Cargando motor de alta velocidad...');
 
     try {
-      const { createFFmpeg, fetchFile } = window.FFmpeg;
-
+      // 1. Instanciamos FFmpeg v12
+      const { FFmpeg } = window.FFmpegWASM;
+      const { fetchFile, toBlobURL } = window.FFmpegUtil;
+      
       if (!window._ffmpegInstance) {
-        window._ffmpegInstance = createFFmpeg({
-          // El núcleo single-thread
-          corePath: 'https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js',
-          // LA MAGIA QUE ARREGLA EL ERROR PROXY_MAIN:
-          mainName: 'main', 
-          log: false,
-        });
+        window._ffmpegInstance = new FFmpeg();
+        window._ffmpegInstance.on('log', ({ message }) => console.log(message));
       }
       const ffmpeg = window._ffmpegInstance;
 
-      if (!ffmpeg.isLoaded()) {
-        setProgress('vid', 10, 'Descargando núcleo WASM (~30 MB, solo la primera vez)...');
-        await ffmpeg.load();
+      // 2. EL TRUCO MAGICO: Descargar los archivos y convertirlos en blobs locales 
+      // Esto hace que el navegador NO bloquee el Worker por razones de CORS
+      if (!ffmpeg.loaded) {
+        setProgress('vid', 10, 'Descargando núcleo (solo la primera vez)...');
+        const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+        await ffmpeg.load({
+          coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+          wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
+        });
       }
 
-      const baseName = file.name
-        .replace(/(\.[a-zA-Z0-9]+)+$/, '')
-        .replace(/[^a-zA-Z0-9_-]/g, '_');
+      const baseName = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
 
-      setProgress('vid', 20, 'Leyendo archivo de entrada...');
-      ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(file));
+      setProgress('vid', 20, 'Leyendo MP4...');
+      await ffmpeg.writeFile('input.mp4', await fetchFile(file));
 
-      setProgress('vid', 30, 'Convirtiendo a MJPEG (esto usa el CPU de tu PC)...');
-      await ffmpeg.run(
+      setProgress('vid', 30, 'Convirtiendo a MJPEG (Esto usará el CPU de tu PC)...');
+      await ffmpeg.exec([
         '-i', 'input.mp4',
         '-vcodec', 'mjpeg',
         '-q:v', '5',
         '-r', '24',
         'output.mjpeg'
-      );
+      ]);
 
-      setProgress('vid', 70, 'Extrayendo audio a WAV...');
-      await ffmpeg.run(
+      setProgress('vid', 70, 'Extrayendo audio WAV...');
+      await ffmpeg.exec([
         '-i', 'input.mp4',
         '-vn',
         '-acodec', 'pcm_s16le',
         '-ar', '44100',
         '-ac', '2',
         'output.wav'
-      );
+      ]);
 
-      setProgress('vid', 88, 'Preparando archivos para descarga...');
-      const mjpegData = ffmpeg.FS('readFile', 'output.mjpeg');
-      const wavData   = ffmpeg.FS('readFile', 'output.wav');
+      setProgress('vid', 88, 'Preparando descargas...');
+      const mjpegData = await ffmpeg.readFile('output.mjpeg');
+      const wavData   = await ffmpeg.readFile('output.wav');
 
       const mjpegBlob = new Blob([mjpegData.buffer], { type: 'video/x-motion-jpeg' });
       const wavBlob   = new Blob([wavData.buffer],   { type: 'audio/wav' });
-      
-      const mjpegUrl  = URL.createObjectURL(mjpegBlob);
-      const wavUrl    = URL.createObjectURL(wavBlob);
 
-      ffmpeg.FS('unlink', 'input.mp4');
-      ffmpeg.FS('unlink', 'output.mjpeg');
-      ffmpeg.FS('unlink', 'output.wav');
+      const mjpegUrl = URL.createObjectURL(mjpegBlob);
+      const wavUrl   = URL.createObjectURL(wavBlob);
 
-      setProgress('vid', 95, '¡Descargando archivos!');
+      await ffmpeg.deleteFile('input.mp4');
+      await ffmpeg.deleteFile('output.mjpeg');
+      await ffmpeg.deleteFile('output.wav');
+
+      setProgress('vid', 95, '¡Descargando!');
       
       const a1 = document.createElement('a');
-      a1.href     = mjpegUrl;
+      a1.href = mjpegUrl;
       a1.download = `${baseName}.mjpeg`;
       document.body.appendChild(a1);
       a1.click();
@@ -922,136 +635,76 @@
 
       setTimeout(() => {
         const a2 = document.createElement('a');
-        a2.href     = wavUrl;
+        a2.href = wavUrl;
         a2.download = `${baseName}.wav`;
         document.body.appendChild(a2);
         a2.click();
         document.body.removeChild(a2);
-
+        
         setTimeout(() => {
-          URL.revokeObjectURL(mjpegUrl);
-          URL.revokeObjectURL(wavUrl);
-        }, 5000);
-
-        setTimeout(() => {
-          setProgress('vid', 100, '¡Listo!');
-          setTimeout(() => {
             showProgress('vid', false);
             document.getElementById('vid-success-action').style.display = 'block';
-            showToast('✓ Archivos convertidos y descargados', 'ok');
-          }, 600);
-        }, 300);
+            showToast('✓ Archivos listos', 'ok');
+        }, 800);
       }, 500);
 
       document.getElementById('vid-file-input').value = '';
 
     } catch(e) {
       showProgress('vid', false);
-      showToast('Error al convertir el video. Revisá la consola.', 'err');
-      console.error('[handleVideoUpload]', e);
+      showToast('Error de conversión. Intenta en otra PC o con un video más pequeño.', 'err');
+      console.error(e);
     }
   }
 
-  // ── Render galerías (Solo imágenes ahora) ─────────────────────────
+  // ── Render UI Galerías ──────────────────────────────────────────
   function renderGallery(type, files) {
     if(type === 'videos') return;
-
-    const elId = 'img-gallery';
-    const el   = document.getElementById(elId);
+    const el = document.getElementById('img-gallery');
     if (!el) return;
-    if (!files || files.length === 0) {
-      el.innerHTML = `<div class="gallery-empty">Todavía no tenés imágenes. ¡Subí una para empezar!</div>`;
-      return;
-    }
-    el.innerHTML = `<div class="gallery-grid">${files.map(f => {
-      return `
+    if (!files || files.length === 0) { el.innerHTML = `<div class="gallery-empty">Todavía no tenés imágenes. ¡Subí una!</div>`; return; }
+    el.innerHTML = `<div class="gallery-grid">${files.map(f => `
       <div class="gallery-card">
         <img class="gallery-thumb" src="${f.thumb || f.url}" alt="${f.name}" loading="lazy" onerror="this.style.background='var(--bg3)'" />
         <div class="gallery-info">
           <div class="gallery-name" title="${f.name}">${f.name}</div>
           <div class="gallery-date">${f.date}</div>
           <div class="gallery-actions">
-            <button class="gal-btn" onclick="openPreview(${JSON.stringify(f)})">Ver</button>
+            <button class="gal-btn" onclick="openPreview(${JSON.stringify(f).replace(/"/g, '&quot;')})">Ver</button>
             <button class="gal-btn" onclick="copyLink('${f.url}')">Copiar</button>
             <button class="gal-btn del" onclick="deleteFile('images','${f.publicId}')">Borrar</button>
           </div>
         </div>
-      </div>`;
-    }).join('')}</div>`;
+      </div>`).join('')}</div>`;
   }
 
   function updateCounters() {
     const files = window._conv.getUserFiles();
     const imgs  = (files.images || []).length;
-    
     document.getElementById('img-count').textContent = `${imgs} / ${window._conv.limits.images.count}`;
-
-    const setPct = (fillId, count, limit) => {
-      const pct  = (count / limit) * 100;
-      const fill = document.getElementById(fillId);
-      if (!fill) return;
-      fill.style.width = pct + '%';
-      fill.className   = 'storage-fill' + (pct >= 90 ? ' full' : pct >= 70 ? ' warn' : '');
-    };
-    setPct('img-fill', imgs, window._conv.limits.images.count);
+    const pct  = (imgs / window._conv.limits.images.count) * 100;
+    const fill = document.getElementById('img-fill');
+    if(fill) { fill.style.width = pct + '%'; fill.className = 'storage-fill' + (pct >= 90 ? ' full' : pct >= 70 ? ' warn' : ''); }
   }
 
-  // ── Acciones de galería ───────────────────────────────────────
   function openPreview(fileData) {
     const f = typeof fileData === 'string' ? JSON.parse(fileData) : fileData;
     const modal   = document.getElementById('preview-modal');
-    const content = document.getElementById('preview-content');
     document.getElementById('preview-title').textContent = f.name;
-
-    content.innerHTML = `
-      <img src="${f.url}" alt="${f.name}"
-        style="max-width:100%;max-height:340px;border-radius:8px;background:var(--bg3);display:block;margin:0 auto" />
-      <div class="preview-url" style="margin-top:.8rem">
-        <input type="text" value="${f.url}" readonly onclick="this.select()" />
-        <button class="preview-copy-btn" onclick="copyLink('${f.url}')">Copiar link</button>
-      </div>`;
-
+    document.getElementById('preview-content').innerHTML = `<img src="${f.url}" alt="${f.name}" style="max-width:100%;max-height:340px;border-radius:8px;background:var(--bg3);display:block;margin:0 auto" /><div class="preview-url" style="margin-top:.8rem"><input type="text" value="${f.url}" readonly onclick="this.select()" /><button class="preview-copy-btn" onclick="copyLink('${f.url}')">Copiar</button></div>`;
     modal.classList.add('show');
   }
 
-  function closePreview() {
-    document.getElementById('preview-modal').classList.remove('show');
-  }
-  document.getElementById('preview-modal').addEventListener('click', function(e) {
-    if (e.target === this) closePreview();
-  });
-
-  function copyLink(url) {
-    navigator.clipboard.writeText(url).then(() => showToast('✓ Link copiado', 'ok'));
-  }
-
+  function closePreview() { document.getElementById('preview-modal').classList.remove('show'); }
+  document.getElementById('preview-modal').addEventListener('click', function(e) { if (e.target === this) closePreview(); });
+  function copyLink(url) { navigator.clipboard.writeText(url).then(() => showToast('✓ Link copiado', 'ok')); }
   async function deleteFile(type, publicId) {
-    if (!confirm('¿Borrar este archivo? Se eliminará de tu listado.')) return;
+    if (!confirm('¿Borrar archivo?')) return;
     await window._conv.deleteFile(type, publicId);
-    showToast('Archivo eliminado del listado', 'ok');
+    showToast('Archivo eliminado', 'ok');
   }
 
-  // ── Helpers ───────────────────────────────────────────────────
-  function uploadWithProgress(url, formData, onProgress) {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', url);
-      xhr.upload.addEventListener('progress', e => {
-        if (e.lengthComputable) onProgress(e.loaded / e.total);
-      });
-      xhr.addEventListener('load', () => {
-        if (xhr.status === 200) resolve(JSON.parse(xhr.responseText));
-        else reject(new Error('Upload failed: ' + xhr.status));
-      });
-      xhr.addEventListener('error', reject);
-      xhr.send(formData);
-    });
-  }
-
-  function showProgress(type, show) {
-    document.getElementById(type + '-progress-wrap').style.display = show ? 'block' : 'none';
-  }
-
+  function showProgress(type, show) { document.getElementById(type + '-progress-wrap').style.display = show ? 'block' : 'none'; }
   function setProgress(type, pct, label) {
     const p = Math.round(pct);
     document.getElementById(type + '-progress-fill').style.width = p + '%';
@@ -1062,13 +715,10 @@
   let _toastTimer = null;
   function showToast(msg, type) {
     const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.className = 'show ' + (type || '');
-    clearTimeout(_toastTimer);
-    _toastTimer = setTimeout(() => { el.className = ''; }, 3200);
+    el.textContent = msg; el.className = 'show ' + (type || '');
+    clearTimeout(_toastTimer); _toastTimer = setTimeout(() => { el.className = ''; }, 3200);
   }
 
-  // ── Drag & Drop ───────────────────────────────────────────────
   ['img-drop-zone','vid-drop-zone'].forEach(id => {
     const zone = document.getElementById(id);
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
@@ -1077,8 +727,7 @@
       e.preventDefault(); zone.classList.remove('dragover');
       const file = e.dataTransfer.files[0];
       if (!file) return;
-      if (id === 'img-drop-zone') handleImageUpload(file);
-      else handleVideoUpload(file);
+      if (id === 'img-drop-zone') handleImageUpload(file); else handleVideoUpload(file);
     });
   });
 </script>
