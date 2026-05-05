@@ -746,17 +746,13 @@
     }
   }
 
-  // ── Upload videos → Cloudinary → .mp4 ────────────────────────
+  // ── Upload videos → Cloudinary → .mp4 (anti-tartamudeo) ───────
   async function handleVideoUpload(file) {
     if (!file) return;
 
-    if (file.type !== 'video/mp4') {
-      showToast('Solo se aceptan archivos MP4.', 'err'); return;
-    }
-
     const files = window._conv.getUserFiles();
-    if ((files.videos || []).length >= window._conv.limits.videos.count) {
-      showToast('Límite de 10 videos alcanzado. Borrá alguno.', 'err'); return;
+    if ((files.videos || []).length >= 10) {
+      showToast('Límite de videos alcanzado.', 'err'); return;
     }
 
     // Verificar duración máxima de 10 minutos
@@ -766,28 +762,37 @@
     }
 
     showProgress('vid', true);
-    setProgress('vid', 5, 'Preparando...');
+    setProgress('vid', 10, 'Preparando video...');
 
     try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('upload_preset', CLD_PRESET);
-      fd.append('folder', 'chmods/videos');
-      fd.append('resource_type', 'video');
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', window._conv.cld.uploadPreset);
+      formData.append('folder', 'chmods/videos');
 
-      const res = await xhrUpload(
-        `https://api.cloudinary.com/v1_1/${CLD_NAME}/video/upload`,
-        fd,
-        pct => setProgress('vid', 10 + pct * 82, 'Subiendo video...')
-      );
+      setProgress('vid', 30, 'Subiendo a los servidores de procesamiento...');
 
-      setProgress('vid', 94, 'Generando link...');
+      const res = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `https://api.cloudinary.com/v1_1/${window._conv.cld.cloudName}/video/upload`);
+        xhr.upload.addEventListener('progress', e => {
+          if (e.lengthComputable) setProgress('vid', 30 + (e.loaded / e.total) * 60, 'Procesando y Subiendo...');
+        });
+        xhr.addEventListener('load', () => {
+          if (xhr.status === 200) resolve(JSON.parse(xhr.responseText)); else reject(new Error());
+        });
+        xhr.addEventListener('error', reject);
+        xhr.send(formData);
+      });
+
+      setProgress('vid', 92, 'Optimizando formato para Minecraft...');
 
       const pId = res.public_id;
-      // URL directa al .mp4 original (sin transformaciones)
-      const mp4Url = `https://res.cloudinary.com/${CLD_NAME}/video/upload/${pId}.mp4`;
+
+      // vc_h264:baseline elimina el parpadeo/tartamudeo en Minecraft
+      const optimizedUrl = `https://res.cloudinary.com/${window._conv.cld.cloudName}/video/upload/vc_h264:baseline,q_auto,w_800/${pId}.mp4`;
       // Thumbnail: primer frame como imagen
-      const thumbUrl = `https://res.cloudinary.com/${CLD_NAME}/video/upload/so_0,f_jpg,w_400/${pId}.jpg`;
+      const thumbUrl = `https://res.cloudinary.com/${window._conv.cld.cloudName}/video/upload/so_0,f_jpg,w_400/${pId}.jpg`;
 
       const cleanName = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.mp4';
       const durationStr = duration > 0
@@ -795,22 +800,23 @@
         : null;
 
       await window._conv.saveFile('videos', {
-        publicId:    pId,
-        url:         mp4Url,
-        thumb:       thumbUrl,
-        name:        cleanName,
-        date:        new Date().toLocaleDateString('es-ES'),
-        duration:    durationStr,
+        publicId:  pId,
+        url:       optimizedUrl,
+        thumb:     thumbUrl,
+        name:      cleanName,
+        date:      new Date().toLocaleDateString('es-ES'),
+        duration:  durationStr,
       });
 
       setProgress('vid', 100, '¡Listo!');
       setTimeout(() => showProgress('vid', false), 1200);
-      showToast('✓ Video subido correctamente', 'ok');
+      showToast('✓ Video listo para CH Images', 'ok');
       document.getElementById('vid-file-input').value = '';
+      window._conv.renderFiles();
 
     } catch(e) {
       showProgress('vid', false);
-      showToast('Error al subir el video. Verificá que tu preset de Cloudinary soporte videos.', 'err');
+      showToast('Error al procesar el video.', 'err');
       console.error('[vid upload]', e);
     }
   }
