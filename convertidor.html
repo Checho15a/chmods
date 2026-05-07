@@ -790,8 +790,7 @@
       const pId = res.public_id;
 
       // vc_h264:baseline elimina el parpadeo/tartamudeo en Minecraft
-      const optimizedUrl = `https://res.cloudinary.com/${window._conv.cld.cloudName}/video/upload/vc_h264:baseline,q_auto,w_800/${pId}.mp4`;
-      // Thumbnail: primer frame como imagen
+      const optimizedUrl = `https://res.cloudinary.com/${window._conv.cld.cloudName}/video/upload/vc_h264:baseline,q_100/${pId}.mp4`;      // Thumbnail: primer frame como imagen
       const thumbUrl = `https://res.cloudinary.com/${window._conv.cld.cloudName}/video/upload/so_0,f_jpg,w_400/${pId}.jpg`;
 
       const cleanName = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.mp4';
