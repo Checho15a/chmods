@@ -1764,19 +1764,18 @@
           ['Versión del mod', '1.0.0'],
           ['Tipo', 'Mod de servidor / cliente'],
           ['Función principal', 'Proyección multimedia en el mundo via URL'],
-          ['Requiere configuración', 'No — funciona desde el primer inicio'],
+          ['Requiere configuración', 'No (funciona desde el primer inicio)'],
           ['Estado', 'En desarrollo activo'],
         ],
         desc: `<strong>CH Images</strong> es un mod para Minecraft Java 1.20.1 (Forge) que permite proyectar <strong>imágenes, videos y GIFs</strong> directamente en el mundo del juego, utilizando links o URLs como fuente de contenido. El mod incluye tanto comandos de chat como una <strong>interfaz gráfica (GUI)</strong> completa para gestionar y controlar la proyección de medios de forma ordenada y eficiente.`,
         extra: `
-          <div class="ws-note"><span class="ws-note-icon">⚡</span><span><strong>Optimización propia:</strong> el mod gestiona el contenido multimedia de forma inteligente — carga el video o GIF, lo proyecta una vez descargado, y va eliminando los frames que ya no están en pantalla a medida que avanza la reproducción. Esto evita sobrecargar la RAM del servidor y la de los jugadores que están visualizando el contenido.</span></div>
+          <div class="ws-note"><span class="ws-note-icon">⚡</span><span><strong>Optimización propia:</strong> el mod gestiona el contenido multimedia de forma inteligente, descarga la Imagen, el Video o el GIF, luego lo carga, y finalmente lo proyecta, y en caso de los Videos, va eliminando los frames que ya no están en pantalla a medida que avanza la reproducción. Esto evita sobrecargar la RAM del servidor y la de los jugadores que están visualizando el contenido.</span></div>
           <div class="ws-h2">¿Qué permite hacer?</div>
-          <div class="ws-p">Desde la GUI, los operadores pueden organizar sus medios en marcos separados por categoría — <strong>imágenes, videos y GIFs</strong> — con nombres personalizables para identificarlos fácilmente. Cada marco puede editarse, previsualizarse y enviarse de forma independiente. El mod también ofrece controles de experiencia para los jugadores no operadores, como bloquear movimiento, chat, inventario e interacciones mientras se proyecta un medio.</div>
-          <div class="ws-note"><span class="ws-note-icon">🔧</span><span>El mod se encuentra en <strong>desarrollo activo</strong>. Algunas funciones, como la reproducción de sonido en videos, están planificadas para versiones futuras.</span></div>
+          <div class="ws-p">Desde la GUI, los operadores pueden organizar sus medios en marcos separados por categoría, <strong>imágenes, videos y GIFs</strong>, con nombres personalizables para identificarlos fácilmente. Cada marco puede editarse, previsualizarse y enviarse de forma independiente. El mod también ofrece controles de experiencia para los jugadores no operadores al momento de visualizar la proyección, como bloquear movimiento, chat, inventario e interacciones mientras se proyecta una media.</div>
         `
       },
       inicio: {
-        intro: 'CH Images no requiere ninguna activación previa ni configuración inicial. Una vez instalado, el mod está disponible de inmediato. No existe un paso de "inicio" obligatorio — todas las funciones son opcionales y están a disposición del operador.',
+        intro: 'CH Images no requiere ninguna activación previa ni configuración inicial. Una vez instalado, el mod está disponible de inmediato. No existe un paso de "inicio" obligatorio, todas las funciones son opcionales y están a disposición del operador.',
         steps: [
           { n: '01', title: 'Obtener el mod', desc: 'Descargá el archivo <code>.jar</code> de CH Images (consultá la sección <strong>Descarga</strong> para obtener acceso). El archivo es compatible exclusivamente con Forge 1.20.1.' },
           { n: '02', title: 'Instalar en la carpeta mods', desc: 'Colocá el archivo <code>.jar</code> dentro de la carpeta <code>mods/</code> de tu instalación de Forge 1.20.1, tanto en el cliente como en el servidor si aplica.' },
@@ -1861,71 +1860,65 @@
           ['Versión del juego', 'Minecraft Java 1.20.1 (Forge)'],
           ['Versión del mod', '1.0.0'],
           ['Tipo', 'Solo cliente (Client-Side)'],
-          ['Función principal', 'Experiencia standalone para eventos masivos'],
-          ['Requiere configuración', 'Sí — IP del servidor en el código interno'],
+          ['Función principal', 'Interfaces personalizadas'],
+          ['Requiere configuración', 'Sí (IP del servidor en el código interno)'],
           ['Estado', 'En desarrollo activo'],
         ],
-        desc: `<strong>CH Launch</strong> es un mod de cliente diseñado para transformar Minecraft en una experiencia <em>standalone</em> — es decir, completamente cerrada e inmersiva — orientada a eventos masivos. La idea es que los jugadores que se unan al evento vean únicamente las pantallas, botones y música que el organizador preparó, sin distracciones de la interfaz nativa del juego.`,
+        desc: `<strong>CH Launch</strong> es un mod de cliente para Minecraft Java 1.20.1 (Forge) diseñado para transformar Minecraft en una experiencia completamente cerrada e inmersiva, orientada a eventos masivos. La idea es que los jugadores que se unan al evento vean únicamente las pantallas, botones y música que el organizador preparó, sin distracciones de la interfaz nativa del juego.`,
         extra: `
-          <div class="ws-note"><span class="ws-note-icon">🎯</span><span>El mod está pensado para distribución directa a los participantes de un evento. Una vez instalado, el cliente de Minecraft se comporta como si fuera la propia plataforma del evento — no como un juego al que se le instaló un mod.</span></div>
+          <div class="ws-note"><span class="ws-note-icon">🎯</span><span>El mod está pensado para distribución directa a los participantes de un evento. Una vez instalado, el cliente de Minecraft se comporta como si fuera la propia plataforma del evento, no como un juego al que se le instaló un mod.</span></div>
           <div class="ws-h2">¿Qué transforma exactamente?</div>
-          <div class="ws-p">El mod actúa en tres niveles. A nivel de <strong>navegación</strong>, elimina el menú multijugador nativo y reemplaza el botón de jugar con una conexión directa al servidor del evento, invisible para el jugador. A nivel de <strong>audio</strong>, desactiva toda la música original de Minecraft y la reemplaza por listas de reproducción personalizadas en formato <code>.ogg</code> que suenan de forma ininterrumpida. A nivel de <strong>interfaz</strong>, reemplaza las pantallas de carga, el menú principal y el menú de pausa por diseños propios del evento.</div>
+          <div class="ws-p">El mod actúa en tres niveles (CADA UNO ES OPCIONAL). A nivel de <strong>navegación</strong>, puedes eliminar el menú multijugador nativo y reemplazar el botón de jugar con una conexión directa al servidor del evento, invisible para el jugador. A nivel de <strong>audio</strong>, puedes desactivar toda la música original de Minecraft y reemplazarla por listas de reproducción personalizadas en formato <code>.ogg</code> que suenan de forma ininterrumpida en el menu principal. A nivel de <strong>interfaz</strong>, puedes reemplazar las pantallas de carga, el menú principal y el menú de pausa por diseños propios del evento.</div>
           <div class="ws-note"><span class="ws-note-icon">ℹ️</span><span>Este mod no tiene comandos ni GUI dentro del juego. Su configuración es interna al código y se ajusta por el creador del evento antes de distribuirlo.</span></div>
         `
       },
       inicio: {
-        intro: 'CH Launch funciona directamente desde el primer inicio. No requiere ninguna acción del jugador para activarse — todo está configurado de antemano por el organizador del evento. El proceso de instalación es idéntico al de cualquier mod de Forge.',
+        intro: 'CH Launch funciona directamente desde el primer inicio. No requiere ninguna acción del jugador para activarse, todo está configurado de antemano por el ocreador del mod, según los intereses del creador del evento. El proceso de instalación es idéntico al de cualquier mod de Forge.',
         steps: [
-          { n: '01', title: 'Recibir el archivo del mod', desc: 'El organizador del evento distribuye el archivo <code>.jar</code> de CH Launch con la configuración del evento ya incluida (IP del servidor, música, fondos, etc.). No existe una versión genérica pública.' },
-          { n: '02', title: 'Instalar en la carpeta mods', desc: 'Colocá el archivo <code>.jar</code> dentro de la carpeta <code>mods/</code> de tu instalación de Forge 1.20.1. No hace falta ningún otro mod ni dependencia adicional.' },
-          { n: '03', title: 'Iniciar Minecraft con Forge 1.20.1', desc: 'Abrí el juego con el perfil de Forge 1.20.1. Desde el primer inicio ya vas a ver la pantalla de introducción del evento y el menú principal personalizado.' },
-          { n: '04', title: 'Presionar JUGAR', desc: 'El botón JUGAR conecta directamente al servidor del evento. No hay lista de servidores ni menú multijugador — la conexión es automática e invisible.' },
+          { n: '01', title: 'Obtener el mod', desc: 'Descargá el archivo <code>.jar</code> de CH Launch con la configuración del evento ya incluida (IP del servidor, música, fondos, etc.). No existe una versión genérica pública, todo es personalizado.' },
+          { n: '02', title: 'Instalar en la carpeta mods', desc: 'Colocá el archivo <code>.jar</code> dentro de la carpeta <code>mods/</code> de tu instalación de Forge 1.20.1. No hace falta ningún otro mod o dependencia adicional, ni tampoco que el mod se coloque en la carpeta de mods del servidor ya que es un mod de Cliente.' },
+          { n: '03', title: 'Iniciar Minecraft con Forge 1.20.1', desc: 'Abrí el juego con el perfil de Forge 1.20.1. Desde el primer inicio ya vas a ver la pantalla de introducción del evento y el menú principal personalizado. Si que es que aplica.' },
+          { n: '04', title: 'Presionar JUGAR (Si se aplica la conexión directa)', desc: 'El botón JUGAR conecta directamente al servidor del evento. No hay lista de servidores ni menú multijugador, la conexión es automática e invisible.' },
         ],
         extra: `
-          <div class="ws-note"><span class="ws-note-icon">⚠️</span><span>La primera vez que iniciás el juego con el mod puede aparecer brevemente la pantalla de carga de Forge o Mojang. Eso es normal — a partir del segundo inicio esas pantallas desaparecen por completo y el mod toma el control desde el principio.</span></div>
+          <div class="ws-note"><span class="ws-note-icon">⚠️</span><span>La primera vez que iniciás el juego con el mod puede aparecer brevemente la pantalla de carga de Forge o Mojang. Eso es normal, a partir del segundo inicio esas pantallas desaparecen por completo y el mod toma el control desde el principio.</span></div>
+          <div class="ws-note"><span class="ws-note-icon">⚠️</span><span>También reitero que si en caso adquieres el mod, tu eres libre de decirme que interfaces deseas añadir, quitar, si quieres aplicar la conexión directa al servidor, eliminando asi la lista de servidores vanilla, si quieres añadir o no una interfaz de pausa, si quieres añadir o no la música personalizada en el menu principal... todo es a creatividad del que adquiera el mod.</span></div>
         `
       },
       tutorial: {
         tag: 'Diseño y personalización',
         title: 'Ejemplos del mod',
-        intro: 'CH Launch no tiene tutorial de uso como tal, ya que el jugador final no configura nada. Esta sección muestra el aspecto visual del mod y las interfaces personalizadas que incluye.',
+        intro: 'CH Launch no tiene tutorial de uso como tal, ya que el jugador final no configura nada. Esta sección muestra el aspecto visual del mod y las interfaces personalizadas que puede incluir.',
         showComandos: false,
         blocks: [
           {
-            title: 'Pantalla de introducción',
+            title: 'Pantalla de carga',
             desc: 'Al iniciar el juego, CH Launch reemplaza las pantallas de carga de Forge y Mojang por una pantalla de introducción propia del evento. Muestra el logo a pantalla completa con un desvanecimiento programado de 5 segundos y una barra de progreso minimalista renderizada por código. A partir del segundo inicio, las pantallas predeterminadas de Forge y Mojang desaparecen por completo.',
             type: 'img',
             src:  'images/chlaunch/intro_screen.png',
-            alt:  'Pantalla de introducción del evento'
+            alt:  'Pantalla de carga del evento'
           },
           {
-            title: 'Menú principal del evento',
-            desc: 'El menú principal de Minecraft es reemplazado completamente por el diseño del evento. Incluye fondo personalizado y botones con efecto glow — un detalle visual agregado por Checho para darle más vida a la interfaz. El botón "JUGAR" conecta directamente al servidor sin pasar por ningún menú adicional. El fondo que ves en este apartado es obra de MemeStudio.',
+            title: 'Menú principal',
+            desc: 'El menú principal de Minecraft es reemplazado completamente por el diseño del evento. Incluye fondo personalizado y botones con efecto glow, un detalle visual agregado por mi, para darle más vida a la interfaz. El botón "JUGAR" conecta directamente al servidor sin pasar por ningún menú adicional. El fondo que ves en este apartado es obra de MemeStudio.',
             type: 'img',
             src:  'images/chlaunch/main_menu.png',
             alt:  'Menú principal personalizado del evento'
           },
           {
-            title: 'Menú de pausa dentro del servidor',
-            desc: 'Cuando un jugador presiona Escape dentro del servidor, en lugar del menú de pausa vanilla de Minecraft aparece una interfaz personalizada del evento. El diseño base de esta pantalla es obra de MemeStudio, y los efectos de glow en los botones fueron agregados por Checho.',
+            title: 'Menú de pausa',
+            desc: 'Cuando un jugador presiona la tecla ESC, o pausa, dentro del servidor, en lugar del menú de pausa vanilla de Minecraft aparece una interfaz personalizada del evento. El diseño base de esta pantalla de ejemplo, es obra de MemeStudio, y los efectos de glow en los botones fueron agregados por mi.',
             type: 'img',
             src:  'images/chlaunch/pause_menu.png',
             alt:  'Menú de pausa personalizado dentro del servidor'
           },
           {
-            title: 'Sistema de audio personalizado',
-            desc: 'La música original de Minecraft se desactiva desde la raíz. En su lugar, el mod reproduce listas de reproducción propias en formato <code>.ogg</code> de forma continua entre el menú principal y las opciones. Dentro del menú nativo de "Opciones de música y sonidos" de Minecraft se inyecta un botón estático que permite cambiar de canción en tiempo real sin salir de ese menú.',
+            title: 'Sistema de audio',
+            desc: 'La música original de Minecraft se desactiva desde la raíz. En su lugar, el mod reproduce listas de reproducción propias en formato <code>.ogg</code> de forma continua entre el menú principal y las opciones. Dentro del menú vanilla de "Opciones de música y sonidos" de Minecraft se inyecta un botón estático que permite cambiar de canción en tiempo real sin salir de ese menú.',
             type: 'img',
             src:  'images/chlaunch/audio_button.png',
             alt:  'Botón de cambio de canción inyectado en las opciones de audio'
-          },
-          {
-            title: 'Sistema Anti-Fuga',
-            desc: 'Si un jugador se desconecta del servidor por cualquier motivo, el mod lo detecta y lo devuelve automáticamente al menú principal personalizado del evento. El acceso a la lista de servidores estándar de Minecraft queda bloqueado, manteniendo la experiencia cerrada en todo momento.',
-            type: 'img',
-            src:  'images/chlaunch/anti_fuga.png',
-            alt:  'Sistema anti-fuga redirigiendo al menú principal del evento'
-          },
+          }
         ]
       },
       recursos: []
