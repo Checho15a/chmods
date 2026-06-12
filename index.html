@@ -36,7 +36,6 @@
     const db   = getFirestore(app);
     let _user = null, _guest = false;
 
-    // Verificar si un username ya existe en Firestore
     async function usernameExists(username) {
       const q = query(
         collection(db, "users"),
@@ -46,11 +45,8 @@
       return !snap.empty;
     }
 
-    // Resolver si el input es email o username, y devolver el email real
     async function resolveEmail(input) {
-      // Si tiene @ es un email directo
       if (input.includes('@')) return input;
-      // Si no, buscar en Firestore por username
       const q = query(
         collection(db, "users"),
         where("usernameLower", "==", input.toLowerCase())
@@ -65,15 +61,11 @@
         return usernameExists(username);
       },
       async register(email, pw, username) {
-        // 1. Verificar username único
         if (await usernameExists(username)) {
           throw { code: 'auth/username-taken' };
         }
-        // 2. Crear usuario en Firebase Auth
         const c = await createUserWithEmailAndPassword(auth, email, pw);
-        // 3. Mandar verificación
         await sendEmailVerification(c.user);
-        // 4. Guardar en Firestore
         await setDoc(doc(db, "users", c.user.uid), {
           username,
           usernameLower: username.toLowerCase(),
@@ -93,7 +85,6 @@
       setGuest:   v  => { _guest = v; },
       isVerified: () => _user?.emailVerified ?? false,
 
-      // ── Sugerencias ──────────────────────────────────────────
       async getSuggestions() {
         const q = query(
           collection(db, 'suggestions'),
@@ -107,8 +98,6 @@
       async postSuggestion(text, category) {
         if (!_user) throw new Error('No autenticado');
         const today = new Date().toISOString().slice(0, 10);
-
-        // Buscar solo por uid (sin índice compuesto) y filtrar fecha en cliente
         const q = query(
           collection(db, 'suggestions'),
           where('uid', '==', _user.uid)
@@ -116,7 +105,6 @@
         const snap = await getDocs(q);
         const alreadyToday = snap.docs.some(d => d.data().dateStr === today);
         if (alreadyToday) throw { code: 'limit/daily' };
-
         const username = _user.displayName || _user.email.split('@')[0];
         return await addDoc(collection(db, 'suggestions'), {
           uid: _user.uid,
@@ -306,7 +294,6 @@
     }
     .theme-toggle:hover { border-color: var(--accent); }
 
-    /* botón tema en auth (esquina) */
     .auth-theme-btn {
       position: absolute; top: 1rem; right: 1rem; z-index: 2;
       width: 34px; height: 34px;
@@ -806,6 +793,27 @@
         </div>
       </div>
 
+      <!-- ── NUEVO MOD: CH Launch ── -->
+      <div class="mod-card" id="mc-launch" onclick="openMod('launch')">
+        <div class="card-head">
+          <div class="card-icon">🚀</div>
+          <div>
+            <div class="card-type">Forge 1.20.1 · Client</div>
+            <div class="card-name">CH Launch</div>
+          </div>
+        </div>
+        <p class="card-desc">Transforma el cliente de Minecraft en una experiencia standalone para eventos masivos — menú personalizado, audio propio y sistema anti-fuga incorporado.</p>
+        <div class="card-foot">
+          <div class="card-tags">
+            <span class="card-tag">Forge</span>
+            <span class="card-tag">Client</span>
+            <span class="card-tag">Eventos</span>
+            <span class="card-tag">UI</span>
+          </div>
+          <span class="card-arrow">↗</span>
+        </div>
+      </div>
+
       <div class="mod-card mod-card--vip" id="mc-squid" onclick="showVipToast()">
         <div class="card-head">
           <div class="card-icon" style="background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.3)">🔐</div>
@@ -887,9 +895,7 @@
     clearMsg();
   }
 
-  function backToLogin() {
-    switchTab('in');
-  }
+  function backToLogin() { switchTab('in'); }
   function showMsg(txt, type) {
     const el = document.getElementById('auth-msg');
     el.textContent = txt; el.className = 'auth-msg ' + type;
@@ -931,7 +937,6 @@
     const email    = document.getElementById('reg-email').value.trim();
     const pw       = document.getElementById('reg-pw').value;
 
-    // Validaciones locales primero (sin llamadas async, sin deshabilitar botón)
     if (!username || !email || !pw) {
       showMsg('Completá todos los campos.', 'err'); return;
     }
@@ -945,26 +950,20 @@
       showMsg('La contraseña debe tener al menos 6 caracteres.', 'err'); return;
     }
 
-    // Deshabilitar botón solo cuando vamos a hacer llamadas reales
     setBtnLoading(true);
 
     try {
-      // Verificar username único
       const taken = await window._chm.checkUsername(username);
       if (taken) {
         showMsg('Ese nombre de usuario ya está en uso. Elegí otro.', 'err');
         setBtnLoading(false);
         return;
       }
-
-      // Crear cuenta
       await window._chm.register(email, pw, username);
       setBtnLoading(false);
       showVerifyScreen(email);
-
     } catch(e) {
       setBtnLoading(false);
-
       if (e.code === 'auth/username-taken') {
         showMsg('Ese nombre de usuario ya está en uso. Elegí otro.', 'err');
       } else if (e.code === 'auth/email-already-in-use') {
@@ -1021,7 +1020,7 @@
   }
 
   function openMod(id) {
-    if (id === 'wip') return; // mod en desarrollo, no tiene wiki aún
+    if (id === 'wip') return;
     openWiki(id);
   }
 
@@ -1081,7 +1080,6 @@
      WIKI — Vista de mod individual (página completa)
 ════════════════════════════════════════════════════════════ -->
 <style>
-  /* ── Vista wiki: reemplaza toda la pantalla ── */
   #wiki-screen {
     display: none;
     position: fixed; inset: 0; z-index: 60;
@@ -1091,7 +1089,6 @@
   }
   #wiki-screen.show { display: flex; }
 
-  /* ── Navbar wiki ── */
   .wiki-nav {
     display: flex; align-items: center; gap: 1rem;
     padding: 0 clamp(1rem, 4vw, 2.5rem);
@@ -1132,12 +1129,10 @@
   }
   .wiki-nav-theme:hover { border-color: var(--accent); }
 
-  /* ── Layout: sidebar + contenido ── */
   .wiki-layout {
     display: flex; flex: 1; overflow: hidden;
   }
 
-  /* ── Sidebar ── */
   .wiki-sidebar {
     width: 230px; flex-shrink: 0;
     background: var(--bg2);
@@ -1171,7 +1166,6 @@
   .sb-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(232,130,12,.06); }
   .sb-icon { width: 18px; text-align: center; font-size: .9rem; flex-shrink: 0; }
 
-  /* grupo desplegable */
   .sb-group-header {
     display: flex; align-items: center; gap: .6rem;
     padding: .55rem 1.1rem;
@@ -1183,7 +1177,6 @@
   .sb-group-header:hover { color: var(--text); background: rgba(232,130,12,.04); }
   .sb-group-label { flex: 1; display: flex; align-items: center; gap: .45rem; }
 
-  /* tooltip del ? — aparece debajo, alineado a la izquierda del sidebar */
   .sb-tooltip-wrap { position: static; display: inline-flex; }
   .sb-q {
     width: 15px; height: 15px; border-radius: 50%;
@@ -1208,7 +1201,6 @@
     opacity: 0; pointer-events: none;
     transition: opacity .2s ease;
     white-space: normal;
-    /* posición dinámica via JS */
     left: 235px; top: auto;
   }
   .sb-q:hover + .sb-tooltip,
@@ -1240,7 +1232,6 @@
   .sb-ext { margin-left: auto; font-size: .68rem; opacity: .5; transition: all var(--ease); }
   .sb-sub-link:hover .sb-ext { opacity: 1; transform: translate(1px,-1px); }
 
-  /* ── Contenido ── */
   .wiki-content {
     flex: 1; overflow-y: auto; overflow-x: hidden;
     padding: 2.5rem clamp(1.5rem, 5vw, 4rem);
@@ -1253,7 +1244,6 @@
   .ws { display: none; }
   .ws.active { display: block; }
 
-  /* tipografía de contenido — formal */
   .ws-tag {
     font-family: 'DM Mono', monospace;
     font-size: .62rem; letter-spacing: .18em;
@@ -1285,7 +1275,6 @@
     border-radius: 4px; padding: .08rem .4rem; color: var(--accent);
   }
 
-  /* chips */
   .ws-chips { display: flex; flex-wrap: wrap; gap: .45rem; margin-bottom: 1.2rem; }
   .ws-chip {
     font-family: 'DM Mono', monospace; font-size: .6rem;
@@ -1295,7 +1284,6 @@
   }
   .ws-chip.hi { border-color: rgba(232,130,12,.4); color: var(--accent); background: rgba(232,130,12,.06); }
 
-  /* nota / callout */
   .ws-note {
     display: flex; gap: .75rem;
     background: rgba(232,130,12,.05);
@@ -1307,7 +1295,6 @@
   .ws-note-icon { flex-shrink: 0; font-size: .95rem; margin-top: .08rem; }
   .ws-note strong { color: var(--text); }
 
-  /* tabla de info formal */
   .ws-table {
     width: 100%; border-collapse: collapse;
     font-size: .84rem; margin-bottom: 1.2rem;
@@ -1325,7 +1312,6 @@
   }
   .ws-table td:last-child { color: var(--text); }
 
-  /* bloque de instalación — sin numeritos animados, formal */
   .ws-install-block {
     background: var(--bg2);
     border: 1px solid var(--border);
@@ -1359,7 +1345,6 @@
     border-radius: 4px; padding: .06rem .36rem; color: var(--accent);
   }
 
-  /* bloque multimedia: título recto + imagen placeholder */
   .ws-media-block { margin-bottom: 2rem; }
   .ws-media-title {
     font-family: 'Syne', sans-serif;
@@ -1380,7 +1365,6 @@
   }
   .ws-img-placeholder span:first-child { font-size: 1.5rem; }
 
-  /* sección descarga */
   .ws-download-box {
     background: var(--bg2);
     border: 1px solid var(--border);
@@ -1417,7 +1401,6 @@
   }
   .ws-discord-info span { color: var(--accent); }
 
-  /* tabla de comandos */
   .ws-cmd-table {
     width: 100%;
     border: 1px solid var(--border);
@@ -1462,7 +1445,6 @@
     border-radius: 4px; padding: .06rem .35rem; color: var(--accent);
   }
 
-  /* sub-links del sidebar como items activos */
   .sb-sub-link.sb-active { color: var(--accent); background: rgba(232,130,12,.06); }
 
   @media (max-width: 600px) {
@@ -1470,7 +1452,6 @@
     .ws-cmd-cell-cmd { border-right: none; border-bottom: 1px solid var(--border); }
   }
 
-  /* ── Carrusel de media ── */
   .ws-carousel {
     position: relative; margin-top: .7rem;
     border-radius: 9px; overflow: hidden;
@@ -1513,7 +1494,6 @@
   }
   .ws-carousel-dot.active { background: var(--accent); width: 18px; border-radius: 3px; }
 
-  /* imagen simple */
   .ws-media-img {
     width: 100%; display: block; border-radius: 9px;
     border: 1px solid var(--border); margin-top: .7rem;
@@ -1521,10 +1501,9 @@
   }
 </style>
 
-<!-- HTML de la vista wiki (página completa) -->
+<!-- HTML de la vista wiki -->
 <div id="wiki-screen">
 
-  <!-- Navbar -->
   <nav class="wiki-nav">
     <button class="wiki-home-btn" onclick="closeWiki()" title="Volver a CH Mods">🏠</button>
     <div class="wiki-nav-sep"></div>
@@ -1533,10 +1512,8 @@
     <button class="wiki-nav-theme" id="wikiThemeBtn" aria-label="Cambiar tema">☀️</button>
   </nav>
 
-  <!-- Layout -->
   <div class="wiki-layout">
 
-    <!-- Sidebar -->
     <aside class="wiki-sidebar">
       <div class="sb-mod-name" id="sb-mod-name">CH Mod</div>
 
@@ -1587,7 +1564,6 @@
       </div>
     </aside>
 
-    <!-- Contenido -->
     <div class="wiki-content" id="wiki-content-area">
 
       <!-- WIKI GENERAL -->
@@ -1611,8 +1587,8 @@
 
       <!-- TUTORIAL MULTIMEDIA -->
       <div class="ws" id="ws-tutorial">
-        <div class="ws-tag">Tutorial paso a paso</div>
-        <h1 class="ws-h1">Tutorial Multimedia</h1>
+        <div class="ws-tag" id="ws-tutorial-tag">Tutorial paso a paso</div>
+        <h1 class="ws-h1" id="ws-tutorial-title">Tutorial Multimedia</h1>
         <div class="ws-p" id="ws-tutorial-intro"></div>
         <div id="ws-tutorial-blocks"></div>
       </div>
@@ -1626,7 +1602,6 @@
           <span>Se recomienda usar <code>/chpreview</code> para gestionar proyecciones. La GUI es más intuitiva, permite almacenar medios con nombre, previsualizar antes de enviar y ofrece opciones exclusivas no disponibles por comandos.</span>
         </div>
 
-        <!-- Comandos generales -->
         <div class="ws-h2">Comandos generales</div>
         <div class="ws-cmd-table">
           <div class="ws-cmd-row">
@@ -1651,7 +1626,6 @@
           </div>
         </div>
 
-        <!-- /chimage -->
         <div class="ws-h2" style="margin-top:1.8rem">/chimage — Imágenes</div>
         <div class="ws-cmd-table">
           <div class="ws-cmd-row">
@@ -1676,7 +1650,6 @@
           <span>Los links deben terminar en <code>.jpg</code>. Otros formatos como <code>.png</code> o <code>.webp</code> pueden funcionar pero no están garantizados.</span>
         </div>
 
-        <!-- Parámetros de /chimage -->
         <div class="ws-h2" style="margin-top:1.4rem">Parámetros opcionales de /chimage link</div>
         <div class="ws-p">Los parámetros se añaden al final del comando, en cualquier combinación. Por defecto todos están en <strong>NO</strong>, por lo que no es necesario especificarlos si no se quieren activar.</div>
         <div class="ws-cmd-table" style="margin-bottom:.8rem">
@@ -1697,7 +1670,6 @@
           <div class="ws-cmd-row"><div class="ws-cmd-cell-cmd" style="font-size:.72rem"><code>/chimage link "url" true chatSI cmdsSI interactSI invSI moverSI</code></div><div class="ws-cmd-cell-desc">Todos los parámetros activos.</div></div>
         </div>
 
-        <!-- /chvideo -->
         <div class="ws-h2" style="margin-top:1.8rem">/chvideo — Videos</div>
         <div class="ws-cmd-table">
           <div class="ws-cmd-row">
@@ -1722,7 +1694,6 @@
           <span>El link debe terminar obligatoriamente en <code>.gif</code>. Si se usa un GIF con este comando, se reproducirá <strong>una sola vez</strong> como si fuera un video, sin repetirse. Los videos <strong>no reproducen sonido</strong> en esta versión.</span>
         </div>
 
-        <!-- /chgif -->
         <div class="ws-h2" style="margin-top:1.8rem">/chgif — GIFs</div>
         <div class="ws-cmd-table">
           <div class="ws-cmd-row">
@@ -1730,7 +1701,7 @@
             <div class="ws-cmd-cell-desc">Muestra la ayuda de uso de comandos para la proyección de GIFs.</div>
           </div>
           <div class="ws-cmd-row">
-            <div class="ws-cmd-cell-cmd"><code>/chgif link "url" true/false</code></div>
+            <div class="ws-cmd-cell-cmd"><code>/chvideo link "url" true/false</code></div>
             <div class="ws-cmd-cell-desc"><strong>true</strong> proyecta el GIF. <strong>false</strong> lo detiene. Se reproduce en bucle hasta desactivarse.</div>
           </div>
           <div class="ws-cmd-row">
@@ -1773,9 +1744,9 @@
         </div>
       </div>
 
-    </div><!-- /wiki-content-area -->
-  </div><!-- /wiki-layout -->
-</div><!-- /wiki-screen -->
+    </div>
+  </div>
+</div>
 
 <script>
   // ══════════════════════════════════════════════
@@ -1815,7 +1786,10 @@
         extra: `<div class="ws-note"><span class="ws-note-icon">ℹ️</span><span>No se generan archivos de configuración. El mod funciona listo para usar desde el primer inicio sin pasos adicionales.</span></div>`
       },
       tutorial: {
+        tag: 'Tutorial paso a paso',
+        title: 'Tutorial Multimedia',
         intro: 'A continuación se detallan todas las funciones del mod, organizadas por sección. Cada función incluye su descripción de uso e imagen o GIF de referencia.',
+        showComandos: true,
         blocks: [
           {
             title: 'Comando /chpreview — Abrir el administrador (GUI)',
@@ -1876,6 +1850,87 @@
       ]
     },
 
+    // ══ NUEVO MOD: CH Launch ══
+    launch: {
+      name: 'CH Launch',
+      version: 'Forge 1.20.1 · Client',
+      general: {
+        title: 'CH Launch',
+        chips: ['Forge 1.20.1', 'v1.0.0', 'Client-Side', 'Eventos', 'UI · Audio · Standalone'],
+        table: [
+          ['Versión del juego', 'Minecraft Java 1.20.1 (Forge)'],
+          ['Versión del mod', '1.0.0'],
+          ['Tipo', 'Solo cliente (Client-Side)'],
+          ['Función principal', 'Experiencia standalone para eventos masivos'],
+          ['Requiere configuración', 'Sí — IP del servidor en el código interno'],
+          ['Estado', 'En desarrollo activo'],
+        ],
+        desc: `<strong>CH Launch</strong> es un mod de cliente diseñado para transformar Minecraft en una experiencia <em>standalone</em> — es decir, completamente cerrada e inmersiva — orientada a eventos masivos. La idea es que los jugadores que se unan al evento vean únicamente las pantallas, botones y música que el organizador preparó, sin distracciones de la interfaz nativa del juego.`,
+        extra: `
+          <div class="ws-note"><span class="ws-note-icon">🎯</span><span>El mod está pensado para distribución directa a los participantes de un evento. Una vez instalado, el cliente de Minecraft se comporta como si fuera la propia plataforma del evento — no como un juego al que se le instaló un mod.</span></div>
+          <div class="ws-h2">¿Qué transforma exactamente?</div>
+          <div class="ws-p">El mod actúa en tres niveles. A nivel de <strong>navegación</strong>, elimina el menú multijugador nativo y reemplaza el botón de jugar con una conexión directa al servidor del evento, invisible para el jugador. A nivel de <strong>audio</strong>, desactiva toda la música original de Minecraft y la reemplaza por listas de reproducción personalizadas en formato <code>.ogg</code> que suenan de forma ininterrumpida. A nivel de <strong>interfaz</strong>, reemplaza las pantallas de carga, el menú principal y el menú de pausa por diseños propios del evento.</div>
+          <div class="ws-note"><span class="ws-note-icon">ℹ️</span><span>Este mod no tiene comandos ni GUI dentro del juego. Su configuración es interna al código y se ajusta por el creador del evento antes de distribuirlo.</span></div>
+        `
+      },
+      inicio: {
+        intro: 'CH Launch funciona directamente desde el primer inicio. No requiere ninguna acción del jugador para activarse — todo está configurado de antemano por el organizador del evento. El proceso de instalación es idéntico al de cualquier mod de Forge.',
+        steps: [
+          { n: '01', title: 'Recibir el archivo del mod', desc: 'El organizador del evento distribuye el archivo <code>.jar</code> de CH Launch con la configuración del evento ya incluida (IP del servidor, música, fondos, etc.). No existe una versión genérica pública.' },
+          { n: '02', title: 'Instalar en la carpeta mods', desc: 'Colocá el archivo <code>.jar</code> dentro de la carpeta <code>mods/</code> de tu instalación de Forge 1.20.1. No hace falta ningún otro mod ni dependencia adicional.' },
+          { n: '03', title: 'Iniciar Minecraft con Forge 1.20.1', desc: 'Abrí el juego con el perfil de Forge 1.20.1. Desde el primer inicio ya vas a ver la pantalla de introducción del evento y el menú principal personalizado.' },
+          { n: '04', title: 'Presionar JUGAR', desc: 'El botón JUGAR conecta directamente al servidor del evento. No hay lista de servidores ni menú multijugador — la conexión es automática e invisible.' },
+        ],
+        extra: `
+          <div class="ws-note"><span class="ws-note-icon">⚠️</span><span>La primera vez que iniciás el juego con el mod puede aparecer brevemente la pantalla de carga de Forge o Mojang. Eso es normal — a partir del segundo inicio esas pantallas desaparecen por completo y el mod toma el control desde el principio.</span></div>
+        `
+      },
+      tutorial: {
+        tag: 'Diseño y personalización',
+        title: 'Ejemplos del mod',
+        intro: 'CH Launch no tiene tutorial de uso como tal, ya que el jugador final no configura nada. Esta sección muestra el aspecto visual del mod y las interfaces personalizadas que incluye.',
+        showComandos: false,
+        blocks: [
+          {
+            title: 'Pantalla de introducción',
+            desc: 'Al iniciar el juego, CH Launch reemplaza las pantallas de carga de Forge y Mojang por una pantalla de introducción propia del evento. Muestra el logo a pantalla completa con un desvanecimiento programado de 5 segundos y una barra de progreso minimalista renderizada por código. A partir del segundo inicio, las pantallas predeterminadas de Forge y Mojang desaparecen por completo.',
+            type: 'img',
+            src:  'images/chlaunch/intro_screen.png',
+            alt:  'Pantalla de introducción del evento'
+          },
+          {
+            title: 'Menú principal del evento',
+            desc: 'El menú principal de Minecraft es reemplazado completamente por el diseño del evento. Incluye fondo personalizado y botones con efecto glow — un detalle visual agregado por Checho para darle más vida a la interfaz. El botón "JUGAR" conecta directamente al servidor sin pasar por ningún menú adicional. El fondo que ves en este apartado es obra de MemeStudio.',
+            type: 'img',
+            src:  'images/chlaunch/main_menu.png',
+            alt:  'Menú principal personalizado del evento'
+          },
+          {
+            title: 'Menú de pausa dentro del servidor',
+            desc: 'Cuando un jugador presiona Escape dentro del servidor, en lugar del menú de pausa vanilla de Minecraft aparece una interfaz personalizada del evento. El diseño base de esta pantalla es obra de MemeStudio, y los efectos de glow en los botones fueron agregados por Checho.',
+            type: 'img',
+            src:  'images/chlaunch/pause_menu.png',
+            alt:  'Menú de pausa personalizado dentro del servidor'
+          },
+          {
+            title: 'Sistema de audio personalizado',
+            desc: 'La música original de Minecraft se desactiva desde la raíz. En su lugar, el mod reproduce listas de reproducción propias en formato <code>.ogg</code> de forma continua entre el menú principal y las opciones. Dentro del menú nativo de "Opciones de música y sonidos" de Minecraft se inyecta un botón estático que permite cambiar de canción en tiempo real sin salir de ese menú.',
+            type: 'img',
+            src:  'images/chlaunch/audio_button.png',
+            alt:  'Botón de cambio de canción inyectado en las opciones de audio'
+          },
+          {
+            title: 'Sistema Anti-Fuga',
+            desc: 'Si un jugador se desconecta del servidor por cualquier motivo, el mod lo detecta y lo devuelve automáticamente al menú principal personalizado del evento. El acceso a la lista de servidores estándar de Minecraft queda bloqueado, manteniendo la experiencia cerrada en todo momento.',
+            type: 'img',
+            src:  'images/chlaunch/anti_fuga.png',
+            alt:  'Sistema anti-fuga redirigiendo al menú principal del evento'
+          },
+        ]
+      },
+      recursos: []
+    },
+
     squid: {
       name: 'CH SquidCraft',
       version: 'Forge 1.20.1',
@@ -1905,12 +1960,15 @@
         extra: `<div class="ws-note"><span class="ws-note-icon">⚠️</span><span>Se recomienda usarlo en un <strong>servidor dedicado</strong> para la experiencia completa. En modo single-player algunas mecánicas pueden comportarse de forma diferente.</span></div>`
       },
       tutorial: {
+        tag: 'Tutorial paso a paso',
+        title: 'Tutorial Multimedia',
         intro: 'Guía de cada función y mecánica incluida en el mod, con descripción e imagen de referencia.',
+        showComandos: true,
         blocks: [
-          { title: 'Ítems exclusivos del evento', desc: 'El mod agrega ítems únicos obtenibles durante el evento. Cada ítem tiene una función específica dentro de las dinámicas del torneo y no está disponible en el modo de juego normal.', img: true },
-          { title: 'Sistema de eliminación automática', desc: 'Al eliminarse un jugador, el sistema del mod lo detecta y aplica las reglas configuradas: anuncio en chat, efectos y transición al modo espectador.', img: true },
-          { title: 'Comandos de administración del evento', desc: 'Comandos disponibles para el operador: <code>/squidcraft start</code> para iniciar, <code>/squidcraft stop</code> para detener, y <code>/squidcraft reset</code> para reiniciar el estado del evento.', img: true },
-          { title: 'Panel de estado del evento', desc: 'El mod incluye una interfaz de estado que muestra los jugadores activos, eliminados y la fase actual del evento en tiempo real.', img: true },
+          { title: 'Ítems exclusivos del evento', desc: 'El mod agrega ítems únicos obtenibles durante el evento. Cada ítem tiene una función específica dentro de las dinámicas del torneo y no está disponible en el modo de juego normal.', type: 'img', src: '', alt: '' },
+          { title: 'Sistema de eliminación automática', desc: 'Al eliminarse un jugador, el sistema del mod lo detecta y aplica las reglas configuradas: anuncio en chat, efectos y transición al modo espectador.', type: 'img', src: '', alt: '' },
+          { title: 'Comandos de administración del evento', desc: 'Comandos disponibles para el operador: <code>/squidcraft start</code> para iniciar, <code>/squidcraft stop</code> para detener, y <code>/squidcraft reset</code> para reiniciar el estado del evento.', type: 'img', src: '', alt: '' },
+          { title: 'Panel de estado del evento', desc: 'El mod incluye una interfaz de estado que muestra los jugadores activos, eliminados y la fase actual del evento en tiempo real.', type: 'img', src: '', alt: '' },
         ]
       },
       recursos: []
@@ -1930,7 +1988,6 @@
     document.getElementById('wiki-screen').classList.add('show');
     document.body.style.overflow = 'hidden';
     wikiSection('general');
-    // Sincronizar tema
     const dark = document.body.classList.contains('dark');
     document.getElementById('wikiThemeBtn').textContent = dark ? '🌙' : '☀️';
   }
@@ -1981,13 +2038,22 @@
       </div>`).join('');
     document.getElementById('ws-inicio-extra').innerHTML = data.inicio.extra || '';
 
-    // tutorial
+    // tutorial — tag y título dinámicos
+    const tutTag = document.getElementById('ws-tutorial-tag');
+    const tutTitle = document.getElementById('ws-tutorial-title');
+    if (tutTag) tutTag.textContent = data.tutorial.tag || 'Tutorial paso a paso';
+    if (tutTitle) tutTitle.textContent = data.tutorial.title || 'Tutorial Multimedia';
+
     document.getElementById('ws-tutorial-intro').innerHTML = data.tutorial.intro;
     const blocksEl = document.getElementById('ws-tutorial-blocks');
     blocksEl.innerHTML = data.tutorial.blocks.map((b, idx) => {
       let mediaHtml = '';
       if (b.type === 'gif' || b.type === 'img') {
-        mediaHtml = `<img class="ws-media-img" src="${b.src}" alt="${b.alt || b.title}" loading="lazy" />`;
+        if (b.src) {
+          mediaHtml = `<img class="ws-media-img" src="${b.src}" alt="${b.alt || b.title}" loading="lazy" />`;
+        } else {
+          mediaHtml = `<div class="ws-img-placeholder"><span>🖼️</span><span>Imagen próximamente</span></div>`;
+        }
       } else if (b.type === 'carousel') {
         const id = `carousel-${idx}`;
         const slides = b.slides.map((s, i) => `
@@ -2014,6 +2080,24 @@
         </div>`;
     }).join('');
 
+    // sidebar: mostrar/ocultar "Comandos" según el mod
+    const sbComandosLink = document.querySelector('.sb-sub-link[data-s="comandos"]');
+    if (sbComandosLink) {
+      sbComandosLink.style.display = data.tutorial.showComandos ? '' : 'none';
+    }
+
+    // sidebar: label del grupo tutorial
+    const sbTutGroupLabel = document.querySelector('#sb-tutorial-group .sb-group-label');
+    if (sbTutGroupLabel) {
+      sbTutGroupLabel.textContent = data.tutorial.tag || 'Tutorial Multimedia';
+    }
+    // restaurar label del sub-link tutorial
+    const sbTutLink = document.querySelector('.sb-sub-link[data-s="tutorial"]');
+    if (sbTutLink) {
+      sbTutLink.innerHTML = `<span style="font-size:.75rem">📖</span> ${data.tutorial.title || 'Tutorial'}<span class="sb-ext" style="opacity:0"></span>`;
+      sbTutLink.onclick = () => wikiSection('tutorial');
+    }
+
     // recursos
     const resLinks = document.getElementById('sb-res-links');
     const resGroup = document.getElementById('sb-res-group');
@@ -2035,15 +2119,12 @@
     const target = document.getElementById('ws-' + sec);
     if (target) target.classList.add('active');
 
-    // Marcar items del sidebar
     document.querySelectorAll('.sb-item').forEach(el =>
       el.classList.toggle('active', el.dataset.s === sec));
 
-    // Marcar sub-links (tutorial / comandos)
     document.querySelectorAll('.sb-sub-link').forEach(el =>
       el.classList.toggle('sb-active', el.dataset.s === sec));
 
-    // Si es tutorial o comandos, abrir el grupo automáticamente
     if (sec === 'tutorial' || sec === 'comandos') {
       document.getElementById('sb-tutorial-group').classList.add('open');
     }
@@ -2080,8 +2161,7 @@
     if (cur < track.children.length - 1) carouselGo(id, cur + 1);
   }
 
-  // Tema dentro de wiki (sincronizado con el body)
-  // Tooltip del ? — posición dinámica para no salirse del sidebar
+  // Tooltip del ?
   const sbQ = document.querySelector('.sb-q');
   const sbTooltip = document.querySelector('.sb-tooltip');
   if (sbQ && sbTooltip) {
@@ -2107,7 +2187,6 @@
       closeSuggestions();
   });
 </script>
-
 <!-- ═══════════════════════════════════════════════════
      TOAST VIP
 ═══════════════════════════════════════════════════ -->
@@ -2142,7 +2221,6 @@
   }
   #sugg-screen.show { display: flex; }
 
-  /* Navbar sugerencias */
   .sugg-nav {
     display: flex; align-items: center; gap: 1rem;
     padding: 0 clamp(1rem, 4vw, 2.5rem);
@@ -2165,7 +2243,6 @@
   }
   .sugg-nav-title span { color: #27ae60; }
 
-  /* Cuerpo */
   .sugg-body {
     flex: 1; overflow-y: auto;
     padding: 2rem clamp(1rem, 5vw, 2.5rem) 4rem;
@@ -2173,10 +2250,7 @@
     scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
   }
 
-  /* Header con descripción */
-  .sugg-header {
-    margin-bottom: 1.8rem;
-  }
+  .sugg-header { margin-bottom: 1.8rem; }
   .sugg-header-tag {
     font-family: 'DM Mono', monospace; font-size: .62rem;
     letter-spacing: .18em; text-transform: uppercase;
@@ -2190,7 +2264,6 @@
     font-size: .88rem; color: var(--dim); line-height: 1.7; max-width: 580px;
   }
 
-  /* Límite diario */
   .sugg-limit-note {
     display: flex; gap: .6rem; align-items: flex-start;
     background: rgba(39,174,96,.06); border: 1px solid rgba(39,174,96,.2);
@@ -2199,7 +2272,6 @@
   }
   .sugg-limit-note strong { color: var(--text); }
 
-  /* Formulario nueva sugerencia */
   .sugg-form {
     background: var(--bg2); border: 1px solid var(--border);
     border-radius: 12px; padding: 1.4rem; margin-bottom: 2rem;
@@ -2244,7 +2316,6 @@
   .sugg-submit-btn:hover { background: #2ecc71; transform: translateY(-1px); }
   .sugg-submit-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
 
-  /* Guest notice */
   .sugg-guest-note {
     background: rgba(232,130,12,.06); border: 1px solid rgba(232,130,12,.2);
     border-radius: 9px; padding: .85rem 1rem; margin-bottom: 1.5rem;
@@ -2252,7 +2323,6 @@
   }
   .sugg-guest-note strong { color: var(--accent); }
 
-  /* Filtros */
   .sugg-filters {
     display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1.2rem;
     align-items: center;
@@ -2271,7 +2341,6 @@
   .sugg-filter-btn.on { border-color: #27ae60; color: #27ae60; background: rgba(39,174,96,.07); }
   .sugg-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-  /* Feed de sugerencias */
   .sugg-feed { display: flex; flex-direction: column; gap: 1rem; }
   .sugg-empty {
     text-align: center; padding: 2.5rem 1rem;
@@ -2321,7 +2390,6 @@
     color: var(--dim2); margin-bottom: .6rem;
   }
 
-  /* Acciones */
   .sugg-actions {
     display: flex; align-items: center; gap: .6rem;
     padding-top: .7rem; border-top: 1px solid var(--border);
@@ -2349,7 +2417,6 @@
   .sugg-action-btn.del:hover { border-color: var(--red); color: var(--red); }
   .sugg-spacer { flex: 1; }
 
-  /* Comentarios */
   .sugg-comments { margin-top: .9rem; border-top: 1px solid var(--border); padding-top: .9rem; }
   .sugg-comment {
     display: flex; gap: .6rem; margin-bottom: .7rem;
@@ -2394,7 +2461,6 @@
   }
   .sugg-comment-send:hover { background: #2ecc71; }
 
-  /* Modal editar */
   #sugg-edit-modal {
     position: fixed; inset: 0; z-index: 70;
     background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
@@ -2432,7 +2498,6 @@
   .sugg-edit-save:hover { background: #2ecc71; }
 </style>
 
-<!-- Toast sugerencias propio -->
 <div id="toast-sugg" style="
   position:fixed; bottom:1.5rem; right:1.5rem; z-index:400;
   background:var(--bg2); border:1px solid var(--border2);
@@ -2468,10 +2533,8 @@
       <span>Podés publicar <strong>1 sugerencia por día</strong> y editarla <strong>1 vez</strong> después de publicarla. Podés borrarla cuando quieras.</span>
     </div>
 
-    <!-- Formulario (solo usuarios logueados) -->
     <div id="sugg-form-area"></div>
 
-    <!-- Filtros -->
     <div class="sugg-filters">
       <span class="sugg-filter-label">Filtrar</span>
       <button class="sugg-filter-btn on" onclick="filterSugg('all', this)">Todos</button>
@@ -2481,7 +2544,6 @@
       <button class="sugg-filter-btn" onclick="filterSugg('other', this)">Otro</button>
     </div>
 
-    <!-- Feed -->
     <div class="sugg-feed" id="sugg-feed">
       <div class="sugg-empty">Cargando sugerencias...</div>
     </div>
@@ -2544,7 +2606,6 @@
   function openSuggestions() {
     document.getElementById('sugg-screen').classList.add('show');
     document.body.style.overflow = 'hidden';
-    // Sincronizar tema
     document.getElementById('suggThemeBtn').textContent =
       document.body.classList.contains('dark') ? '🌙' : '☀️';
     loadSuggestions();
@@ -2556,7 +2617,6 @@
     document.body.style.overflow = '';
   }
 
-  // Tema
   document.getElementById('suggThemeBtn').addEventListener('click', () => {
     applyTheme(!document.body.classList.contains('dark'));
     document.getElementById('suggThemeBtn').textContent =
@@ -2572,7 +2632,6 @@
     });
   }
 
-  // ── Render formulario ──────────────────────────────────────────
   function renderSuggForm() {
     const area = document.getElementById('sugg-form-area');
     const user = window._chm?.user();
@@ -2618,7 +2677,6 @@
     el.className = 'sugg-char-count' + (len > 540 ? ' warn' : '');
   }
 
-  // ── Cargar y renderizar feed ────────────────────────────────────
   async function loadSuggestions() {
     document.getElementById('sugg-feed').innerHTML = '<div class="sugg-empty">Cargando...</div>';
     try {
@@ -2702,14 +2760,12 @@
     }).join('');
   }
 
-  // ── Publicar sugerencia ────────────────────────────────────────
   async function submitSugg() {
     const ta  = document.getElementById('new-sugg-text');
     const btn = document.getElementById('sugg-submit-btn');
     if (!ta || !ta.value.trim()) { suggToast('Escribí algo antes de publicar.', 'err'); return; }
     if (ta.value.trim().length < 5) { suggToast('La sugerencia es muy corta (mín. 5 caracteres).', 'err'); return; }
 
-    // Verificar que el usuario esté logueado
     const user = window._chm?.user();
     if (!user) { suggToast('Sesión expirada. Recargá la página e iniciá sesión de nuevo.', 'err'); return; }
 
@@ -2717,15 +2773,12 @@
     btn.textContent = 'Publicando...';
 
     try {
-      console.log('[sugg] Intentando publicar para uid:', user.uid);
       await window._chm.postSuggestion(ta.value, _newCat);
-      console.log('[sugg] Publicado OK');
       ta.value = '';
       updateCharCount(ta, 'new-char');
       await loadSuggestions();
       suggToast('✓ Sugerencia publicada', 'ok');
     } catch(e) {
-      console.error('[sugg] Error al publicar:', e.code, e.message, e);
       if (e.code === 'limit/daily') {
         suggToast('Ya publicaste tu sugerencia de hoy. Volvé mañana 🕐', 'err');
       } else if (e.code === 'permission-denied') {
@@ -2741,14 +2794,12 @@
     }
   }
 
-  // ── Like ───────────────────────────────────────────────────────
   async function toggleLike(id) {
     if (!window._chm.user() || window._chm.isGuest()) {
       suggToast('Iniciá sesión para dar like.', 'err'); return;
     }
     try {
       await window._chm.toggleLike(id);
-      // Actualizar localmente
       const s = _suggAll.find(x => x.id === id);
       if (s) {
         const uid = window._chm.user().uid;
@@ -2763,7 +2814,6 @@
     } catch(e) { suggToast('Error al actualizar.', 'err'); }
   }
 
-  // ── Comentarios ────────────────────────────────────────────────
   async function sendComment(suggId) {
     const input = document.getElementById(`ci-${suggId}`);
     if (!input || !input.value.trim()) return;
@@ -2782,7 +2832,6 @@
     } catch(e) { suggToast('Error al borrar.', 'err'); }
   }
 
-  // ── Editar ─────────────────────────────────────────────────────
   function openEditModal(id, text, cat) {
     _editingId = id; _editCat = cat || 'mod';
     document.getElementById('edit-sugg-text').value = text;
@@ -2814,7 +2863,6 @@
     }
   }
 
-  // ── Borrar ─────────────────────────────────────────────────────
   async function deleteSugg(id) {
     if (!confirm('¿Borrar esta sugerencia? No se puede recuperar.')) return;
     try {
@@ -2824,7 +2872,6 @@
     } catch(e) { suggToast('Error al borrar.', 'err'); }
   }
 
-  // ── Toast interno de sugerencias ───────────────────────────────
   let _stTimer = null;
   function suggToast(msg, type) {
     const el = document.getElementById('toast-sugg');
@@ -2839,7 +2886,6 @@
     }, 3500);
   }
 
-  // ── Helpers ────────────────────────────────────────────────────
   function escHtml(s) {
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
