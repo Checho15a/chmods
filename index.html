@@ -915,13 +915,14 @@
     clearMsg();
   }
 
-  function showVerifyScreen(email) {
+  function showForgotScreen() {
     document.getElementById('auth-tabs').style.display   = 'none';
     document.getElementById('form-in').style.display     = 'none';
     document.getElementById('form-reg').style.display    = 'none';
-    document.getElementById('verify-view').style.display = 'block';
-    const emailEl = document.getElementById('v-email-display');
-    if (emailEl && email) emailEl.textContent = email;
+    document.getElementById('verify-view').style.display = 'none';
+    document.getElementById('forgot-view').style.display = 'block';
+    const input = document.getElementById('forgot-input');
+    if (input) input.value = '';
     clearMsg();
   }
 
