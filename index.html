@@ -751,6 +751,21 @@
         <button class="v-btn" onclick="checkVerify()">✓ Ya verifiqué — entrar</button>
         <button class="v-back-btn" onclick="backToLogin()">← Volver al inicio de sesión</button>
       </div>
+
+      <!-- Olvidé mi contraseña -->
+      <div id="forgot-view">
+        <div class="v-icon">🔑</div>
+        <div class="v-title">Recuperar contraseña</div>
+        <div class="v-text">
+          Ingresá tu correo electrónico o tu nombre de usuario y te enviaremos un link para restablecer tu contraseña.
+        </div>
+        <div class="auth-field" style="text-align:left">
+          <label>Correo electrónico o usuario</label>
+          <input type="text" id="forgot-input" placeholder="tu@correo.com o Usuario123" autocomplete="off" />
+        </div>
+        <button class="v-btn" id="forgot-send-btn" onclick="doForgotPassword()">Enviar link de recuperación</button>
+        <button class="v-back-btn" onclick="backToLogin()">← Volver al inicio de sesión</button>
+      </div>
     </div>
   </div>
 </div>
