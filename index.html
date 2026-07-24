@@ -1014,6 +1014,38 @@
     else showMsg('Todavía no verificaste tu correo. Revisá la bandeja.', 'err');
   }
 
+  // ── Olvidé mi contraseña ─────────────────────────────────────
+  async function doForgotPassword() {
+    clearMsg();
+    const input = document.getElementById('forgot-input').value.trim();
+    if (!input) { showMsg('Ingresá tu correo o nombre de usuario.', 'err'); return; }
+
+    const btn = document.getElementById('forgot-send-btn');
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = 'Enviando...';
+
+    try {
+      const email = await window._chm.resetPassword(input);
+      showMsg(`✓ Te enviamos un correo a ${email} con el link para restablecer tu contraseña. Revisá también la carpeta de Spam.`, 'ok');
+    } catch(e) {
+      if (e.code === 'auth/username-not-found') {
+        showMsg('No existe ningún usuario con ese nombre.', 'err');
+      } else if (e.code === 'auth/user-not-found') {
+        showMsg('No existe ninguna cuenta con ese correo.', 'err');
+      } else if (e.code === 'auth/invalid-email') {
+        showMsg('El correo no es válido.', 'err');
+      } else if (e.code === 'auth/too-many-requests') {
+        showMsg('Demasiados intentos. Esperá un momento antes de volver a intentar.', 'err');
+      } else {
+        showMsg(fbErr(e.code), 'err');
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
+  
   // ── Invitado ──────────────────────────────────────────────────
   function doGuest() { window._chm.setGuest(true); enterApp(null, true); }
 
