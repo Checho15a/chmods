@@ -85,6 +85,12 @@
       setGuest:   v  => { _guest = v; },
       isVerified: () => _user?.emailVerified ?? false,
 
+      async resetPassword(emailOrUsername) {
+        const email = await resolveEmail(emailOrUsername);
+        await sendPasswordResetEmail(auth, email);
+        return email;
+      },
+
       async getSuggestions() {
         const q = query(
           collection(db, 'suggestions'),
