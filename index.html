@@ -915,6 +915,17 @@
     clearMsg();
   }
 
+  function showVerifyScreen(email) {
+    document.getElementById('auth-tabs').style.display   = 'none';
+    document.getElementById('form-in').style.display     = 'none';
+    document.getElementById('form-reg').style.display    = 'none';
+    document.getElementById('verify-view').style.display = 'block';
+    document.getElementById('forgot-view').style.display = 'none';
+    const emailEl = document.getElementById('v-email-display');
+    if (emailEl && email) emailEl.textContent = email;
+    clearMsg();
+  }
+
   function showForgotScreen() {
     document.getElementById('auth-tabs').style.display   = 'none';
     document.getElementById('form-in').style.display     = 'none';
