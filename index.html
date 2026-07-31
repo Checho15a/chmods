@@ -1220,7 +1220,9 @@
       MOD_DATA[m.id] = m; // integra con la wiki genérica (openWiki/_buildWiki)
       if (!isAdmin && !m.published) return;
       if (document.getElementById('mc-' + m.id)) return; // ya tiene tarjeta fija en la página (images/launch)
-      grid.insertAdjacentHTML('beforeend', renderCustomModCard(m));
+      const suggCard = document.getElementById('mc-suggest');
+      if (suggCard) suggCard.insertAdjacentHTML('beforebegin', renderCustomModCard(m));
+      else grid.insertAdjacentHTML('beforeend', renderCustomModCard(m));
     });
 
     if (isAdmin) {
@@ -2233,7 +2235,7 @@
   // ══════════════════════════════════════════════
   // Copia "de fábrica" de los mods principales (antes de que el Panel OP los pueda sobreescribir),
   // usada por la función de importar mods existentes.
-  const CORE_MODS_BACKUP = JSON.parse(JSON.stringify({ images: MOD_DATA.images, launch: MOD_DATA.launch }));
+  const CORE_MODS_BACKUP = JSON.parse(JSON.stringify({ images: MOD_DATA.images, launch: MOD_DATA.launch, squid: MOD_DATA.squid }));
 
   let _wikiMod = null;
 
@@ -2280,7 +2282,7 @@
     // tabla
     const tEl = document.getElementById('ws-table');
     tEl.innerHTML = data.general.table.map(r =>
-      `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+      `<tr><td>${Array.isArray(r) ? r[0] : r.k}</td><td>${Array.isArray(r) ? r[1] : r.v}</td></tr>`).join('');
 
     // inicio
     document.getElementById('ws-inicio-intro').innerHTML = data.inicio.intro;
@@ -2331,7 +2333,7 @@
       } else if (b.type === 'table') {
         mediaHtml = `
           <table class="ws-table" style="margin-top:.7rem">
-            ${(b.rows||[]).map(r => `<tr><td>${r[0]||''}</td><td>${r[1]||''}</td></tr>`).join('')}
+            ${(b.rows||[]).map(r => `<tr><td>${(Array.isArray(r)?r[0]:r.k)||''}</td><td>${(Array.isArray(r)?r[1]:r.v)||''}</td></tr>`).join('')}
           </table>`;
       }
       return `
@@ -3324,6 +3326,13 @@
       mods = await window._chm.adminGetAllMods();
     } catch(e) { mods = []; }
 
+    // Si falta alguno de los mods principales, se importan solos en silencio (una sola vez).
+    const missingCore = ['images','launch','squid'].some(id => !mods.some(m => m.id === id));
+    if (missingCore) {
+      await adminImportCoreMods(true);
+      try { mods = await window._chm.adminGetAllMods(); } catch(e) {}
+    }
+
     // Si mientras esperábamos se disparó otra llamada más nueva, descartamos esta y no tocamos el DOM.
     if (myToken !== _adminListToken) return;
     _adminModsCache = mods;
@@ -3346,34 +3355,42 @@
 
     if (!_adminModsCache.length) rows = `<div class="admin-empty">Todavía no creaste ningún mod.</div>`;
 
-    const alreadyImported = _adminModsCache.some(m => m.id === 'images' || m.id === 'launch');
-
     body.innerHTML = `
       <div class="admin-title">🛠️ Tus mods</div>
       <div class="aform-row" style="margin-bottom:1.1rem">
         <button class="admin-newmod-btn" style="margin-bottom:0" onclick="openModEditor(null)">➕ Nuevo mod</button>
-        ${alreadyImported ? '' : `<button class="admin-newmod-btn" style="margin-bottom:0;background:var(--bg3);color:var(--text);border:1px solid var(--border2)" onclick="adminImportCoreMods()">🔄 Importar CH Images / CH Launch</button>`}
       </div>
       ${rows}`;
+    body.scrollTop = 0;
   }
 
-  async function adminImportCoreMods() {
+  function normalizeTable(arr) {
+    return (arr || []).map(r => Array.isArray(r) ? { k: r[0]||'', v: r[1]||'' } : r);
+  }
+
+  const CORE_META = {
+    images: { icon: '🖼️', cardDesc: 'Proyectá imágenes, videos y GIFs en el mundo de Minecraft mediante comandos o una interfaz visual integrada. Completamente configurable.', cardTags: ['Forge','Media','GUI'] },
+    launch: { icon: '🚀', cardDesc: 'Reemplaza las diferentes interfaces del Minecraft Vanilla, incluido la interfaz de carga de Mojang y Forge, con funcionalidades de conexión directa con el servidor, y música personalizada en el menu principal.', cardTags: ['Forge','Client','Eventos','UI'] },
+    squid: { icon: '🔐', cardDesc: 'Funcionalidades inspiradas en el evento SquidCraftGames. Items, mecánicas y sistemas personalizados que replican la experiencia.', cardTags: ['Forge','Events','VIP'] },
+  };
+
+  async function adminImportCoreMods(silent) {
     try {
-      for (const id of ['images', 'launch']) {
+      for (const id of ['images', 'launch', 'squid']) {
         const src = CORE_MODS_BACKUP[id];
+        if (!src) continue;
         const data = JSON.parse(JSON.stringify(src));
-        data.icon = id === 'images' ? '🖼️' : '🚀';
-        data.cardDesc = id === 'images'
-          ? 'Proyectá imágenes, videos y GIFs en el mundo de Minecraft mediante comandos o una interfaz visual integrada. Completamente configurable.'
-          : 'Reemplaza las diferentes interfaces del Minecraft Vanilla, incluido la interfaz de carga de Mojang y Forge, con funcionalidades de conexión directa con el servidor, y música personalizada en el menu principal.';
-        data.cardTags = id === 'images' ? ['Forge','Media','GUI'] : ['Forge','Client','Eventos','UI'];
+        data.icon = CORE_META[id].icon;
+        data.cardDesc = CORE_META[id].cardDesc;
+        data.cardTags = CORE_META[id].cardTags;
         data.published = true;
+        if (data.general) data.general.table = normalizeTable(data.general.table);
+        (data.tutorial?.blocks || []).forEach(b => { if (b.rows) b.rows = normalizeTable(b.rows); });
         await window._chm.adminSaveMod(id, data);
       }
-      suggToast('✓ Mods importados — ya los podés editar', 'ok');
-      renderAdminList();
+      if (!silent) suggToast('✓ Mods importados — ya los podés editar', 'ok');
       loadCustomMods();
-    } catch(e) { suggToast('Error al importar: ' + (e.message||''), 'err'); }
+    } catch(e) { if (!silent) suggToast('Error al importar: ' + (e.message||''), 'err'); }
   }
 
   async function adminDuplicateMod(id) {
@@ -3429,6 +3446,7 @@
       _editorState = blankModTemplate();
     }
     renderModEditor();
+    document.getElementById('admin-body').scrollTop = 0;
   }
 
   // ── helpers de binding genérico ──
@@ -3474,8 +3492,8 @@
 
     const tableRows = (s.general.table||[]).map((row,i) => `
       <div class="arow-item">
-        <input type="text" value="${escAttr(row[0])}" oninput="s_setTableCell(${i},0,this.value)" placeholder="Campo" style="max-width:160px" />
-        <input type="text" value="${escAttr(row[1])}" oninput="s_setTableCell(${i},1,this.value)" placeholder="Valor" />
+        <input type="text" value="${escAttr(row.k)}" oninput="s_setTableCell(${i},'k',this.value)" placeholder="Campo" style="max-width:160px" />
+        <input type="text" value="${escAttr(row.v)}" oninput="s_setTableCell(${i},'v',this.value)" placeholder="Valor" />
         <button class="arow-remove" onclick="s_delArr('general.table',${i})">✕</button>
       </div>`).join('');
 
@@ -3526,8 +3544,8 @@
       } else if (b.type === 'table') {
         const rows = (b.rows||[]).map((row,ri) => `
           <div class="arow-item">
-            <input type="text" value="${escAttr(row[0])}" oninput="s_setBlockTableCell(${i},${ri},0,this.value)" placeholder="Campo" style="max-width:160px" />
-            <input type="text" value="${escAttr(row[1])}" oninput="s_setBlockTableCell(${i},${ri},1,this.value)" placeholder="Valor" />
+            <input type="text" value="${escAttr(row.k)}" oninput="s_setBlockTableCell(${i},${ri},'k',this.value)" placeholder="Campo" style="max-width:160px" />
+            <input type="text" value="${escAttr(row.v)}" oninput="s_setBlockTableCell(${i},${ri},'v',this.value)" placeholder="Valor" />
             <button class="arow-remove" onclick="s_delArr('tutorial.blocks.${i}.rows',${ri})">✕</button>
           </div>`).join('');
         extra = `<div style="margin-top:.6rem">${rows}<button class="aform-add-btn" onclick="s_addTableRow(${i})">➕ Fila</button></div>`;
@@ -3590,7 +3608,7 @@
       <div class="aform-section">
         <div class="aform-section-title">📄 Página general (Wiki)</div>
         <div class="aform-field" style="margin-bottom:.8rem"><label>Chips</label>${chipsRows}<button class="aform-add-btn" onclick="s_pushArr('general.chips','')">➕ Chip</button></div>
-        <div class="aform-field" style="margin-bottom:.8rem"><label>Tabla de datos</label>${tableRows}<button class="aform-add-btn" onclick="s_pushArr('general.table',['',''])">➕ Fila</button></div>
+        <div class="aform-field" style="margin-bottom:.8rem"><label>Tabla de datos</label>${tableRows}<button class="aform-add-btn" onclick="s_pushArr('general.table',{k:'',v:''})">➕ Fila</button></div>
         <div class="aform-field" style="margin-bottom:.8rem"><label>Descripción principal</label>${makeRTE('general.desc')}</div>
         <div class="aform-field"><label>Contenido extra (opcional)</label>${makeRTE('general.extra')}</div>
       </div>
@@ -3662,7 +3680,7 @@
     renderModEditor();
   }
   function s_addSlide(bi) { _editorState.tutorial.blocks[bi].slides.push({ src:'', label:'' }); renderModEditor(); }
-  function s_addTableRow(bi) { _editorState.tutorial.blocks[bi].rows.push(['', '']); renderModEditor(); }
+  function s_addTableRow(bi) { _editorState.tutorial.blocks[bi].rows.push({k:'', v:''}); renderModEditor(); }
 
   function s_updatePreview(el, previewId) {
     const img = document.getElementById(previewId);
