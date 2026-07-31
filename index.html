@@ -19,6 +19,9 @@
       query, where, getDocs, serverTimestamp, addDoc,
       deleteDoc, updateDoc, orderBy, limit, increment
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getStorage, ref as storageRef, uploadBytes, getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey:            "AIzaSyA7roNXDxQGR-lki5Qth7Hqe9Lp5_ig8bk",
@@ -31,10 +34,12 @@
       measurementId:     "G-2WGDQHJVVS"
     };
 
-    const app  = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db   = getFirestore(app);
-    let _user = null, _guest = false;
+    const app     = initializeApp(firebaseConfig);
+    const auth    = getAuth(app);
+    const db      = getFirestore(app);
+    const storage = getStorage(app);
+    let _user = null, _guest = false, _isAdmin = false;
+    const ADMIN_EMAIL = "escalanteortizsergio9@gmail.com";
 
     async function usernameExists(username) {
       const q = query(
@@ -199,10 +204,55 @@
         comments.splice(commentIdx, 1);
         await updateDoc(ref, { comments });
       },
+
+      // ── ADMIN: gestión de mods personalizados ──────────────────
+      isAdmin: () => _isAdmin,
+
+      async adminGetAllMods() {
+        if (!_isAdmin) throw new Error('Sin permiso');
+        const snap = await getDocs(collection(db, 'customMods'));
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      },
+
+      async getPublishedMods() {
+        const q = query(collection(db, 'customMods'), where('published', '==', true));
+        const snap = await getDocs(q);
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      },
+
+      async adminSaveMod(modId, data) {
+        if (!_isAdmin) throw new Error('Sin permiso');
+        const cleanId = (modId || ('custom_' + Date.now())).replace(/[^a-zA-Z0-9_]/g, '');
+        const ref = doc(db, 'customMods', cleanId);
+        const payload = { ...data, updatedAt: serverTimestamp() };
+        const existing = await getDoc(ref);
+        if (!existing.exists()) payload.createdAt = serverTimestamp();
+        await setDoc(ref, payload, { merge: true });
+        return cleanId;
+      },
+
+      async adminSetPublished(modId, published) {
+        if (!_isAdmin) throw new Error('Sin permiso');
+        await updateDoc(doc(db, 'customMods', modId), { published, updatedAt: serverTimestamp() });
+      },
+
+      async adminDeleteMod(modId) {
+        if (!_isAdmin) throw new Error('Sin permiso');
+        await deleteDoc(doc(db, 'customMods', modId));
+      },
+
+      async uploadFile(file, folder) {
+        if (!_isAdmin) throw new Error('Sin permiso');
+        const path = `mods/${folder || 'general'}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9_.-]/g,'_')}`;
+        const ref = storageRef(storage, path);
+        await uploadBytes(ref, file);
+        return await getDownloadURL(ref);
+      },
     };
 
     onAuthStateChanged(auth, u => {
       _user = u;
+      _isAdmin = !!(u?.emailVerified && u.email === ADMIN_EMAIL);
       if (u?.emailVerified) window._chm_onAuth?.(u);
     });
   </script>
@@ -498,6 +548,12 @@
     }
     .nav-badge.g { border: 1px solid var(--border2); color: var(--dim); }
     .nav-badge.u { border: 1px solid var(--accent);  color: var(--accent); }
+    .nav-badge-op { background: var(--accent); color: #0c0c0c; font-weight: 700; }
+
+    .mod-card--addnew {
+      border: 1.5px dashed rgba(232,130,12,.5); background: transparent;
+    }
+    .mod-card--addnew:hover { background: rgba(232,130,12,.04); }
     .nav-logout {
       background: none; border: 1px solid var(--border2);
       border-radius: 5px; padding: .25rem .65rem;
@@ -1125,19 +1181,79 @@
       }
     } else {
       const name = user.displayName || user.email.split('@')[0];
+      const isAdmin = window._chm.isAdmin();
       document.getElementById('nav-user').innerHTML  = `Hola, <b>${name}</b>`;
-      document.getElementById('nav-badge').textContent = 'usuario';
-      document.getElementById('nav-badge').className   = 'nav-badge u';
+      document.getElementById('nav-badge').textContent = isAdmin ? 'OP' : 'usuario';
+      document.getElementById('nav-badge').className   = 'nav-badge u' + (isAdmin ? ' nav-badge-op' : '');
       lockCards(false);
 
-      // ── Si venimos de un link directo (?mod=id), abrimos esa wiki automáticamente ──
-      if (_pendingMod && typeof MOD_DATA !== 'undefined' && MOD_DATA[_pendingMod]) {
-        const modToOpen = _pendingMod;
-        _pendingMod = null;
-        history.replaceState(null, '', location.pathname);
-        setTimeout(() => openWiki(modToOpen), 150);
-      }
+      loadCustomMods().then(() => {
+        // ── Si venimos de un link directo (?mod=id), abrimos esa wiki automáticamente ──
+        if (_pendingMod && typeof MOD_DATA !== 'undefined' && MOD_DATA[_pendingMod]) {
+          const modToOpen = _pendingMod;
+          _pendingMod = null;
+          history.replaceState(null, '', location.pathname);
+          setTimeout(() => openWiki(modToOpen), 150);
+        }
+      });
     }
+  }
+
+  // ── Cargar mods personalizados desde Firestore y pintarlos en la grilla ──
+  async function loadCustomMods() {
+    const grid = document.querySelector('.mods-grid');
+    document.querySelectorAll('.mod-card--custom, .mod-card--addnew').forEach(el => el.remove());
+    const isAdmin = window._chm.isAdmin();
+
+    try {
+      const mods = isAdmin ? await window._chm.adminGetAllMods() : await window._chm.getPublishedMods();
+      mods.forEach(m => {
+        MOD_DATA[m.id] = m; // integra con la wiki genérica (openWiki/_buildWiki)
+        if (!isAdmin && !m.published) return;
+        grid.insertAdjacentHTML('beforeend', renderCustomModCard(m));
+      });
+    } catch(e) { console.error('Error cargando mods personalizados', e); }
+
+    if (isAdmin) {
+      grid.insertAdjacentHTML('beforeend', `
+        <div class="mod-card mod-card--addnew" onclick="openAdminPanel()">
+          <div class="card-head">
+            <div class="card-icon" style="background:rgba(232,130,12,.14);border-color:rgba(232,130,12,.35)">➕</div>
+            <div>
+              <div class="card-type" style="color:var(--accent)">Panel OP</div>
+              <div class="card-name">Añadir mod</div>
+            </div>
+          </div>
+          <p class="card-desc">Creá un mod nuevo, editá los que ya existen o gestioná qué está publicado.</p>
+          <div class="card-foot">
+            <div class="card-tags"><span class="card-tag">Admin</span></div>
+            <span class="card-arrow">↗</span>
+          </div>
+        </div>`);
+    }
+  }
+
+  function renderCustomModCard(m) {
+    const draftBadge = !m.published ? `<span class="card-tag" style="border-color:rgba(230,126,34,.4);color:#e67e22">Borrador</span>` : '';
+    const tags = (m.cardTags || []).map(t => `<span class="card-tag">${escHtml(t)}</span>`).join('');
+    return `
+      <div class="mod-card mod-card--custom" id="mc-${m.id}" onclick="openMod('${m.id}')">
+        <div class="card-head">
+          <div class="card-icon">${m.icon || '🧩'}</div>
+          <div>
+            <div class="card-type">${escHtml(m.version || '')}</div>
+            <div class="card-name">${escHtml(m.name || 'Mod sin nombre')}</div>
+          </div>
+        </div>
+        <p class="card-desc">${escHtml(m.cardDesc || '')}</p>
+        <div class="card-foot">
+          <div class="card-tags">${tags}${draftBadge}</div>
+          <div class="card-foot-actions">
+            <button class="card-share-btn" onclick="event.stopPropagation(); shareModLink('${m.id}', this)" title="Copiar link directo a este mod">🔗</button>
+            <span class="card-arrow">↗</span>
+          </div>
+        </div>
+      </div>`;
   }
 
   // ── Lockear cards ─────────────────────────────────────────────
@@ -2313,6 +2429,8 @@
       closeWiki();
     if (e.key === 'Escape' && document.getElementById('sugg-screen').classList.contains('show'))
       closeSuggestions();
+    if (e.key === 'Escape' && document.getElementById('admin-screen')?.classList.contains('show'))
+      closeAdminPanel();
   });
 </script>
 <!-- ═══════════════════════════════════════════════════
@@ -3024,6 +3142,479 @@
     if (!ts) return '';
     const d = ts.toDate ? ts.toDate() : new Date(ts);
     return d.toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
+  }
+</script>
+
+<!-- ═══════════════════════════════════════════════════
+     PANEL OP (admin) — crear / editar mods
+═══════════════════════════════════════════════════ -->
+<style>
+  #admin-screen {
+    position: fixed; inset: 0; z-index: 65;
+    background: var(--bg); display: none; flex-direction: column;
+    transition: background var(--ease);
+  }
+  #admin-screen.show { display: flex; }
+  .admin-body {
+    flex: 1; overflow-y: auto;
+    padding: 2rem clamp(1rem, 5vw, 2.5rem) 5rem;
+    max-width: 860px; margin: 0 auto; width: 100%;
+    scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
+  }
+  .admin-title { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:700; color:var(--white); margin-bottom:1.4rem; display:flex; align-items:center; gap:.6rem; }
+  .admin-newmod-btn {
+    padding:.55rem 1.1rem; background:var(--accent); color:#0c0c0c; border:none;
+    border-radius:var(--r); font-family:'Nunito',sans-serif; font-size:.82rem; font-weight:700;
+    cursor:pointer; transition:all var(--ease); margin-bottom:1.4rem;
+  }
+  .admin-newmod-btn:hover { background:var(--accent2); }
+  .admin-mod-row {
+    display:flex; align-items:center; gap:.9rem;
+    background:var(--bg2); border:1px solid var(--border); border-radius:11px;
+    padding:1rem 1.2rem; margin-bottom:.8rem;
+  }
+  .admin-mod-icon { font-size:1.4rem; flex-shrink:0; }
+  .admin-mod-meta { flex:1; min-width:0; }
+  .admin-mod-name { font-family:'Syne',sans-serif; font-size:.92rem; font-weight:700; color:var(--white); }
+  .admin-mod-sub { font-family:'DM Mono',monospace; font-size:.62rem; color:var(--dim2); margin-top:.15rem; }
+  .admin-pill { font-family:'DM Mono',monospace; font-size:.58rem; padding:.2rem .55rem; border-radius:999px; white-space:nowrap; }
+  .admin-pill.pub { border:1px solid var(--green); color:var(--green); }
+  .admin-pill.draft { border:1px solid #e67e22; color:#e67e22; }
+  .admin-mod-actions { display:flex; gap:.4rem; flex-shrink:0; flex-wrap:wrap; }
+  .admin-btn {
+    padding:.32rem .7rem; border-radius:6px; border:1px solid var(--border2);
+    background:var(--bg3); font-family:'Nunito',sans-serif; font-size:.72rem; font-weight:700;
+    color:var(--dim); cursor:pointer; transition:all var(--ease);
+  }
+  .admin-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .admin-btn.danger:hover { border-color:var(--red); color:var(--red); }
+  .admin-empty { text-align:center; padding:3rem 1rem; color:var(--dim2); font-size:.88rem; }
+
+  .aform-section { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:1.3rem; margin-bottom:1.1rem; }
+  .aform-section-title { font-family:'Syne',sans-serif; font-size:.9rem; font-weight:700; color:var(--accent); margin-bottom:1rem; display:flex; align-items:center; gap:.5rem; }
+  .aform-row { display:flex; gap:.8rem; margin-bottom:.8rem; flex-wrap:wrap; }
+  .aform-field { flex:1; min-width:140px; }
+  .aform-field label { display:block; font-family:'DM Mono',monospace; font-size:.6rem; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); margin-bottom:.32rem; }
+  .aform-field input[type=text], .aform-field input[type=url], .aform-field textarea {
+    width:100%; background:var(--bg3); border:1px solid var(--border2); border-radius:var(--r);
+    padding:.55rem .8rem; font-family:'Nunito',sans-serif; font-size:.85rem; color:var(--white);
+    outline:none; transition:border-color var(--ease);
+  }
+  .aform-field input:focus, .aform-field textarea:focus { border-color:var(--accent); }
+  .aform-hint { font-size:.68rem; color:var(--dim2); margin-top:.25rem; }
+
+  .rte-toolbar { display:flex; gap:.3rem; margin-bottom:.4rem; flex-wrap:wrap; }
+  .rte-toolbar button {
+    width:28px; height:28px; border-radius:5px; border:1px solid var(--border2);
+    background:var(--bg3); color:var(--dim); cursor:pointer; font-size:.72rem; font-weight:700;
+    transition:all var(--ease);
+  }
+  .rte-toolbar button:hover { border-color:var(--accent); color:var(--accent); }
+  .rte-editor {
+    min-height:80px; background:var(--bg3); border:1px solid var(--border2); border-radius:var(--r);
+    padding:.6rem .85rem; font-family:'Nunito',sans-serif; font-size:.85rem; color:var(--white);
+    outline:none; line-height:1.6;
+  }
+  .rte-editor:focus { border-color:var(--accent); }
+  .rte-editor b, .rte-editor strong { color:var(--accent); }
+  .rte-editor pre { background:var(--bg); border:1px solid var(--border2); border-radius:4px; padding:.4rem .6rem; font-family:'DM Mono',monospace; font-size:.78rem; overflow-x:auto; }
+
+  .arow-item { display:flex; gap:.5rem; margin-bottom:.5rem; align-items:center; }
+  .arow-item input { flex:1; }
+  .arow-remove { width:26px; height:26px; flex-shrink:0; border-radius:6px; border:1px solid var(--border2); background:var(--bg3); color:var(--red); cursor:pointer; font-size:.75rem; }
+  .arow-remove:hover { border-color:var(--red); }
+  .aform-add-btn {
+    padding:.38rem .8rem; border-radius:6px; border:1px dashed var(--border2); background:transparent;
+    font-family:'Nunito',sans-serif; font-size:.76rem; font-weight:700; color:var(--dim); cursor:pointer;
+    transition:all var(--ease);
+  }
+  .aform-add-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+  .ablock-card { border:1px solid var(--border); border-radius:10px; padding:1rem; margin-bottom:.8rem; background:var(--bg); }
+  .ablock-head { display:flex; align-items:center; gap:.5rem; margin-bottom:.7rem; }
+  .ablock-type-tag { font-family:'DM Mono',monospace; font-size:.58rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); border:1px solid rgba(232,130,12,.35); border-radius:999px; padding:.15rem .55rem; }
+  .ablock-move { display:flex; gap:.25rem; margin-left:auto; }
+  .ablock-move button, .ablock-del {
+    width:24px; height:24px; border-radius:5px; border:1px solid var(--border2); background:var(--bg3);
+    color:var(--dim); cursor:pointer; font-size:.68rem;
+  }
+  .ablock-move button:hover { border-color:var(--accent); color:var(--accent); }
+  .ablock-del:hover { border-color:var(--red); color:var(--red); }
+  .aupload-btn {
+    display:inline-flex; align-items:center; gap:.4rem; padding:.4rem .75rem;
+    background:var(--bg3); border:1px solid var(--border2); border-radius:var(--r);
+    font-family:'Nunito',sans-serif; font-size:.76rem; font-weight:700; color:var(--dim);
+    cursor:pointer; transition:all var(--ease); margin-top:.4rem;
+  }
+  .aupload-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .aupload-preview { max-width:100%; max-height:160px; border-radius:8px; margin-top:.5rem; display:block; border:1px solid var(--border); }
+  .aslide-card { border:1px solid var(--border2); border-radius:8px; padding:.7rem; margin-bottom:.5rem; background:var(--bg2); }
+
+  .aform-footer { display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1.4rem; }
+  .aform-footer button { padding:.6rem 1.2rem; border-radius:var(--r); font-family:'Nunito',sans-serif; font-size:.82rem; font-weight:700; cursor:pointer; transition:all var(--ease); border:none; }
+  .abtn-save { background:var(--bg3); border:1px solid var(--border2) !important; color:var(--text); }
+  .abtn-save:hover { border-color:var(--accent) !important; color:var(--accent); }
+  .abtn-publish { background:var(--green); color:#fff; }
+  .abtn-publish:hover { background:#2ecc71; }
+  .abtn-danger { background:transparent; border:1px solid var(--red) !important; color:var(--red); margin-left:auto; }
+  .abtn-danger:hover { background:rgba(192,57,43,.08); }
+  .abtn-cancel { background:transparent; border:1px solid var(--border2) !important; color:var(--dim); }
+</style>
+
+<div id="admin-screen">
+  <nav class="wiki-nav">
+    <button class="wiki-home-btn" onclick="closeAdminPanel()" title="Volver">🏠</button>
+    <div class="wiki-nav-sep"></div>
+    <div class="wiki-nav-brand">Panel <span>OP</span></div>
+    <button class="wiki-nav-theme" id="adminThemeBtn" aria-label="Cambiar tema">☀️</button>
+  </nav>
+  <div class="admin-body" id="admin-body"></div>
+</div>
+
+<script>
+  // ══════════════════════════════════════════════
+  //  PANEL OP
+  // ══════════════════════════════════════════════
+  let _adminModsCache = [];
+  let _editorState = null;
+  let _editorId = null;
+
+  function openAdminPanel() {
+    if (!window._chm.isAdmin()) return;
+    document.getElementById('admin-screen').classList.add('show');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('adminThemeBtn').textContent = document.body.classList.contains('dark') ? '🌙' : '☀️';
+    renderAdminList();
+  }
+  function closeAdminPanel() {
+    document.getElementById('admin-screen').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('adminThemeBtn').addEventListener('click', () => {
+    applyTheme(!document.body.classList.contains('dark'));
+  });
+
+  async function renderAdminList() {
+    const body = document.getElementById('admin-body');
+    body.innerHTML = `<div class="admin-title">🛠️ Tus mods</div><div class="admin-empty">Cargando...</div>`;
+    try {
+      _adminModsCache = await window._chm.adminGetAllMods();
+    } catch(e) { _adminModsCache = []; }
+
+    let rows = _adminModsCache.map(m => `
+      <div class="admin-mod-row">
+        <div class="admin-mod-icon">${m.icon || '🧩'}</div>
+        <div class="admin-mod-meta">
+          <div class="admin-mod-name">${escHtml(m.name || 'Sin nombre')}</div>
+          <div class="admin-mod-sub">${escHtml(m.version || '')} · id: ${m.id}</div>
+        </div>
+        <span class="admin-pill ${m.published ? 'pub' : 'draft'}">${m.published ? '● Publicado' : '○ Borrador'}</span>
+        <div class="admin-mod-actions">
+          <button class="admin-btn" onclick="openModEditor('${m.id}')">Editar</button>
+          <button class="admin-btn" onclick="adminTogglePublish('${m.id}', ${!m.published})">${m.published ? 'Ocultar' : 'Publicar'}</button>
+          <button class="admin-btn danger" onclick="adminDeleteModConfirm('${m.id}')">Borrar</button>
+        </div>
+      </div>`).join('');
+
+    if (!_adminModsCache.length) rows = `<div class="admin-empty">Todavía no creaste ningún mod.</div>`;
+
+    body.innerHTML = `
+      <div class="admin-title">🛠️ Tus mods</div>
+      <button class="admin-newmod-btn" onclick="openModEditor(null)">➕ Nuevo mod</button>
+      ${rows}`;
+  }
+
+  async function adminTogglePublish(id, val) {
+    try {
+      await window._chm.adminSetPublished(id, val);
+      suggToast(val ? '✓ Mod publicado' : 'Mod oculto (borrador)', 'ok');
+      renderAdminList();
+      loadCustomMods();
+    } catch(e) { suggToast('Error al actualizar.', 'err'); }
+  }
+  async function adminDeleteModConfirm(id) {
+    if (!confirm('¿Borrar este mod para siempre? No se puede deshacer.')) return;
+    try {
+      await window._chm.adminDeleteMod(id);
+      delete MOD_DATA[id];
+      suggToast('Mod eliminado', 'ok');
+      renderAdminList();
+      loadCustomMods();
+    } catch(e) { suggToast('Error al borrar.', 'err'); }
+  }
+
+  function blankModTemplate() {
+    return {
+      name: '', version: 'Forge 1.20.1', icon: '🧩', cardDesc: '', cardTags: [],
+      general: { chips: [], table: [], desc: '', extra: '' },
+      inicio: { intro: '', steps: [], extra: '' },
+      tutorial: { tag: 'Tutorial paso a paso', title: 'Tutorial', intro: '', showComandos: false, blocks: [] },
+      recursos: [],
+      published: false
+    };
+  }
+
+  function openModEditor(id) {
+    _editorId = id;
+    if (id) {
+      const found = _adminModsCache.find(m => m.id === id);
+      _editorState = JSON.parse(JSON.stringify(found || blankModTemplate()));
+    } else {
+      _editorState = blankModTemplate();
+    }
+    renderModEditor();
+  }
+
+  // ── helpers de binding genérico ──
+  function getPath(obj, path) { return path.split('.').reduce((o,k) => (o == null ? o : o[k]), obj); }
+  function setPath(obj, path, val) {
+    const parts = path.split('.');
+    let cur = obj;
+    for (let i = 0; i < parts.length - 1; i++) cur = cur[parts[i]];
+    cur[parts[parts.length - 1]] = val;
+  }
+
+  function rteCmd(id, cmd, val) { document.getElementById(id).focus(); document.execCommand(cmd, false, val || null); }
+  function rteLink(id) {
+    const url = prompt('URL del link:');
+    if (url) { document.getElementById(id).focus(); document.execCommand('createLink', false, url); }
+  }
+  function makeRTE(bindPath, placeholder) {
+    const id = 'rte_' + bindPath.replace(/\./g,'_') + '_' + Math.random().toString(36).slice(2,7);
+    const html = getPath(_editorState, bindPath) || '';
+    return `
+      <div class="rte-toolbar">
+        <button type="button" title="Negrita" onclick="rteCmd('${id}','bold')"><b>B</b></button>
+        <button type="button" title="Cursiva" onclick="rteCmd('${id}','italic')"><i>I</i></button>
+        <button type="button" title="Título" onclick="rteCmd('${id}','formatBlock','H3')">H</button>
+        <button type="button" title="Lista" onclick="rteCmd('${id}','insertUnorderedList')">•≡</button>
+        <button type="button" title="Link" onclick="rteLink('${id}')">🔗</button>
+        <button type="button" title="Código" onclick="rteCmd('${id}','formatBlock','PRE')">&lt;/&gt;</button>
+        <button type="button" title="Quitar formato" onclick="rteCmd('${id}','removeFormat')">✕</button>
+      </div>
+      <div class="rte-editor" id="${id}" contenteditable="true" data-bind="${bindPath}" data-rte="1"
+           placeholder="${placeholder||''}">${html}</div>`;
+  }
+
+  function renderModEditor() {
+    const s = _editorState;
+    const body = document.getElementById('admin-body');
+
+    const chipsRows = (s.general.chips||[]).map((c,i) => `
+      <div class="arow-item">
+        <input type="text" value="${escAttr(c)}" oninput="s_setArr('general.chips',${i},this.value)" placeholder="Etiqueta" />
+        <button class="arow-remove" onclick="s_delArr('general.chips',${i})">✕</button>
+      </div>`).join('');
+
+    const tableRows = (s.general.table||[]).map((row,i) => `
+      <div class="arow-item">
+        <input type="text" value="${escAttr(row[0])}" oninput="s_setTableCell(${i},0,this.value)" placeholder="Campo" style="max-width:160px" />
+        <input type="text" value="${escAttr(row[1])}" oninput="s_setTableCell(${i},1,this.value)" placeholder="Valor" />
+        <button class="arow-remove" onclick="s_delArr('general.table',${i})">✕</button>
+      </div>`).join('');
+
+    const stepsHtml = (s.inicio.steps||[]).map((st,i) => `
+      <div class="ablock-card">
+        <div class="ablock-head">
+          <span class="ablock-type-tag">Paso ${i+1}</span>
+          <div class="ablock-move">
+            <button onclick="s_move('inicio.steps',${i},-1)">↑</button>
+            <button onclick="s_move('inicio.steps',${i},1)">↓</button>
+            <button class="ablock-del" onclick="s_delArr('inicio.steps',${i})">✕</button>
+          </div>
+        </div>
+        <div class="aform-field" style="margin-bottom:.6rem">
+          <label>Título del paso</label>
+          <input type="text" value="${escAttr(st.title)}" data-bind="inicio.steps.${i}.title" oninput="s_input(this)" />
+        </div>
+        <div class="aform-field"><label>Descripción</label>${makeRTE('inicio.steps.'+i+'.desc')}</div>
+      </div>`).join('');
+
+    const blocksHtml = (s.tutorial.blocks||[]).map((b,i) => {
+      let extra = '';
+      if (b.type === 'image') {
+        const pid = 'imgprev_' + i;
+        extra = `
+          <div class="aform-field" style="margin-top:.6rem">
+            <label>URL de la imagen o GIF</label>
+            <input type="text" value="${escAttr(b.src)}" data-bind="tutorial.blocks.${i}.src" oninput="s_input(this); s_updatePreview(this,'${pid}')" placeholder="https://..." />
+            <img class="aupload-preview" id="${pid}" src="${b.src||''}" style="${b.src?'':'display:none'}" onerror="this.style.display='none'" onload="this.style.display='block'" />
+          </div>
+          <div class="aform-field" style="margin-top:.5rem">
+            <label>Texto alternativo</label>
+            <input type="text" value="${escAttr(b.alt)}" data-bind="tutorial.blocks.${i}.alt" oninput="s_input(this)" />
+          </div>`;
+      } else if (b.type === 'carousel') {
+        const slides = (b.slides||[]).map((sl,si) => {
+          const pid = 'slideprev_' + i + '_' + si;
+          return `
+          <div class="aslide-card">
+            <label style="display:block;font-family:'DM Mono',monospace;font-size:.6rem;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem">URL del slide</label>
+            <input type="text" value="${escAttr(sl.src)}" data-bind="tutorial.blocks.${i}.slides.${si}.src" oninput="s_input(this); s_updatePreview(this,'${pid}')" placeholder="https://..." />
+            <img class="aupload-preview" id="${pid}" src="${sl.src||''}" style="max-height:90px;${sl.src?'':'display:none'}" onerror="this.style.display='none'" onload="this.style.display='block'" />
+            <input type="text" value="${escAttr(sl.label)}" data-bind="tutorial.blocks.${i}.slides.${si}.label" oninput="s_input(this)" placeholder="Etiqueta del slide" style="margin-top:.4rem" />
+            <button class="arow-remove" style="margin-top:.4rem" onclick="s_delArr('tutorial.blocks.${i}.slides',${si})">✕ Quitar slide</button>
+          </div>`;
+        }).join('');
+        extra = `<div style="margin-top:.6rem">${slides}<button class="aform-add-btn" onclick="s_addSlide(${i})">➕ Slide</button></div>`;
+      } else if (b.type === 'table') {
+        const rows = (b.rows||[]).map((row,ri) => `
+          <div class="arow-item">
+            <input type="text" value="${escAttr(row[0])}" oninput="s_setBlockTableCell(${i},${ri},0,this.value)" placeholder="Campo" style="max-width:160px" />
+            <input type="text" value="${escAttr(row[1])}" oninput="s_setBlockTableCell(${i},${ri},1,this.value)" placeholder="Valor" />
+            <button class="arow-remove" onclick="s_delArr('tutorial.blocks.${i}.rows',${ri})">✕</button>
+          </div>`).join('');
+        extra = `<div style="margin-top:.6rem">${rows}<button class="aform-add-btn" onclick="s_addTableRow(${i})">➕ Fila</button></div>`;
+      }
+      return `
+        <div class="ablock-card">
+          <div class="ablock-head">
+            <span class="ablock-type-tag">${({text:'Texto',image:'Imagen',carousel:'Carrusel',table:'Tabla'})[b.type]}</span>
+            <div class="ablock-move">
+              <button onclick="s_move('tutorial.blocks',${i},-1)">↑</button>
+              <button onclick="s_move('tutorial.blocks',${i},1)">↓</button>
+              <button class="ablock-del" onclick="s_delArr('tutorial.blocks',${i})">✕</button>
+            </div>
+          </div>
+          <div class="aform-field" style="margin-bottom:.6rem">
+            <label>Título del bloque</label>
+            <input type="text" value="${escAttr(b.title)}" data-bind="tutorial.blocks.${i}.title" oninput="s_input(this)" />
+          </div>
+          <div class="aform-field"><label>Descripción</label>${makeRTE('tutorial.blocks.'+i+'.desc')}</div>
+          ${extra}
+        </div>`;
+    }).join('');
+
+    const recursosHtml = (s.recursos||[]).map((r,i) => `
+      <div class="arow-item">
+        <input type="text" value="${escAttr(r.label)}" oninput="s_setArrObj('recursos',${i},'label',this.value)" placeholder="Nombre" style="max-width:160px" />
+        <input type="text" value="${escAttr(r.url)}" oninput="s_setArrObj('recursos',${i},'url',this.value)" placeholder="URL" />
+        <button class="arow-remove" onclick="s_delArr('recursos',${i})">✕</button>
+      </div>`).join('');
+
+    body.innerHTML = `
+      <div class="admin-title">🛠️ ${_editorId ? 'Editar mod' : 'Nuevo mod'}</div>
+
+      <div class="aform-section">
+        <div class="aform-section-title">📋 Básico</div>
+        <div class="aform-row">
+          <div class="aform-field" style="max-width:70px">
+            <label>Icono</label>
+            <input type="text" value="${escAttr(s.icon)}" data-bind="icon" oninput="s_input(this)" maxlength="4" />
+          </div>
+          <div class="aform-field">
+            <label>Nombre del mod</label>
+            <input type="text" value="${escAttr(s.name)}" data-bind="name" oninput="s_input(this)" placeholder="CH Ejemplo" />
+          </div>
+          <div class="aform-field">
+            <label>Versión / tipo</label>
+            <input type="text" value="${escAttr(s.version)}" data-bind="version" oninput="s_input(this)" placeholder="Forge 1.20.1" />
+          </div>
+        </div>
+        <div class="aform-field" style="margin-bottom:.8rem">
+          <label>Descripción corta (la de la tarjeta)</label>
+          <textarea rows="2" data-bind="cardDesc" oninput="s_input(this)">${escHtml(s.cardDesc)}</textarea>
+        </div>
+        <div class="aform-field">
+          <label>Etiquetas de la tarjeta (separadas por coma)</label>
+          <input type="text" value="${escAttr((s.cardTags||[]).join(', '))}" oninput="s_setCsv('cardTags', this.value)" placeholder="Forge, Media, GUI" />
+        </div>
+      </div>
+
+      <div class="aform-section">
+        <div class="aform-section-title">📄 Página general (Wiki)</div>
+        <div class="aform-field" style="margin-bottom:.8rem"><label>Chips</label>${chipsRows}<button class="aform-add-btn" onclick="s_pushArr('general.chips','')">➕ Chip</button></div>
+        <div class="aform-field" style="margin-bottom:.8rem"><label>Tabla de datos</label>${tableRows}<button class="aform-add-btn" onclick="s_pushArr('general.table',['',''])">➕ Fila</button></div>
+        <div class="aform-field" style="margin-bottom:.8rem"><label>Descripción principal</label>${makeRTE('general.desc')}</div>
+        <div class="aform-field"><label>Contenido extra (opcional)</label>${makeRTE('general.extra')}</div>
+      </div>
+
+      <div class="aform-section">
+        <div class="aform-section-title">▶ Cómo empezar</div>
+        <div class="aform-field" style="margin-bottom:.8rem"><label>Introducción</label>${makeRTE('inicio.intro')}</div>
+        ${stepsHtml}
+        <button class="aform-add-btn" onclick="s_pushArr('inicio.steps',{title:'',desc:''})">➕ Paso</button>
+        <div class="aform-field" style="margin-top:.9rem"><label>Extra (opcional)</label>${makeRTE('inicio.extra')}</div>
+      </div>
+
+      <div class="aform-section">
+        <div class="aform-section-title">🎬 Tutorial / bloques</div>
+        <div class="aform-row">
+          <div class="aform-field"><label>Etiqueta de sección</label><input type="text" value="${escAttr(s.tutorial.tag)}" data-bind="tutorial.tag" oninput="s_input(this)" /></div>
+          <div class="aform-field"><label>Título de sección</label><input type="text" value="${escAttr(s.tutorial.title)}" data-bind="tutorial.title" oninput="s_input(this)" /></div>
+        </div>
+        <div class="aform-field" style="margin-bottom:.8rem"><label>Introducción</label>${makeRTE('tutorial.intro')}</div>
+        ${blocksHtml}
+        <div class="aform-row" style="margin-top:.4rem">
+          <button class="aform-add-btn" onclick="s_addBlock('text')">➕ Texto</button>
+          <button class="aform-add-btn" onclick="s_addBlock('image')">➕ Imagen</button>
+          <button class="aform-add-btn" onclick="s_addBlock('carousel')">➕ Carrusel</button>
+          <button class="aform-add-btn" onclick="s_addBlock('table')">➕ Tabla</button>
+        </div>
+      </div>
+
+      <div class="aform-section">
+        <div class="aform-section-title">📦 Páginas recursos</div>
+        ${recursosHtml}
+        <button class="aform-add-btn" onclick="s_pushArr('recursos',{label:'',url:''})">➕ Recurso</button>
+      </div>
+
+      <div class="aform-footer">
+        <button class="abtn-cancel" onclick="renderAdminList()">← Cancelar</button>
+        <button class="abtn-save" onclick="adminSaveCurrent(false)">💾 Guardar borrador</button>
+        <button class="abtn-publish" onclick="adminSaveCurrent(true)">${s.published ? '✓ Guardar (publicado)' : '🚀 Guardar y publicar'}</button>
+        ${_editorId ? `<button class="abtn-danger" onclick="adminDeleteModConfirm('${_editorId}')">🗑️ Eliminar</button>` : ''}
+      </div>`;
+
+    // sincroniza contenteditable (rich text) al estado en cada input
+    body.querySelectorAll('[data-rte]').forEach(el => {
+      el.addEventListener('input', () => setPath(_editorState, el.dataset.bind, el.innerHTML));
+    });
+  }
+
+  function s_input(el) { setPath(_editorState, el.dataset.bind, el.value); }
+  function s_setCsv(path, val) { setPath(_editorState, path, val.split(',').map(x=>x.trim()).filter(Boolean)); }
+  function s_setArr(path, i, val) { getPath(_editorState, path)[i] = val; }
+  function s_setArrObj(path, i, key, val) { getPath(_editorState, path)[i][key] = val; }
+  function s_setTableCell(i, col, val) { _editorState.general.table[i][col] = val; }
+  function s_setBlockTableCell(bi, ri, col, val) { _editorState.tutorial.blocks[bi].rows[ri][col] = val; }
+  function s_delArr(path, i) { getPath(_editorState, path).splice(i,1); renderModEditor(); }
+  function s_pushArr(path, val) { getPath(_editorState, path).push(val); renderModEditor(); }
+  function s_move(path, i, dir) {
+    const arr = getPath(_editorState, path);
+    const j = i + dir;
+    if (j < 0 || j >= arr.length) return;
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+    renderModEditor();
+  }
+  function s_addBlock(type) {
+    const base = { type, title: '', desc: '' };
+    if (type === 'image') Object.assign(base, { src: '', alt: '' });
+    if (type === 'carousel') base.slides = [];
+    if (type === 'table') base.rows = [];
+    _editorState.tutorial.blocks.push(base);
+    renderModEditor();
+  }
+  function s_addSlide(bi) { _editorState.tutorial.blocks[bi].slides.push({ src:'', label:'' }); renderModEditor(); }
+  function s_addTableRow(bi) { _editorState.tutorial.blocks[bi].rows.push(['', '']); renderModEditor(); }
+
+  function s_updatePreview(el, previewId) {
+    const img = document.getElementById(previewId);
+    if (!img) return;
+    if (el.value) { img.src = el.value; img.style.display = 'block'; }
+    else { img.style.display = 'none'; }
+  }
+
+  async function adminSaveCurrent(publish) {
+    if (!_editorState.name.trim()) { suggToast('Ponele un nombre al mod.', 'err'); return; }
+    _editorState.published = publish ? true : _editorState.published;
+    try {
+      const newId = await window._chm.adminSaveMod(_editorId, _editorState);
+      _editorId = newId;
+      suggToast('✓ Mod guardado', 'ok');
+      await loadCustomMods();
+      renderAdminList();
+    } catch(e) { suggToast('Error al guardar: ' + (e.message||''), 'err'); }
   }
 </script>
 </body>
