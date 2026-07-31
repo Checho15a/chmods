@@ -1219,6 +1219,7 @@
     mods.forEach(m => {
       MOD_DATA[m.id] = m; // integra con la wiki genérica (openWiki/_buildWiki)
       if (!isAdmin && !m.published) return;
+      if (document.getElementById('mc-' + m.id)) return; // ya tiene tarjeta fija en la página (images/launch)
       grid.insertAdjacentHTML('beforeend', renderCustomModCard(m));
     });
 
@@ -2230,6 +2231,10 @@
   // ══════════════════════════════════════════════
   //  LÓGICA WIKI
   // ══════════════════════════════════════════════
+  // Copia "de fábrica" de los mods principales (antes de que el Panel OP los pueda sobreescribir),
+  // usada por la función de importar mods existentes.
+  const CORE_MODS_BACKUP = JSON.parse(JSON.stringify({ images: MOD_DATA.images, launch: MOD_DATA.launch }));
+
   let _wikiMod = null;
 
   function openWiki(modId) {
@@ -2298,9 +2303,9 @@
 
     document.getElementById('ws-tutorial-intro').innerHTML = data.tutorial.intro;
     const blocksEl = document.getElementById('ws-tutorial-blocks');
-    blocksEl.innerHTML = data.tutorial.blocks.map((b, idx) => {
+    blocksEl.innerHTML = (data.tutorial.blocks || []).map((b, idx) => {
       let mediaHtml = '';
-      if (b.type === 'gif' || b.type === 'img') {
+      if (b.type === 'gif' || b.type === 'img' || b.type === 'image') {
         if (b.src) {
           mediaHtml = `<img class="ws-media-img" src="${b.src}" alt="${b.alt || b.title}" loading="lazy" />`;
         } else {
@@ -2308,21 +2313,26 @@
         }
       } else if (b.type === 'carousel') {
         const id = `carousel-${idx}`;
-        const slides = b.slides.map((s, i) => `
+        const slides = (b.slides||[]).map((s, i) => `
           <div class="ws-carousel-slide">
             <img src="${s.src}" alt="${s.label}" loading="lazy" />
             <div class="ws-carousel-label">${s.label}</div>
           </div>`).join('');
-        const dots = b.slides.map((_, i) =>
+        const dots = (b.slides||[]).map((_, i) =>
           `<div class="ws-carousel-dot${i===0?' active':''}" onclick="carouselGo('${id}',${i})"></div>`
         ).join('');
         mediaHtml = `
           <div class="ws-carousel" id="${id}">
             <div class="ws-carousel-track" id="${id}-track">${slides}</div>
             <button class="ws-carousel-btn prev" id="${id}-prev" onclick="carouselPrev('${id}')" disabled>‹</button>
-            <button class="ws-carousel-btn next" id="${id}-next" onclick="carouselNext('${id}')" ${b.slides.length<=1?'disabled':''}>›</button>
+            <button class="ws-carousel-btn next" id="${id}-next" onclick="carouselNext('${id}')" ${(b.slides||[]).length<=1?'disabled':''}>›</button>
             <div class="ws-carousel-dots" id="${id}-dots">${dots}</div>
           </div>`;
+      } else if (b.type === 'table') {
+        mediaHtml = `
+          <table class="ws-table" style="margin-top:.7rem">
+            ${(b.rows||[]).map(r => `<tr><td>${r[0]||''}</td><td>${r[1]||''}</td></tr>`).join('')}
+          </table>`;
       }
       return `
         <div class="ws-media-block">
@@ -3328,6 +3338,7 @@
         <span class="admin-pill ${m.published ? 'pub' : 'draft'}">${m.published ? '● Publicado' : '○ Borrador'}</span>
         <div class="admin-mod-actions">
           <button class="admin-btn" onclick="openModEditor('${m.id}')">Editar</button>
+          <button class="admin-btn" onclick="adminDuplicateMod('${m.id}')">Duplicar</button>
           <button class="admin-btn" onclick="adminTogglePublish('${m.id}', ${!m.published})">${m.published ? 'Ocultar' : 'Publicar'}</button>
           <button class="admin-btn danger" onclick="adminDeleteModConfirm('${m.id}')">Borrar</button>
         </div>
@@ -3335,10 +3346,48 @@
 
     if (!_adminModsCache.length) rows = `<div class="admin-empty">Todavía no creaste ningún mod.</div>`;
 
+    const alreadyImported = _adminModsCache.some(m => m.id === 'images' || m.id === 'launch');
+
     body.innerHTML = `
       <div class="admin-title">🛠️ Tus mods</div>
-      <button class="admin-newmod-btn" onclick="openModEditor(null)">➕ Nuevo mod</button>
+      <div class="aform-row" style="margin-bottom:1.1rem">
+        <button class="admin-newmod-btn" style="margin-bottom:0" onclick="openModEditor(null)">➕ Nuevo mod</button>
+        ${alreadyImported ? '' : `<button class="admin-newmod-btn" style="margin-bottom:0;background:var(--bg3);color:var(--text);border:1px solid var(--border2)" onclick="adminImportCoreMods()">🔄 Importar CH Images / CH Launch</button>`}
+      </div>
       ${rows}`;
+  }
+
+  async function adminImportCoreMods() {
+    try {
+      for (const id of ['images', 'launch']) {
+        const src = CORE_MODS_BACKUP[id];
+        const data = JSON.parse(JSON.stringify(src));
+        data.icon = id === 'images' ? '🖼️' : '🚀';
+        data.cardDesc = id === 'images'
+          ? 'Proyectá imágenes, videos y GIFs en el mundo de Minecraft mediante comandos o una interfaz visual integrada. Completamente configurable.'
+          : 'Reemplaza las diferentes interfaces del Minecraft Vanilla, incluido la interfaz de carga de Mojang y Forge, con funcionalidades de conexión directa con el servidor, y música personalizada en el menu principal.';
+        data.cardTags = id === 'images' ? ['Forge','Media','GUI'] : ['Forge','Client','Eventos','UI'];
+        data.published = true;
+        await window._chm.adminSaveMod(id, data);
+      }
+      suggToast('✓ Mods importados — ya los podés editar', 'ok');
+      renderAdminList();
+      loadCustomMods();
+    } catch(e) { suggToast('Error al importar: ' + (e.message||''), 'err'); }
+  }
+
+  async function adminDuplicateMod(id) {
+    const original = _adminModsCache.find(m => m.id === id);
+    if (!original) return;
+    const copy = JSON.parse(JSON.stringify(original));
+    delete copy.id;
+    copy.name = (copy.name || 'Mod') + ' (copia)';
+    copy.published = false;
+    try {
+      await window._chm.adminSaveMod(null, copy);
+      suggToast('✓ Mod duplicado como borrador', 'ok');
+      renderAdminList();
+    } catch(e) { suggToast('Error al duplicar: ' + (e.message||''), 'err'); }
   }
 
   async function adminTogglePublish(id, val) {
