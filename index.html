@@ -1200,19 +1200,27 @@
   }
 
   // ── Cargar mods personalizados desde Firestore y pintarlos en la grilla ──
+  let _customModsToken = 0;
   async function loadCustomMods() {
+    const myToken = ++_customModsToken;
     const grid = document.querySelector('.mods-grid');
     document.querySelectorAll('.mod-card--custom, .mod-card--addnew').forEach(el => el.remove());
     const isAdmin = window._chm.isAdmin();
 
+    let mods = [];
     try {
-      const mods = isAdmin ? await window._chm.adminGetAllMods() : await window._chm.getPublishedMods();
-      mods.forEach(m => {
-        MOD_DATA[m.id] = m; // integra con la wiki genérica (openWiki/_buildWiki)
-        if (!isAdmin && !m.published) return;
-        grid.insertAdjacentHTML('beforeend', renderCustomModCard(m));
-      });
+      mods = isAdmin ? await window._chm.adminGetAllMods() : await window._chm.getPublishedMods();
     } catch(e) { console.error('Error cargando mods personalizados', e); }
+
+    // Si mientras esperábamos la respuesta se disparó una llamada más nueva, descartamos esta.
+    if (myToken !== _customModsToken) return;
+
+    document.querySelectorAll('.mod-card--custom, .mod-card--addnew').forEach(el => el.remove());
+    mods.forEach(m => {
+      MOD_DATA[m.id] = m; // integra con la wiki genérica (openWiki/_buildWiki)
+      if (!isAdmin && !m.published) return;
+      grid.insertAdjacentHTML('beforeend', renderCustomModCard(m));
+    });
 
     if (isAdmin) {
       grid.insertAdjacentHTML('beforeend', `
@@ -3276,12 +3284,15 @@
   //  PANEL OP
   // ══════════════════════════════════════════════
   let _adminModsCache = [];
+  let _adminListToken = 0;
   let _editorState = null;
   let _editorId = null;
 
   function openAdminPanel() {
     if (!window._chm.isAdmin()) return;
-    document.getElementById('admin-screen').classList.add('show');
+    const screen = document.getElementById('admin-screen');
+    if (screen.classList.contains('show')) return; // ya está abierto, evita doble carga
+    screen.classList.add('show');
     document.body.style.overflow = 'hidden';
     document.getElementById('adminThemeBtn').textContent = document.body.classList.contains('dark') ? '🌙' : '☀️';
     renderAdminList();
@@ -3295,11 +3306,17 @@
   });
 
   async function renderAdminList() {
+    const myToken = ++_adminListToken;
     const body = document.getElementById('admin-body');
     body.innerHTML = `<div class="admin-title">🛠️ Tus mods</div><div class="admin-empty">Cargando...</div>`;
+    let mods = [];
     try {
-      _adminModsCache = await window._chm.adminGetAllMods();
-    } catch(e) { _adminModsCache = []; }
+      mods = await window._chm.adminGetAllMods();
+    } catch(e) { mods = []; }
+
+    // Si mientras esperábamos se disparó otra llamada más nueva, descartamos esta y no tocamos el DOM.
+    if (myToken !== _adminListToken) return;
+    _adminModsCache = mods;
 
     let rows = _adminModsCache.map(m => `
       <div class="admin-mod-row">
