@@ -623,6 +623,16 @@
     .card-arrow { color: var(--accent); font-size: .95rem; transition: transform var(--ease); }
     .mod-card:not(.locked):hover .card-arrow { transform: translate(3px,-3px); }
 
+    .card-foot-actions { display: flex; align-items: center; gap: .5rem; flex-shrink: 0; }
+    .card-share-btn {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--bg3); border: 1px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .8rem; color: var(--dim); cursor: pointer;
+      transition: all var(--ease); flex-shrink: 0;
+    }
+    .card-share-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(232,130,12,.08); transform: translateY(-1px); }
+
     #toast-guest {
       position: fixed; top: 68px; right: 1rem; z-index: 50;
       background: #fff0f0; border: 1px solid var(--red);
@@ -818,7 +828,10 @@
             <span class="card-tag">Media</span>
             <span class="card-tag">GUI</span>
           </div>
-          <span class="card-arrow">↗</span>
+          <div class="card-foot-actions">
+            <button class="card-share-btn" onclick="event.stopPropagation(); shareModLink('images', this)" title="Copiar link directo a este mod">🔗</button>
+            <span class="card-arrow">↗</span>
+          </div>
         </div>
       </div>
 
@@ -839,7 +852,10 @@
             <span class="card-tag">Eventos</span>
             <span class="card-tag">UI</span>
           </div>
-          <span class="card-arrow">↗</span>
+          <div class="card-foot-actions">
+            <button class="card-share-btn" onclick="event.stopPropagation(); shareModLink('launch', this)" title="Copiar link directo a este mod">🔗</button>
+            <span class="card-arrow">↗</span>
+          </div>
         </div>
       </div>
 
@@ -891,6 +907,39 @@
 </div>
 
 <script>
+  // ── Deep link a mods vía ?mod=id ────────────────────────────────
+  const _urlParams = new URLSearchParams(location.search);
+  let _pendingMod = _urlParams.get('mod');
+
+  // ── Compartir / copiar link directo de un mod ───────────────────
+  function shareModLink(modId, btnEl) {
+    const url = `${location.origin}${location.pathname}?mod=${modId}`;
+    const onCopied = () => {
+      suggToast('🔗 Link copiado — compartilo donde quieras', 'ok');
+      if (btnEl) {
+        const original = btnEl.textContent;
+        btnEl.textContent = '✓';
+        setTimeout(() => { btnEl.textContent = original; }, 1200);
+      }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(onCopied).catch(() => fallbackCopy(url, onCopied));
+    } else {
+      fallbackCopy(url, onCopied);
+    }
+  }
+  function fallbackCopy(text, cb) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); cb(); }
+    catch(e) { suggToast('No se pudo copiar el link', 'err'); }
+    document.body.removeChild(ta);
+  }
+
   // ── Toggle tema (sincroniza ambos botones) ────────────────────
   function applyTheme(dark) {
     document.body.classList.toggle('dark', dark);
@@ -1070,12 +1119,24 @@
       document.getElementById('nav-badge').className   = 'nav-badge g';
       document.getElementById('guest-strip').style.display = 'inline-block';
       lockCards(true);
+      if (_pendingMod) {
+        // Hay un link directo a un mod pero está como invitado: avisamos que debe loguearse.
+        setTimeout(showGuestToast, 400);
+      }
     } else {
       const name = user.displayName || user.email.split('@')[0];
       document.getElementById('nav-user').innerHTML  = `Hola, <b>${name}</b>`;
       document.getElementById('nav-badge').textContent = 'usuario';
       document.getElementById('nav-badge').className   = 'nav-badge u';
       lockCards(false);
+
+      // ── Si venimos de un link directo (?mod=id), abrimos esa wiki automáticamente ──
+      if (_pendingMod && typeof MOD_DATA !== 'undefined' && MOD_DATA[_pendingMod]) {
+        const modToOpen = _pendingMod;
+        _pendingMod = null;
+        history.replaceState(null, '', location.pathname);
+        setTimeout(() => openWiki(modToOpen), 150);
+      }
     }
   }
 
