@@ -1529,8 +1529,8 @@
     font-size: .9rem; color: var(--dim);
     line-height: 1.85; margin-bottom: .9rem;
   }
-  .ws-p strong { color: var(--text); font-weight: 600; }
-  .ws-p em { color: var(--accent); font-style: normal; }
+  .ws-p strong, .ws-p b { color: var(--text); font-weight: 600; }
+  .ws-p em, .ws-p i { color: var(--accent); font-style: normal; }
   .ws-p code {
     font-family: 'DM Mono', monospace; font-size: .82rem;
     background: var(--bg3); border: 1px solid var(--border2);
@@ -2243,6 +2243,9 @@
     const data = MOD_DATA[modId];
     if (!data) return;
     _wikiMod = modId;
+    _wikiPreviewActive = false;
+    const homeBtn = document.querySelector('#wiki-screen .wiki-home-btn');
+    if (homeBtn) { homeBtn.textContent = '🏠'; homeBtn.title = 'Volver a CH Mods'; }
     _buildWiki(data);
     document.getElementById('wiki-screen').classList.add('show');
     document.body.style.overflow = 'hidden';
@@ -2251,10 +2254,34 @@
     document.getElementById('wikiThemeBtn').textContent = dark ? '🌙' : '☀️';
   }
 
+  let _wikiPreviewActive = false;
+  function previewCurrentMod() {
+    if (!_editorState.name.trim()) { suggToast('Ponele un nombre al mod antes de previsualizar.', 'err'); return; }
+    _buildWiki(_editorState);
+    document.getElementById('admin-screen').classList.remove('show');
+    document.getElementById('wiki-screen').classList.add('show');
+    document.body.style.overflow = 'hidden';
+    wikiSection('general');
+    document.getElementById('wikiThemeBtn').textContent = document.body.classList.contains('dark') ? '🌙' : '☀️';
+    _wikiPreviewActive = true;
+    const homeBtn = document.querySelector('#wiki-screen .wiki-home-btn');
+    if (homeBtn) { homeBtn.textContent = '←'; homeBtn.title = 'Volver al editor'; }
+    const brand = document.getElementById('wn-brand');
+    if (brand) brand.innerHTML = '👁️ Vista previa (sin guardar)';
+  }
+
   function closeWiki() {
     document.getElementById('wiki-screen').classList.remove('show');
-    document.body.style.overflow = '';
     _wikiMod = null;
+    if (_wikiPreviewActive) {
+      _wikiPreviewActive = false;
+      const homeBtn = document.querySelector('#wiki-screen .wiki-home-btn');
+      if (homeBtn) { homeBtn.textContent = '🏠'; homeBtn.title = 'Volver a CH Mods'; }
+      document.getElementById('admin-screen').classList.add('show');
+      document.body.style.overflow = 'hidden'; // seguimos dentro del panel a pantalla completa
+    } else {
+      document.body.style.overflow = '';
+    }
   }
 
   function _buildWiki(data) {
@@ -2306,6 +2333,9 @@
     document.getElementById('ws-tutorial-intro').innerHTML = data.tutorial.intro;
     const blocksEl = document.getElementById('ws-tutorial-blocks');
     blocksEl.innerHTML = (data.tutorial.blocks || []).map((b, idx) => {
+      if (b.type === 'note') {
+        return `<div class="ws-media-block"><div class="ws-note"><span class="ws-note-icon">${b.icon || '💡'}</span><span>${b.desc || ''}</span></div></div>`;
+      }
       let mediaHtml = '';
       if (b.type === 'gif' || b.type === 'img' || b.type === 'image') {
         if (b.src) {
@@ -3236,7 +3266,8 @@
     outline:none; line-height:1.6;
   }
   .rte-editor:focus { border-color:var(--accent); }
-  .rte-editor b, .rte-editor strong { color:var(--accent); }
+  .rte-editor b, .rte-editor strong { color: var(--white); font-weight: 700; }
+  .rte-editor i, .rte-editor em { color: var(--accent); font-style: normal; }
   .rte-editor pre { background:var(--bg); border:1px solid var(--border2); border-radius:4px; padding:.4rem .6rem; font-family:'DM Mono',monospace; font-size:.78rem; overflow-x:auto; }
 
   .arow-item { display:flex; gap:.5rem; margin-bottom:.5rem; align-items:center; }
@@ -3469,7 +3500,7 @@
     return `
       <div class="rte-toolbar">
         <button type="button" title="Negrita" onclick="rteCmd('${id}','bold')"><b>B</b></button>
-        <button type="button" title="Cursiva" onclick="rteCmd('${id}','italic')"><i>I</i></button>
+        <button type="button" title="Resaltar en naranja (no es cursiva real)" onclick="rteCmd('${id}','italic')"><i>I</i></button>
         <button type="button" title="Título" onclick="rteCmd('${id}','formatBlock','H3')">H</button>
         <button type="button" title="Lista" onclick="rteCmd('${id}','insertUnorderedList')">•≡</button>
         <button type="button" title="Link" onclick="rteLink('${id}')">🔗</button>
@@ -3515,6 +3546,25 @@
       </div>`).join('');
 
     const blocksHtml = (s.tutorial.blocks||[]).map((b,i) => {
+      // Las notas (recuadro naranja) tienen una tarjeta simplificada: ícono + texto, sin título.
+      if (b.type === 'note') {
+        return `
+          <div class="ablock-card">
+            <div class="ablock-head">
+              <span class="ablock-type-tag">Nota</span>
+              <div class="ablock-move">
+                <button onclick="s_move('tutorial.blocks',${i},-1)">↑</button>
+                <button onclick="s_move('tutorial.blocks',${i},1)">↓</button>
+                <button class="ablock-del" onclick="s_delArr('tutorial.blocks',${i})">✕</button>
+              </div>
+            </div>
+            <div class="aform-field" style="max-width:90px;margin-bottom:.6rem">
+              <label>Ícono</label>
+              <input type="text" value="${escAttr(b.icon || '💡')}" data-bind="tutorial.blocks.${i}.icon" oninput="s_input(this)" maxlength="4" />
+            </div>
+            <div class="aform-field"><label>Texto de la nota</label>${makeRTE('tutorial.blocks.'+i+'.desc')}</div>
+          </div>`;
+      }
       let extra = '';
       if (b.type === 'image') {
         const pid = 'imgprev_' + i;
@@ -3631,6 +3681,7 @@
         ${blocksHtml}
         <div class="aform-row" style="margin-top:.4rem">
           <button class="aform-add-btn" onclick="s_addBlock('text')">➕ Texto</button>
+          <button class="aform-add-btn" onclick="s_addBlock('note')">➕ Nota (fondo naranja)</button>
           <button class="aform-add-btn" onclick="s_addBlock('image')">➕ Imagen</button>
           <button class="aform-add-btn" onclick="s_addBlock('carousel')">➕ Carrusel</button>
           <button class="aform-add-btn" onclick="s_addBlock('table')">➕ Tabla</button>
@@ -3645,6 +3696,7 @@
 
       <div class="aform-footer">
         <button class="abtn-cancel" onclick="renderAdminList()">← Cancelar</button>
+        <button class="abtn-save" onclick="previewCurrentMod()">👁️ Previsualizar</button>
         <button class="abtn-save" onclick="adminSaveCurrent(false)">💾 Guardar borrador</button>
         <button class="abtn-publish" onclick="adminSaveCurrent(true)">${s.published ? '✓ Guardar (publicado)' : '🚀 Guardar y publicar'}</button>
         ${_editorId ? `<button class="abtn-danger" onclick="adminDeleteModConfirm('${_editorId}')">🗑️ Eliminar</button>` : ''}
@@ -3676,6 +3728,7 @@
     if (type === 'image') Object.assign(base, { src: '', alt: '' });
     if (type === 'carousel') base.slides = [];
     if (type === 'table') base.rows = [];
+    if (type === 'note') base.icon = '💡';
     _editorState.tutorial.blocks.push(base);
     renderModEditor();
   }
