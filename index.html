@@ -1993,19 +1993,19 @@
       <div class="ws" id="ws-descarga">
         <div class="ws-tag">Distribución del mod</div>
         <h1 class="ws-h1">Descarga</h1>
-        <div class="ws-p">Los mods del proyecto <strong>CH</strong> son <em>privados</em> y no están disponibles para descarga pública directa. Cada mod es desarrollado de forma independiente y su distribución está controlada para garantizar la integridad del trabajo.</div>
+        <div class="ws-p" id="ws-descarga-intro"></div>
         <div class="ws-note">
           <span class="ws-note-icon">ℹ️</span>
-          <span>Si estás interesado en adquirir o utilizar alguno de los mods — ya sea mediante un acuerdo o de forma paga — podés contactarme directamente a través de mi servidor de Discord. Ahí coordinamos los detalles.</span>
+          <span id="ws-descarga-note"></span>
         </div>
         <div class="ws-download-box">
-          <div class="ws-download-title">Contacto para adquisición</div>
-          <div class="ws-p" style="margin-bottom:.3rem">Escribime al servidor de Discord de <strong>CH Mods</strong>. Respondé en el canal correspondiente al mod que te interesa y coordinamos.</div>
-          <a class="ws-discord-btn" href="https://discord.gg/WvehBVr2Sj" target="_blank" rel="noopener">
+          <div class="ws-download-title" id="ws-descarga-boxtitle"></div>
+          <div class="ws-p" style="margin-bottom:.3rem" id="ws-descarga-boxtext"></div>
+          <a class="ws-discord-btn" id="ws-descarga-discordbtn" href="https://discord.gg/WvehBVr2Sj" target="_blank" rel="noopener">
             💬 &nbsp;Ir al servidor de Discord
           </a>
           <div class="ws-discord-info">
-            Usuario: <span>Checho</span> &nbsp;·&nbsp; ID: <span>checho_10920</span>
+            Usuario: <span id="ws-descarga-discorduser"></span> &nbsp;·&nbsp; ID: <span id="ws-descarga-discordid"></span>
           </div>
         </div>
       </div>
@@ -2417,6 +2417,25 @@
     } else {
       resGroup.style.display = 'none';
     }
+
+    // descarga (editable por mod, con valores por defecto si no está definida)
+    const DESCARGA_DEFAULT = {
+      intro: 'Los mods del proyecto <strong>CH</strong> son <em>privados</em> y no están disponibles para descarga pública directa. Cada mod es desarrollado de forma independiente y su distribución está controlada para garantizar la integridad del trabajo.',
+      note: 'Si estás interesado en adquirir o utilizar alguno de los mods — ya sea mediante un acuerdo o de forma paga — podés contactarme directamente a través de mi servidor de Discord. Ahí coordinamos los detalles.',
+      boxTitle: 'Contacto para adquisición',
+      boxText: 'Escribime al servidor de Discord de <strong>CH Mods</strong>. Respondé en el canal correspondiente al mod que te interesa y coordinamos.',
+      discordUrl: 'https://discord.gg/WvehBVr2Sj',
+      discordUser: 'Checho',
+      discordId: 'checho_10920'
+    };
+    const dl = { ...DESCARGA_DEFAULT, ...(data.descarga || {}) };
+    document.getElementById('ws-descarga-intro').innerHTML = dl.intro;
+    document.getElementById('ws-descarga-note').innerHTML = dl.note;
+    document.getElementById('ws-descarga-boxtitle').textContent = dl.boxTitle;
+    document.getElementById('ws-descarga-boxtext').innerHTML = dl.boxText;
+    document.getElementById('ws-descarga-discordbtn').href = dl.discordUrl;
+    document.getElementById('ws-descarga-discorduser').textContent = dl.discordUser;
+    document.getElementById('ws-descarga-discordid').textContent = dl.discordId;
 
     // secciones personalizadas (creadas desde el Panel OP)
     const sbCustom = document.getElementById('sb-custom-container');
@@ -3492,6 +3511,7 @@
       general: { chips: [], table: [], desc: '', extra: '', extraBlocks: [] },
       inicio: { intro: '', steps: [], extra: '', extraBlocks: [] },
       tutorial: { tag: 'Tutorial paso a paso', title: 'Tutorial', intro: '', showComandos: false, blocks: [] },
+      descarga: { intro: '', note: '', boxTitle: 'Contacto para adquisición', boxText: '', discordUrl: 'https://discord.gg/WvehBVr2Sj', discordUser: 'Checho', discordId: 'checho_10920' },
       recursos: [],
       customSections: [],
       published: false
@@ -3510,6 +3530,7 @@
     if (!_editorState.general.extraBlocks) _editorState.general.extraBlocks = [];
     if (!_editorState.inicio.extraBlocks) _editorState.inicio.extraBlocks = [];
     if (!_editorState.customSections) _editorState.customSections = [];
+    if (!_editorState.descarga) _editorState.descarga = { intro: '', note: '', boxTitle: 'Contacto para adquisición', boxText: '', discordUrl: 'https://discord.gg/WvehBVr2Sj', discordUser: 'Checho', discordId: 'checho_10920' };
     renderModEditor();
     document.getElementById('admin-body').scrollTop = 0;
   }
@@ -3731,6 +3752,19 @@
         </div>
         <div class="aform-field" style="margin-bottom:.8rem"><label>Introducción</label>${makeRTE('tutorial.intro')}</div>
         ${blocksHtml}
+      </div>
+
+      <div class="aform-section">
+        <div class="aform-section-title">🔒 Descarga</div>
+        <div class="aform-field" style="margin-bottom:.8rem"><label>Texto introductorio</label>${makeRTE('descarga.intro')}</div>
+        <div class="aform-field" style="margin-bottom:.8rem"><label>Nota destacada (recuadro de aviso)</label>${makeRTE('descarga.note')}</div>
+        <div class="aform-field" style="margin-bottom:.8rem"><label>Título del recuadro de contacto</label><input type="text" value="${escAttr(s.descarga.boxTitle)}" data-bind="descarga.boxTitle" oninput="s_input(this)" /></div>
+        <div class="aform-field" style="margin-bottom:.8rem"><label>Texto del recuadro de contacto</label>${makeRTE('descarga.boxText')}</div>
+        <div class="aform-row">
+          <div class="aform-field"><label>Link de Discord</label><input type="text" value="${escAttr(s.descarga.discordUrl)}" data-bind="descarga.discordUrl" oninput="s_input(this)" /></div>
+          <div class="aform-field"><label>Usuario</label><input type="text" value="${escAttr(s.descarga.discordUser)}" data-bind="descarga.discordUser" oninput="s_input(this)" /></div>
+          <div class="aform-field"><label>ID</label><input type="text" value="${escAttr(s.descarga.discordId)}" data-bind="descarga.discordId" oninput="s_input(this)" /></div>
+        </div>
       </div>
 
       <div class="aform-section">
