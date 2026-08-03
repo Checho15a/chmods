@@ -1780,10 +1780,10 @@
       <div class="sb-mod-name" id="sb-mod-name">CH Mod</div>
 
       <div class="sb-item active" onclick="wikiSection('general')" data-s="general">
-        <span class="sb-icon">📄</span> Wiki
+        <span class="sb-icon">📄</span> <span id="sb-label-general">Wiki</span>
       </div>
       <div class="sb-item" onclick="wikiSection('inicio')" data-s="inicio">
-        <span class="sb-icon">▶</span> Cómo empezar
+        <span class="sb-icon">▶</span> <span id="sb-label-inicio">Cómo empezar</span>
       </div>
 
       <!-- Tutorial Multimedia — desplegable -->
@@ -1806,7 +1806,7 @@
       </div>
 
       <div class="sb-item" onclick="wikiSection('descarga')" data-s="descarga">
-        <span class="sb-icon">🔒</span> Descarga
+        <span class="sb-icon">🔒</span> <span id="sb-label-descarga">Descarga</span>
       </div>
 
       <div id="sb-custom-container"></div>
@@ -2243,6 +2243,20 @@
   // usada por la función de importar mods existentes.
   const CORE_MODS_BACKUP = JSON.parse(JSON.stringify({ images: MOD_DATA.images, launch: MOD_DATA.launch, squid: MOD_DATA.squid }));
 
+  // Valores por defecto compartidos entre el editor del Panel OP y el render público,
+  // para que nunca queden desincronizados (mismo texto en ambos lados).
+  const DESCARGA_DEFAULT = {
+    intro: 'Los mods del proyecto <strong>CH</strong> son <em>privados</em> y no están disponibles para descarga pública directa. Cada mod es desarrollado de forma independiente y su distribución está controlada para garantizar la integridad del trabajo.',
+    note: 'Si estás interesado en adquirir o utilizar alguno de los mods — ya sea mediante un acuerdo o de forma paga — podés contactarme directamente a través de mi servidor de Discord. Ahí coordinamos los detalles.',
+    boxTitle: 'Contacto para adquisición',
+    boxText: 'Escribime al servidor de Discord de <strong>CH Mods</strong>. Respondé en el canal correspondiente al mod que te interesa y coordinamos.',
+    discordUrl: 'https://discord.gg/WvehBVr2Sj',
+    discordUser: 'Checho',
+    discordId: 'checho_10920'
+  };
+  const DEFAULT_SECTION_LABELS = { general: 'Wiki', inicio: 'Cómo empezar', descarga: 'Descarga' };
+  const DEFAULT_SECTION_ORDER = ['general', 'inicio', 'tutorial', 'descarga'];
+
   let _wikiMod = null;
 
   function openWiki(modId) {
@@ -2419,15 +2433,6 @@
     }
 
     // descarga (editable por mod, con valores por defecto si no está definida)
-    const DESCARGA_DEFAULT = {
-      intro: 'Los mods del proyecto <strong>CH</strong> son <em>privados</em> y no están disponibles para descarga pública directa. Cada mod es desarrollado de forma independiente y su distribución está controlada para garantizar la integridad del trabajo.',
-      note: 'Si estás interesado en adquirir o utilizar alguno de los mods — ya sea mediante un acuerdo o de forma paga — podés contactarme directamente a través de mi servidor de Discord. Ahí coordinamos los detalles.',
-      boxTitle: 'Contacto para adquisición',
-      boxText: 'Escribime al servidor de Discord de <strong>CH Mods</strong>. Respondé en el canal correspondiente al mod que te interesa y coordinamos.',
-      discordUrl: 'https://discord.gg/WvehBVr2Sj',
-      discordUser: 'Checho',
-      discordId: 'checho_10920'
-    };
     const dl = { ...DESCARGA_DEFAULT, ...(data.descarga || {}) };
     document.getElementById('ws-descarga-intro').innerHTML = dl.intro;
     document.getElementById('ws-descarga-note').innerHTML = dl.note;
@@ -2454,6 +2459,46 @@
           ${renderBlocksPublic(sec.blocks, 'sec' + si)}
         </div>`).join('');
     }
+
+    // nombres personalizados de las secciones fijas
+    const labels = { ...DEFAULT_SECTION_LABELS, ...(data.sectionLabels || {}) };
+    const lblGeneral = document.getElementById('sb-label-general');
+    const lblInicio  = document.getElementById('sb-label-inicio');
+    const lblDescarga = document.getElementById('sb-label-descarga');
+    if (lblGeneral) lblGeneral.textContent = labels.general;
+    if (lblInicio) lblInicio.textContent = labels.inicio;
+    if (lblDescarga) lblDescarga.textContent = labels.descarga;
+
+    // orden del menú lateral (secciones fijas + personalizadas, en el orden que definió el admin)
+    applySectionOrder(data.sectionOrder && data.sectionOrder.length ? data.sectionOrder : DEFAULT_SECTION_ORDER);
+  }
+
+  // Reordena físicamente los items del sidebar según el array de claves recibido.
+  function applySectionOrder(order) {
+    const container = document.querySelector('.wiki-sidebar');
+    const resGroup = document.getElementById('sb-res-group');
+    if (!container || !resGroup) return;
+    const fixedNodes = {
+      general: document.querySelector('.wiki-sidebar > .sb-item[data-s="general"]'),
+      inicio: document.querySelector('.wiki-sidebar > .sb-item[data-s="inicio"]'),
+      tutorial: document.getElementById('sb-tutorial-group'),
+      descarga: document.querySelector('.wiki-sidebar > .sb-item[data-s="descarga"]'),
+    };
+    const used = new Set();
+    (order || []).forEach(key => {
+      let el = fixedNodes[key];
+      if (!el && key.startsWith('custom_')) {
+        el = document.querySelector(`#sb-custom-container .sb-item[data-s="${key}"]`);
+      }
+      if (el) { container.insertBefore(el, resGroup); used.add(key); }
+    });
+    // cualquier sección que no esté en el orden guardado se agrega al final, antes de Recursos
+    Object.keys(fixedNodes).forEach(key => {
+      if (!used.has(key) && fixedNodes[key]) container.insertBefore(fixedNodes[key], resGroup);
+    });
+    document.querySelectorAll('#sb-custom-container .sb-item').forEach(el => {
+      if (!used.has(el.dataset.s)) container.insertBefore(el, resGroup);
+    });
   }
 
   function wikiSection(sec) {
@@ -3511,9 +3556,11 @@
       general: { chips: [], table: [], desc: '', extra: '', extraBlocks: [] },
       inicio: { intro: '', steps: [], extra: '', extraBlocks: [] },
       tutorial: { tag: 'Tutorial paso a paso', title: 'Tutorial', intro: '', showComandos: false, blocks: [] },
-      descarga: { intro: '', note: '', boxTitle: 'Contacto para adquisición', boxText: '', discordUrl: 'https://discord.gg/WvehBVr2Sj', discordUser: 'Checho', discordId: 'checho_10920' },
+      descarga: JSON.parse(JSON.stringify(DESCARGA_DEFAULT)),
       recursos: [],
       customSections: [],
+      sectionOrder: [...DEFAULT_SECTION_ORDER],
+      sectionLabels: { ...DEFAULT_SECTION_LABELS },
       published: false
     };
   }
@@ -3530,7 +3577,22 @@
     if (!_editorState.general.extraBlocks) _editorState.general.extraBlocks = [];
     if (!_editorState.inicio.extraBlocks) _editorState.inicio.extraBlocks = [];
     if (!_editorState.customSections) _editorState.customSections = [];
-    if (!_editorState.descarga) _editorState.descarga = { intro: '', note: '', boxTitle: 'Contacto para adquisición', boxText: '', discordUrl: 'https://discord.gg/WvehBVr2Sj', discordUser: 'Checho', discordId: 'checho_10920' };
+    {
+      const saved = _editorState.descarga || {};
+      const merged = {};
+      Object.keys(DESCARGA_DEFAULT).forEach(k => {
+        merged[k] = (saved[k] !== undefined && saved[k] !== '') ? saved[k] : DESCARGA_DEFAULT[k];
+      });
+      _editorState.descarga = merged;
+    }
+    if (!_editorState.sectionLabels) _editorState.sectionLabels = { ...DEFAULT_SECTION_LABELS };
+    else _editorState.sectionLabels = { ...DEFAULT_SECTION_LABELS, ..._editorState.sectionLabels };
+    if (!_editorState.sectionOrder || !_editorState.sectionOrder.length) _editorState.sectionOrder = [...DEFAULT_SECTION_ORDER];
+    // agrega secciones personalizadas que todavía no estén en el orden (mods creados antes de esta función)
+    (_editorState.customSections || []).forEach(sec => {
+      const key = 'custom_' + sec.id;
+      if (!_editorState.sectionOrder.includes(key)) _editorState.sectionOrder.push(key);
+    });
     renderModEditor();
     document.getElementById('admin-body').scrollTop = 0;
   }
@@ -3697,8 +3759,42 @@
         <button class="arow-remove" onclick="s_delArr('recursos',${i})">✕</button>
       </div>`).join('');
 
+    const sectionMeta = {
+      general: { icon: '📄', fixedLabel: 'Página general (Wiki)' },
+      inicio: { icon: '▶', fixedLabel: 'Cómo empezar' },
+      tutorial: { icon: '🎬', fixedLabel: s.tutorial.tag || 'Tutorial' },
+      descarga: { icon: '🔒', fixedLabel: 'Descarga' },
+    };
+    const sectionOrderHtml = (s.sectionOrder||[]).map((key, idx) => {
+      const isCustom = key.startsWith('custom_');
+      let icon, nameField;
+      if (isCustom) {
+        const sec = (s.customSections||[]).find(c => 'custom_' + c.id === key);
+        icon = sec ? (sec.icon || '📄') : '📄';
+        nameField = sec ? escHtml(sec.label || 'Sección') + ' <span style="color:var(--dim2);font-size:.7rem">(personalizada — se edita más abajo)</span>' : '(sección eliminada)';
+      } else {
+        icon = sectionMeta[key]?.icon || '📄';
+        nameField = `<input type="text" value="${escAttr((s.sectionLabels && s.sectionLabels[key]) || DEFAULT_SECTION_LABELS[key] || key)}" data-bind="sectionLabels.${key}" oninput="s_input(this)" style="max-width:220px" />`;
+      }
+      return `
+        <div class="arow-item">
+          <span style="width:22px;text-align:center">${icon}</span>
+          <div style="flex:1">${nameField}</div>
+          <div class="ablock-move">
+            <button onclick="s_moveSectionOrder(${idx},-1)">↑</button>
+            <button onclick="s_moveSectionOrder(${idx},1)">↓</button>
+          </div>
+        </div>`;
+    }).join('');
+
     body.innerHTML = `
       <div class="admin-title">🛠️ ${_editorId ? 'Editar mod' : 'Nuevo mod'}</div>
+
+      <div class="aform-section">
+        <div class="aform-section-title">🧭 Orden y nombres del menú</div>
+        <div class="aform-hint" style="margin-bottom:.7rem">Moví cualquier sección arriba o abajo con las flechas, y renombrá las que tienen campo de texto. El Tutorial se renombra en su propia sección más abajo.</div>
+        ${sectionOrderHtml}
+      </div>
 
       <div class="aform-section">
         <div class="aform-section-title">📋 Básico</div>
@@ -3777,11 +3873,7 @@
         <div class="aform-section">
           <div class="aform-section-title" style="display:flex;align-items:center;gap:.5rem">
             <span>📄 Sección personalizada</span>
-            <div class="ablock-move" style="margin-left:auto">
-              <button onclick="s_move('customSections',${si},-1)">↑</button>
-              <button onclick="s_move('customSections',${si},1)">↓</button>
-              <button class="ablock-del" onclick="s_delArr('customSections',${si})">✕</button>
-            </div>
+            <button class="ablock-del" style="margin-left:auto" onclick="s_deleteSection(${si})">✕ Borrar sección</button>
           </div>
           <div class="aform-row">
             <div class="aform-field" style="max-width:80px">
@@ -3841,7 +3933,26 @@
   function s_addTableRow(blockPath) { getPath(_editorState, blockPath).rows.push({k:'', v:''}); renderModEditor(); }
   function s_addSection() {
     if (!_editorState.customSections) _editorState.customSections = [];
-    _editorState.customSections.push({ id: 'sec_' + Date.now(), icon: '📄', label: 'Nueva sección', intro: '', blocks: [] });
+    if (!_editorState.sectionOrder) _editorState.sectionOrder = [...DEFAULT_SECTION_ORDER];
+    const id = 'sec_' + Date.now();
+    _editorState.customSections.push({ id, icon: '📄', label: 'Nueva sección', intro: '', blocks: [] });
+    _editorState.sectionOrder.push('custom_' + id);
+    renderModEditor();
+  }
+  function s_deleteSection(si) {
+    const sec = _editorState.customSections[si];
+    _editorState.customSections.splice(si, 1);
+    if (sec && _editorState.sectionOrder) {
+      const key = 'custom_' + sec.id;
+      _editorState.sectionOrder = _editorState.sectionOrder.filter(k => k !== key);
+    }
+    renderModEditor();
+  }
+  function s_moveSectionOrder(idx, dir) {
+    const arr = _editorState.sectionOrder;
+    const j = idx + dir;
+    if (j < 0 || j >= arr.length) return;
+    [arr[idx], arr[j]] = [arr[j], arr[idx]];
     renderModEditor();
   }
 
