@@ -103,7 +103,7 @@
           limit(50)
         );
         const snap = await getDocs(q);
-        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        return snap.docs.map(d => ({ ...d.data(), id: d.id }));
       },
 
       async postSuggestion(text, category) {
@@ -211,20 +211,21 @@
       async adminGetAllMods() {
         if (!_isAdmin) throw new Error('Sin permiso');
         const snap = await getDocs(collection(db, 'customMods'));
-        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        return snap.docs.map(d => ({ ...d.data(), id: d.id }));
       },
 
       async getPublishedMods() {
         const q = query(collection(db, 'customMods'), where('published', '==', true));
         const snap = await getDocs(q);
-        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        return snap.docs.map(d => ({ ...d.data(), id: d.id }));
       },
 
       async adminSaveMod(modId, data) {
         if (!_isAdmin) throw new Error('Sin permiso');
         const cleanId = (modId || ('custom_' + Date.now())).replace(/[^a-zA-Z0-9_]/g, '');
         const ref = doc(db, 'customMods', cleanId);
-        const payload = { ...data, updatedAt: serverTimestamp() };
+        const { id, ...dataWithoutId } = data; // "id" es solo un campo de conveniencia en memoria, nunca se guarda
+        const payload = { ...dataWithoutId, updatedAt: serverTimestamp() };
         const existing = await getDoc(ref);
         if (!existing.exists()) payload.createdAt = serverTimestamp();
         await setDoc(ref, payload, { merge: true });
@@ -3586,6 +3587,7 @@
     if (id) {
       const found = _adminModsCache.find(m => m.id === id);
       _editorState = JSON.parse(JSON.stringify(found || blankModTemplate()));
+      delete _editorState.id; // "id" es solo de conveniencia en memoria (_adminModsCache), nunca se edita ni se guarda
     } else {
       _editorState = blankModTemplate();
     }
@@ -4042,6 +4044,7 @@
       _pendingModId = newId;
       suggToast('✓ ID cambiado a "' + newId + '"', 'ok');
       await loadCustomMods();
+      _adminModsCache = await window._chm.adminGetAllMods(); // refresca la caché interna del panel ya mismo
       renderModEditor();
     } catch(e) { suggToast('Error al cambiar el ID: ' + (e.message||''), 'err'); }
   }
