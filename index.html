@@ -1531,6 +1531,11 @@
   }
   .ws-p strong, .ws-p b { color: var(--text); font-weight: 600; }
   .ws-p em, .ws-p i { color: var(--accent); font-style: normal; }
+  /* Blindaje general: cualquier negrita/cursiva dentro del contenido de la wiki (notas, "cómo empezar",
+     descarga, secciones personalizadas, etc.) usa los mismos colores, sin importar si el navegador
+     generó <strong>/<em> o <span style="font-weight:...">/<span style="font-style:...">. */
+  .wiki-content strong, .wiki-content b, .wiki-content span[style*="bold"], .wiki-content span[style*="700"] { color: var(--text); font-weight: 600; }
+  .wiki-content em, .wiki-content i, .wiki-content span[style*="italic"] { color: var(--accent); font-style: normal; }
   .ws-p code {
     font-family: 'DM Mono', monospace; font-size: .82rem;
     background: var(--bg3); border: 1px solid var(--border2);
@@ -3359,8 +3364,8 @@
     outline:none; line-height:1.6;
   }
   .rte-editor:focus { border-color:var(--accent); }
-  .rte-editor b, .rte-editor strong { color: var(--white); font-weight: 700; }
-  .rte-editor i, .rte-editor em { color: var(--accent); font-style: normal; }
+  .rte-editor b, .rte-editor strong, .rte-editor span[style*="bold"], .rte-editor span[style*="700"] { color: var(--white); font-weight: 700; }
+  .rte-editor i, .rte-editor em, .rte-editor span[style*="italic"] { color: var(--accent); font-style: normal; }
   .rte-editor pre { background:var(--bg); border:1px solid var(--border2); border-radius:4px; padding:.4rem .6rem; font-family:'DM Mono',monospace; font-size:.78rem; overflow-x:auto; }
 
   .arow-item { display:flex; gap:.5rem; margin-bottom:.5rem; align-items:center; }
@@ -3621,7 +3626,11 @@
     cur[parts[parts.length - 1]] = val;
   }
 
-  function rteCmd(id, cmd, val) { document.getElementById(id).focus(); document.execCommand(cmd, false, val || null); }
+  function rteCmd(id, cmd, val) {
+    document.getElementById(id).focus();
+    document.execCommand('styleWithCSS', false, false); // fuerza <b>/<i> en vez de <span style="...">, para que el color siempre coincida
+    document.execCommand(cmd, false, val || null);
+  }
   function rteLink(id) {
     const url = prompt('URL del link:');
     if (url) { document.getElementById(id).focus(); document.execCommand('createLink', false, url); }
