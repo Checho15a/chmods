@@ -3428,6 +3428,7 @@
   let _adminListToken = 0;
   let _editorState = null;
   let _editorId = null;
+  let _pendingModId = '';
 
   function openAdminPanel() {
     if (!window._chm.isAdmin()) return;
@@ -3613,6 +3614,7 @@
       const key = 'custom_' + sec.id;
       if (!_editorState.sectionOrder.includes(key)) _editorState.sectionOrder.push(key);
     });
+    _pendingModId = id || '';
     renderModEditor();
     document.getElementById('admin-body').scrollTop = 0;
   }
@@ -3915,6 +3917,21 @@
 
       <button class="admin-newmod-btn" style="background:var(--bg3);color:var(--text);border:1px solid var(--border2);margin-bottom:1.2rem" onclick="s_addSection()">➕ Añadir sección nueva</button>
 
+      <div class="aform-section">
+        <div class="aform-section-title">🔗 ID del mod (para el link)</div>
+        <div class="aform-hint" style="margin-bottom:.6rem">
+          ${_editorId
+            ? `Se usa en el link para compartir: <code style="color:var(--accent)">?mod=${_editorId}</code>. Solo letras, números y guión bajo.`
+            : `Si lo dejás vacío, se genera uno automático al guardar. Solo letras, números y guión bajo.`}
+        </div>
+        <div class="aform-row">
+          <div class="aform-field">
+            <input type="text" id="mod-id-input" value="${escAttr(_pendingModId)}" oninput="_pendingModId=this.value" placeholder="ej: chmines" />
+          </div>
+          ${_editorId ? `<button class="admin-btn" style="flex-shrink:0" onclick="adminChangeModId()">🔄 Cambiar ID</button>` : ''}
+        </div>
+      </div>
+
       <div class="aform-footer">
         <button class="abtn-cancel" onclick="renderAdminList()">← Cancelar</button>
         <button class="abtn-save" onclick="previewCurrentMod()">👁️ Previsualizar</button>
@@ -3991,12 +4008,42 @@
     if (!_editorState.name.trim()) { suggToast('Ponele un nombre al mod.', 'err'); return; }
     _editorState.published = publish ? true : _editorState.published;
     try {
-      const newId = await window._chm.adminSaveMod(_editorId, _editorState);
+      let idToUse = _editorId; // si ya existe, se guarda siempre con el mismo id (el cambio de id es aparte)
+      if (!idToUse) {
+        const typed = (_pendingModId || '').trim().replace(/[^a-zA-Z0-9_]/g, '');
+        if (typed) {
+          const taken = _adminModsCache.some(m => m.id === typed) || ['images','launch','squid'].includes(typed);
+          if (taken) { suggToast('Ese ID ya está en uso. Elegí otro.', 'err'); return; }
+        }
+        idToUse = typed || null; // null = se genera uno automático
+      }
+      const newId = await window._chm.adminSaveMod(idToUse, _editorState);
       _editorId = newId;
+      _pendingModId = newId;
       suggToast('✓ Mod guardado', 'ok');
       await loadCustomMods();
       renderAdminList();
     } catch(e) { suggToast('Error al guardar: ' + (e.message||''), 'err'); }
+  }
+
+  async function adminChangeModId() {
+    if (!_editorId) { suggToast('Guardá el mod primero, después le podés cambiar el ID.', 'err'); return; }
+    const newId = (document.getElementById('mod-id-input').value || '').trim().replace(/[^a-zA-Z0-9_]/g, '');
+    if (!newId) { suggToast('Escribí un ID válido (letras, números, guión bajo).', 'err'); return; }
+    if (newId === _editorId) { suggToast('Ese ya es el ID actual.', 'err'); return; }
+    const taken = _adminModsCache.some(m => m.id === newId) || ['images','launch','squid'].includes(newId);
+    if (taken) { suggToast('Ese ID ya está en uso por otro mod.', 'err'); return; }
+    try {
+      const oldId = _editorId;
+      await window._chm.adminSaveMod(newId, _editorState);
+      await window._chm.adminDeleteMod(oldId);
+      delete MOD_DATA[oldId];
+      _editorId = newId;
+      _pendingModId = newId;
+      suggToast('✓ ID cambiado a "' + newId + '"', 'ok');
+      await loadCustomMods();
+      renderModEditor();
+    } catch(e) { suggToast('Error al cambiar el ID: ' + (e.message||''), 'err'); }
   }
 </script>
 </body>
