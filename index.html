@@ -2362,7 +2362,7 @@
     document.getElementById('sb-mod-name').textContent = data.name;
 
     // general
-    document.getElementById('ws-title').textContent = data.general.title;
+    document.getElementById('ws-title').textContent = data.general.title || data.name || '';
     document.getElementById('ws-desc').innerHTML = data.general.desc;
     document.getElementById('ws-extra').innerHTML = data.general.extra || '';
 
@@ -3852,6 +3852,11 @@
 
       <div class="aform-section">
         <div class="aform-section-title">📄 Página general (Wiki)</div>
+        <div class="aform-field" style="margin-bottom:.8rem">
+          <label>Título grande de la página (encabezado principal)</label>
+          <input type="text" value="${escAttr(s.general.title)}" data-bind="general.title" oninput="s_input(this)" placeholder="${escAttr(s.name) || 'ej: CH Mines'}" />
+          <div class="aform-hint">Es distinto del "Nombre del mod" de arriba — este es el título grande que aparece en la wiki.</div>
+        </div>
         <div class="aform-field" style="margin-bottom:.8rem"><label>Chips</label>${chipsRows}<button class="aform-add-btn" onclick="s_pushArr('general.chips','')">➕ Chip</button></div>
         <div class="aform-field" style="margin-bottom:.8rem"><label>Tabla de datos</label>${tableRows}<button class="aform-add-btn" onclick="s_pushArr('general.table',{k:'',v:''})">➕ Fila</button></div>
         <div class="aform-field" style="margin-bottom:.8rem"><label>Descripción principal</label>${makeRTE('general.desc')}</div>
