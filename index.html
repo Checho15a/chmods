@@ -3510,6 +3510,7 @@
         data.published = true;
         if (data.general) data.general.table = normalizeTable(data.general.table);
         (data.tutorial?.blocks || []).forEach(b => { if (b.rows) b.rows = normalizeTable(b.rows); });
+        normalizeBlockTypes(data.tutorial?.blocks);
         await window._chm.adminSaveMod(id, data);
       }
       if (!silent) suggToast('✓ Mods importados — ya los podés editar', 'ok');
@@ -3565,6 +3566,15 @@
     };
   }
 
+  // Los mods originales (CH Images/CH Launch) usan los nombres viejos 'img'/'gif' para imágenes;
+  // el editor solo entiende 'image'. Esto normaliza cualquier bloque que venga con el nombre viejo.
+  function normalizeBlockTypes(blocks) {
+    (blocks || []).forEach(b => {
+      if (b.type === 'img' || b.type === 'gif') b.type = 'image';
+    });
+    return blocks;
+  }
+
   function openModEditor(id) {
     _editorId = id;
     if (id) {
@@ -3577,6 +3587,11 @@
     if (!_editorState.general.extraBlocks) _editorState.general.extraBlocks = [];
     if (!_editorState.inicio.extraBlocks) _editorState.inicio.extraBlocks = [];
     if (!_editorState.customSections) _editorState.customSections = [];
+    // normaliza tipos de bloque viejos (de los mods originales hardcodeados) al nuevo formato del editor
+    normalizeBlockTypes(_editorState.tutorial.blocks);
+    normalizeBlockTypes(_editorState.general.extraBlocks);
+    normalizeBlockTypes(_editorState.inicio.extraBlocks);
+    (_editorState.customSections || []).forEach(sec => normalizeBlockTypes(sec.blocks));
     {
       const saved = _editorState.descarga || {};
       const merged = {};
@@ -3649,7 +3664,7 @@
         </div>`;
     }
     let extra = '';
-    if (b.type === 'image') {
+    if (b.type === 'image' || b.type === 'img' || b.type === 'gif') {
       const pid = 'imgprev_' + itemPath.replace(/\./g,'_');
       extra = `
         <div class="aform-field" style="margin-top:.6rem">
@@ -3686,7 +3701,7 @@
     return `
       <div class="ablock-card">
         <div class="ablock-head">
-          <span class="ablock-type-tag">${({text:'Texto',image:'Imagen',carousel:'Carrusel',table:'Tabla'})[b.type]}</span>
+          <span class="ablock-type-tag">${({text:'Texto',image:'Imagen',img:'Imagen',gif:'Imagen',carousel:'Carrusel',table:'Tabla'})[b.type] || 'Imagen'}</span>
           <div class="ablock-move">
             <button onclick="s_move('${listPath}',${i},-1)">↑</button>
             <button onclick="s_move('${listPath}',${i},1)">↓</button>
