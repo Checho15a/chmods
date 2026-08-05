@@ -3507,7 +3507,7 @@
 
   async function adminImportCoreMods(silent) {
     try {
-      for (const id of ['images', 'launch', 'squid']) {
+      for (const id of ['images', 'launch']) {
         const src = CORE_MODS_BACKUP[id];
         if (!src) continue;
         const data = JSON.parse(JSON.stringify(src));
