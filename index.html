@@ -2185,7 +2185,7 @@
   // ══════════════════════════════════════════════
   // Copia "de fábrica" de los mods principales (antes de que el Panel OP los pueda sobreescribir),
   // usada por la función de importar mods existentes.
-  const CORE_MODS_BACKUP = JSON.parse(JSON.stringify({ images: MOD_DATA.images, launch: MOD_DATA.launch, squid: MOD_DATA.squid }));
+  const CORE_MODS_BACKUP = JSON.parse(JSON.stringify({ images: MOD_DATA.images, launch: MOD_DATA.launch }));
 
   // Valores por defecto compartidos entre el editor del Panel OP y el render público,
   // para que nunca queden desincronizados (mismo texto en ambos lados).
