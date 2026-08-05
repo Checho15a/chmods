@@ -725,6 +725,18 @@
     .foot-l { font-family: 'Nunito', sans-serif; font-size: .75rem; color: var(--dim2); font-weight: 600; }
     .foot-l span { color: var(--accent); }
     .foot-r { font-family: 'DM Mono', monospace; font-size: .62rem; color: var(--dim2); letter-spacing: .07em; }
+    .footer-kofi-btn {
+      display: inline-flex; align-items: center; gap: .45rem;
+      padding: .42rem .95rem; border-radius: 999px;
+      background: var(--bg2); border: 1px solid var(--border2);
+      font-family: 'Nunito', sans-serif; font-size: .74rem; font-weight: 700;
+      color: var(--dim); text-decoration: none; transition: all var(--ease);
+    }
+    .footer-kofi-btn:hover {
+      border-color: #ff5e5b; color: #ff5e5b;
+      background: rgba(255,94,91,.08); transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(255,94,91,.15);
+    }
 
     @media (max-width: 600px) {
       .auth-card { padding: 1.7rem 1.2rem; }
@@ -939,6 +951,9 @@
 
   <footer>
     <div class="foot-l">© 2026 <span>Checho</span> — Todos los derechos reservados</div>
+    <a class="footer-kofi-btn" href="https://ko-fi.com/sergio40583" target="_blank" rel="noopener" title="Apoyame con un café">
+      ☕ Invitame un café
+    </a>
     <div class="foot-r">CH Mods — Minecraft Java 1.20.1</div>
   </footer>
 
