@@ -3458,7 +3458,7 @@
     } catch(e) { mods = []; }
 
     // Si falta alguno de los mods principales, se importan solos en silencio (una sola vez).
-    const missingCore = ['images','launch','squid'].some(id => !mods.some(m => m.id === id));
+    const missingCore = ['images','launch'].some(id => !mods.some(m => m.id === id));
     if (missingCore) {
       await adminImportCoreMods(true);
       try { mods = await window._chm.adminGetAllMods(); } catch(e) {}
