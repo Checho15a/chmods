@@ -2177,49 +2177,6 @@
         ]
       },
       recursos: []
-    },
-
-    squid: {
-      name: 'CH SquidCraft',
-      version: 'Forge 1.20.1',
-      general: {
-        title: 'CH SquidCraft',
-        chips: ['Forge 1.20.1', 'Eventos', 'Ítems Personalizados', 'Mecánicas', 'Fan-made'],
-        table: [
-          ['Versión', 'Forge 1.20.1'],
-          ['Tipo', 'Mod de servidor'],
-          ['Inspiración', 'SquidCraftGames (evento fan-made)'],
-          ['Requiere config.', 'Sí, mínima'],
-        ],
-        desc: '<strong>CH SquidCraft</strong> es un mod inspirado en el evento <em>SquidCraftGames</em>. Agrega mecánicas, ítems y sistemas personalizados que permiten recrear la experiencia del evento dentro de un servidor de Minecraft Java 1.20.1.',
-        extra: `
-          <div class="ws-note"><span class="ws-note-icon">🦑</span><span>Este es un proyecto <strong>fan-made</strong>, no oficial. Los créditos de la idea original corresponden a los organizadores del evento SquidCraftGames.</span></div>
-          <div class="ws-p">El mod incluye <strong>ítems exclusivos</strong> del evento, <strong>mecánicas de eliminación</strong> y sistemas de control que permiten gestionar el torneo desde comandos de operador.</div>
-        `
-      },
-      inicio: {
-        intro: 'CH SquidCraft requiere una configuración inicial mínima antes de activar las mecánicas del evento. Seguí los pasos a continuación.',
-        steps: [
-          { n: '01', title: 'Descargar el mod', desc: 'Obtené el archivo <code>.jar</code> de CH SquidCraft (ver sección Descarga).' },
-          { n: '02', title: 'Instalar en la carpeta mods', desc: 'Colocá el <code>.jar</code> en la carpeta <code>mods/</code> de tu instalación de Forge 1.20.1 en el servidor.' },
-          { n: '03', title: 'Configurar los parámetros', desc: 'Al iniciar por primera vez, se genera un archivo <code>config/chsquidcraft.toml</code>. Desde ahí podés ajustar los parámetros del evento según tus necesidades.' },
-          { n: '04', title: 'Iniciar el evento', desc: 'Como operador del servidor, usá el comando <code>/squidcraft start</code> para activar las mecánicas. Cuando termine, usá <code>/squidcraft stop</code>.' },
-        ],
-        extra: `<div class="ws-note"><span class="ws-note-icon">⚠️</span><span>Se recomienda usarlo en un <strong>servidor dedicado</strong> para la experiencia completa. En modo single-player algunas mecánicas pueden comportarse de forma diferente.</span></div>`
-      },
-      tutorial: {
-        tag: 'Tutorial paso a paso',
-        title: 'Tutorial Multimedia',
-        intro: 'Guía de cada función y mecánica incluida en el mod, con descripción e imagen de referencia.',
-        showComandos: true,
-        blocks: [
-          { title: 'Ítems exclusivos del evento', desc: 'El mod agrega ítems únicos obtenibles durante el evento. Cada ítem tiene una función específica dentro de las dinámicas del torneo y no está disponible en el modo de juego normal.', type: 'img', src: '', alt: '' },
-          { title: 'Sistema de eliminación automática', desc: 'Al eliminarse un jugador, el sistema del mod lo detecta y aplica las reglas configuradas: anuncio en chat, efectos y transición al modo espectador.', type: 'img', src: '', alt: '' },
-          { title: 'Comandos de administración del evento', desc: 'Comandos disponibles para el operador: <code>/squidcraft start</code> para iniciar, <code>/squidcraft stop</code> para detener, y <code>/squidcraft reset</code> para reiniciar el estado del evento.', type: 'img', src: '', alt: '' },
-          { title: 'Panel de estado del evento', desc: 'El mod incluye una interfaz de estado que muestra los jugadores activos, eliminados y la fase actual del evento en tiempo real.', type: 'img', src: '', alt: '' },
-        ]
-      },
-      recursos: []
     }
   };
 
