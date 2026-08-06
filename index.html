@@ -149,7 +149,7 @@
       },
 
       async deleteSuggestion(id) {
-        if (!_user) throw new Error('No autenticado');
+        if (!_user) throw new Error('No Autenticado');
         const ref = doc(db, 'suggestions', id);
         const snap = await getDoc(ref);
         if (!snap.exists()) return;
