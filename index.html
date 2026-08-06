@@ -618,6 +618,15 @@
       max-width: 980px; margin: 0 auto;
       padding: 3rem clamp(1rem, 5vw, 2rem) 5rem;
     }
+    .home-ad-wrap {
+      max-width: 980px; margin: 0 auto;
+      padding: 0 clamp(1rem, 5vw, 2rem);
+    }
+    .home-ad-wrap .wiki-ad-label {
+      font-family: 'DM Mono', monospace; font-size: .58rem;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--dim2); margin-bottom: .5rem; text-align: center;
+    }
     .sec-label {
       font-family: 'Nunito', sans-serif; font-size: .7rem; font-weight: 700;
       letter-spacing: .12em; text-transform: uppercase;
@@ -877,6 +886,16 @@
       👀 Modo invitado — iniciá sesión para acceder a los mods
     </div>
   </section>
+
+  <div class="home-ad-wrap">
+    <div class="wiki-ad-label">Publicidad</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-6501527131691677"
+         data-ad-slot="0000000001"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+  </div>
 
   <main class="mods-section">
     <div class="sec-label">Mods disponibles</div>
@@ -1173,6 +1192,7 @@
       document.getElementById('nav-badge').className   = 'nav-badge g';
       document.getElementById('guest-strip').style.display = 'inline-block';
       lockCards(true);
+      pushAd('homeAd');
       if (_pendingMod) {
         // Hay un link directo a un mod pero está como invitado: avisamos que debe loguearse.
         setTimeout(showGuestToast, 400);
@@ -1184,6 +1204,7 @@
       document.getElementById('nav-badge').textContent = isAdmin ? 'OP' : 'usuario';
       document.getElementById('nav-badge').className   = 'nav-badge u' + (isAdmin ? ' nav-badge-op' : '');
       lockCards(false);
+      pushAd('homeAd');
 
       loadCustomMods().then(() => {
         // ── Si venimos de un link directo (?mod=id), abrimos esa wiki automáticamente ──
@@ -1500,6 +1521,24 @@
   }
   .wiki-content::-webkit-scrollbar { width: 5px; }
   .wiki-content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .wiki-ad-rail {
+    display: none; /* se muestra solo en pantallas anchas, ver media query */
+    width: 300px; flex-shrink: 0;
+    padding: 2.5rem 1.5rem;
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .wiki-ad-rail::-webkit-scrollbar { display: none; }
+  .wiki-ad-label {
+    font-family: 'DM Mono', monospace; font-size: .58rem;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--dim2); margin-bottom: .6rem; text-align: center;
+  }
+  @media (min-width: 1300px) {
+    .wiki-ad-rail { display: block; position: sticky; top: 0; align-self: flex-start; }
+  }
 
   .ws { display: none; }
   .ws.active { display: block; }
@@ -2242,6 +2281,16 @@
     wikiSection('general');
     const dark = document.body.classList.contains('dark');
     document.getElementById('wikiThemeBtn').textContent = dark ? '🌙' : '☀️';
+    pushAd('wikiAd');
+  }
+
+  // Carga cada anuncio una sola vez, justo cuando su contenedor se vuelve visible.
+  const _adsPushed = {};
+  function pushAd(key) {
+    if (_adsPushed[key]) return;
+    _adsPushed[key] = true;
+    try { (window.adsbygoogle = window.adsbygoogle || []).push({}); }
+    catch(e) { console.warn('AdSense no pudo cargar el anuncio:', e); }
   }
 
   let _wikiPreviewActive = false;
