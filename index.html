@@ -757,8 +757,9 @@
 </head>
 <body>
 
-<!-- AUTH -->
-<div id="auth-screen">
+<!-- AUTH (ahora es un modal opcional: no bloquea la entrada a la página) -->
+<div id="auth-screen" style="display:none">
+  <button class="auth-theme-btn" id="authCloseBtn" style="right:auto;left:1rem" onclick="closeAuthModal()" aria-label="Cerrar" title="Cerrar">✕</button>
   <button class="auth-theme-btn" id="authThemeBtn" aria-label="Cambiar tema">☀️</button>
   <div class="auth-wrap">
     <div class="auth-logo-top">
@@ -874,7 +875,8 @@
       <div class="nav-user" id="nav-user"></div>
       <span class="nav-badge" id="nav-badge"></span>
       <button class="theme-toggle" id="themeBtn" aria-label="Cambiar tema">☀️</button>
-      <button class="nav-logout" onclick="doLogout()">Cerrar sesión</button>
+      <button class="nav-logout" id="nav-login-btn" onclick="openAuthModal()" style="display:none">Iniciar sesión</button>
+      <button class="nav-logout" id="nav-logout-btn" onclick="doLogout()">Cerrar sesión</button>
     </div>
   </nav>
 
@@ -882,9 +884,6 @@
     <div class="hero-tag">// Minecraft Java Mods</div>
     <h1 class="hero-title"><span>CH</span> Mods</h1>
     <p class="hero-sub">Mods creados con identidad propia para Minecraft Java (Forge/Fabric). Cada mod tiene su propia wiki y documentación.</p>
-    <div class="hero-guest-strip" id="guest-strip">
-      👀 Modo invitado — iniciá sesión para acceder a los mods
-    </div>
   </section>
 
   <div class="home-ad-wrap">
@@ -1182,40 +1181,53 @@
   // ── Invitado ──────────────────────────────────────────────────
   function doGuest() { window._chm.setGuest(true); enterApp(null, true); }
 
+  // ── Modal de login/registro (ahora opcional, no bloquea la app) ─
+  function openAuthModal() {
+    switchTab('in');
+    document.getElementById('auth-screen').style.display = 'flex';
+  }
+  function closeAuthModal() {
+    document.getElementById('auth-screen').style.display = 'none';
+  }
+
   // ── Entrar a la app ───────────────────────────────────────────
+  // Nota: ya NO hay muro de login. Cualquiera (invitado o logueado) entra directo
+  // a ver los mods y sus wikis. El login solo se pide puntualmente al querer
+  // interactuar (dar like, comentar, publicar sugerencias) — ver openAuthRequiredModal().
   function enterApp(user, guest) {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app-screen').style.display  = 'block';
+    const loginBtn  = document.getElementById('nav-login-btn');
+    const logoutBtn = document.getElementById('nav-logout-btn');
+
     if (guest) {
       document.getElementById('nav-user').innerHTML  = 'Invitado';
-      document.getElementById('nav-badge').textContent = 'guest';
+      document.getElementById('nav-badge').textContent = 'invitado';
       document.getElementById('nav-badge').className   = 'nav-badge g';
-      document.getElementById('guest-strip').style.display = 'inline-block';
-      lockCards(true);
-      pushAd('homeAd');
-      if (_pendingMod) {
-        // Hay un link directo a un mod pero está como invitado: avisamos que debe loguearse.
-        setTimeout(showGuestToast, 400);
-      }
+      if (loginBtn)  loginBtn.style.display  = 'inline-block';
+      if (logoutBtn) logoutBtn.style.display = 'none';
     } else {
       const name = user.displayName || user.email.split('@')[0];
       const isAdmin = window._chm.isAdmin();
       document.getElementById('nav-user').innerHTML  = `Hola, <b>${name}</b>`;
       document.getElementById('nav-badge').textContent = isAdmin ? 'OP' : 'usuario';
       document.getElementById('nav-badge').className   = 'nav-badge u' + (isAdmin ? ' nav-badge-op' : '');
-      lockCards(false);
-      pushAd('homeAd');
-
-      loadCustomMods().then(() => {
-        // ── Si venimos de un link directo (?mod=id), abrimos esa wiki automáticamente ──
-        if (_pendingMod && typeof MOD_DATA !== 'undefined' && MOD_DATA[_pendingMod]) {
-          const modToOpen = _pendingMod;
-          _pendingMod = null;
-          history.replaceState(null, '', location.pathname);
-          setTimeout(() => openWiki(modToOpen), 150);
-        }
-      });
+      if (loginBtn)  loginBtn.style.display  = 'none';
+      if (logoutBtn) logoutBtn.style.display = 'inline-block';
     }
+
+    pushAd('homeAd');
+
+    loadCustomMods().then(() => {
+      // ── Si venimos de un link directo (?mod=id), abrimos esa wiki automáticamente ──
+      // (ya no hace falta estar logueado para esto, los mods son públicos)
+      if (_pendingMod && typeof MOD_DATA !== 'undefined' && MOD_DATA[_pendingMod]) {
+        const modToOpen = _pendingMod;
+        _pendingMod = null;
+        history.replaceState(null, '', location.pathname);
+        setTimeout(() => openWiki(modToOpen), 150);
+      }
+    });
   }
 
   // ── Cargar mods personalizados desde Firestore y pintarlos en la grilla ──
@@ -1306,16 +1318,13 @@
   }
 
   // ── Logout ────────────────────────────────────────────────────
+  // Ya no vuelve a la pantalla de login obligatoria: simplemente vuelve a modo invitado,
+  // que sigue viendo todo el contenido con normalidad.
   async function doLogout() {
     if (window._chm.isGuest()) { window._chm.setGuest(false); }
     else { try { await window._chm.logout(); } catch(e) {} }
-    document.getElementById('app-screen').style.display  = 'none';
-    document.getElementById('auth-screen').style.display = 'flex';
-    document.querySelectorAll('.mod-card').forEach(c => {
-      c.classList.remove('locked');
-      c.querySelector('.card-icon').classList.remove('dim');
-    });
-    switchTab('in');
+    window._chm.setGuest(true);
+    enterApp(null, true);
   }
 
   // ── Toast rojo invitado ───────────────────────────────────────
@@ -1335,11 +1344,20 @@
   document.getElementById('tg-x').addEventListener('click', hideGuestToast);
 
   // ── Auto-login si ya hay sesión activa ────────────────────────
+  // Ahora se dispara siempre que Firebase confirma un usuario verificado,
+  // incluso si ya estábamos navegando como invitado (pasa de invitado a logueado sin recargar).
   window._chm_onAuth = function(user) {
-    if (document.getElementById('auth-screen').style.display !== 'none') {
-      enterApp(user, false);
-    }
+    enterApp(user, false);
   };
+
+  // ── Entrada automática sin muro de login ───────────────────────
+  // Al cargar la página, cualquiera entra directo como invitado. Si además tenía
+  // una sesión guardada, Firebase la detecta un instante después y _chm_onAuth
+  // se encarga de pasar automáticamente a modo logueado.
+  window.addEventListener('DOMContentLoaded', () => {
+    if (window._chm) window._chm.setGuest(true);
+    enterApp(null, true);
+  });
 
   // ── Errores Firebase legibles ─────────────────────────────────
   function fbErr(code) {
@@ -2593,6 +2611,10 @@
       closeSuggestions();
     if (e.key === 'Escape' && document.getElementById('admin-screen')?.classList.contains('show'))
       closeAdminPanel();
+    if (e.key === 'Escape' && document.getElementById('auth-screen').style.display !== 'none')
+      closeAuthModal();
+    if (e.key === 'Escape' && document.getElementById('auth-required-modal')?.style.display === 'flex')
+      closeAuthRequiredModal();
   });
 </script>
 <!-- ═══════════════════════════════════════════════════
@@ -2972,7 +2994,46 @@
   </div>
 </div>
 
+<!-- Modal: se necesita cuenta para interactuar (like / comentar / publicar) -->
+<div id="auth-required-modal" style="
+  position:fixed; inset:0; z-index:80;
+  background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
+  display:none; align-items:center; justify-content:center; padding:1rem;
+">
+  <div style="
+    background:var(--bg2); border:1px solid var(--border); border-radius:14px;
+    padding:1.8rem 1.6rem 1.6rem; width:100%; max-width:380px;
+    text-align:center; position:relative;
+    box-shadow:0 24px 60px rgba(0,0,0,.3);
+  ">
+    <button onclick="closeAuthRequiredModal()" title="Volver" aria-label="Volver" style="
+      position:absolute; top:.8rem; left:.8rem;
+      width:30px; height:30px; border-radius:50%;
+      background:var(--bg3); border:1px solid var(--border2);
+      color:var(--dim); cursor:pointer; font-size:.9rem;
+      display:flex; align-items:center; justify-content:center;
+    ">←</button>
+    <div style="font-size:2.2rem; margin-bottom:.6rem">🔒</div>
+    <div style="font-family:'Syne',sans-serif; font-size:1.05rem; font-weight:700; color:var(--white); margin-bottom:.5rem">
+      Necesitás una cuenta
+    </div>
+    <div style="font-size:.85rem; color:var(--dim); line-height:1.6; margin-bottom:1.3rem">
+      Para dar like, comentar o publicar sugerencias necesitás iniciar sesión o registrarte. Es gratis y solo toma un momento.
+    </div>
+    <button class="auth-btn" style="margin-bottom:.6rem" onclick="closeAuthRequiredModal(); openAuthModal();">Iniciar sesión / Registrarse</button>
+    <button class="v-back-btn" onclick="closeAuthRequiredModal()">← Volver sin loguearme</button>
+  </div>
+</div>
+
 <script>
+  // ── Modal 'necesitás una cuenta' ─────────────────────────────
+  function openAuthRequiredModal() {
+    document.getElementById('auth-required-modal').style.display = 'flex';
+  }
+  function closeAuthRequiredModal() {
+    document.getElementById('auth-required-modal').style.display = 'none';
+  }
+
   // ══════════════════════════════════════════════
   //  TOAST VIP
   // ══════════════════════════════════════════════
@@ -3042,17 +3103,8 @@
 
   function renderSuggForm() {
     const area = document.getElementById('sugg-form-area');
-    const user = window._chm?.user();
-    const isGuest = window._chm?.isGuest();
-
-    if (!user || isGuest) {
-      area.innerHTML = `<div class="sugg-guest-note">
-        🔒 Solo los usuarios con cuenta pueden publicar sugerencias.<br>
-        <strong>Iniciá sesión</strong> para participar.
-      </div>`;
-      return;
-    }
-
+    // El formulario ahora se muestra siempre, incluso a invitados. Si intentan publicar
+    // sin cuenta, submitSugg() les pide loguearse recién en ese momento.
     const catBtns = Object.entries(CATS).map(([k,v]) =>
       `<button class="sugg-cat-btn${k===_newCat?' on':''}" onclick="setNewCat('${k}',this)">${v}</button>`
     ).join('');
@@ -3131,12 +3183,14 @@
           ${c.uid === uid ? `<button class="sugg-comment-del" onclick="delComment('${s.id}',${i})">✕</button>` : ''}
         </div>`).join('');
 
-      const inputRow = uid && !window._chm.isGuest() ? `
+      // El campo de comentario ahora se muestra siempre; si el visitante no tiene
+      // cuenta, sendComment() le pide loguearse recién al intentar enviar.
+      const inputRow = `
         <div class="sugg-comment-input-row">
           <input class="sugg-comment-input" id="ci-${s.id}" placeholder="Agregar comentario..." maxlength="300"
             onkeydown="if(event.key==='Enter')sendComment('${s.id}')" />
           <button class="sugg-comment-send" onclick="sendComment('${s.id}')">→</button>
-        </div>` : '';
+        </div>`;
 
       return `<div class="sugg-card" id="sc-${s.id}">
         <div class="sugg-card-header">
@@ -3169,6 +3223,8 @@
   }
 
   async function submitSugg() {
+    if (!window._chm?.user() || window._chm.isGuest()) { openAuthRequiredModal(); return; }
+
     const ta  = document.getElementById('new-sugg-text');
     const btn = document.getElementById('sugg-submit-btn');
     if (!ta || !ta.value.trim()) { suggToast('Escribí algo antes de publicar.', 'err'); return; }
@@ -3204,7 +3260,7 @@
 
   async function toggleLike(id) {
     if (!window._chm.user() || window._chm.isGuest()) {
-      suggToast('Iniciá sesión para dar like.', 'err'); return;
+      openAuthRequiredModal(); return;
     }
     try {
       await window._chm.toggleLike(id);
@@ -3223,6 +3279,7 @@
   }
 
   async function sendComment(suggId) {
+    if (!window._chm?.user() || window._chm.isGuest()) { openAuthRequiredModal(); return; }
     const input = document.getElementById(`ci-${suggId}`);
     if (!input || !input.value.trim()) return;
     try {
