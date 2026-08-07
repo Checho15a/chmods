@@ -1585,8 +1585,14 @@
   /* Blindaje general: cualquier negrita/cursiva dentro del contenido de la wiki (notas, "cómo empezar",
      descarga, secciones personalizadas, etc.) usa los mismos colores, sin importar si el navegador
      generó <strong>/<em> o <span style="font-weight:...">/<span style="font-style:...">. */
-  .wiki-content strong, .wiki-content b, .wiki-content span[style*="bold"], .wiki-content span[style*="700"] { color: var(--text); font-weight: 600; }
-  .wiki-content em, .wiki-content i, .wiki-content span[style*="italic"] { color: var(--accent); font-style: normal; }
+  /* Blindaje extra: a veces el editor "pega" el color exacto que se veía en pantalla al escribir
+     (ej: blanco, si se escribió en modo oscuro). Eso deja texto invisible al cambiar de tema.
+     Esta regla ignora cualquier color pegado así, ANTES de aplicar los colores de negrita/cursiva
+     de abajo (que van después a propósito, para que sigan ganando ellos). */
+  .wiki-content [style*="color"] { color: inherit !important; }
+  .rte-editor [style*="color"] { color: inherit !important; }
+  .wiki-content strong, .wiki-content b, .wiki-content span[style*="bold"], .wiki-content span[style*="700"] { color: var(--text) !important; font-weight: 600; }
+  .wiki-content em, .wiki-content i, .wiki-content span[style*="italic"] { color: var(--accent) !important; font-style: normal; }
   .ws-p code {
     font-family: 'DM Mono', monospace; font-size: .82rem;
     background: var(--bg3); border: 1px solid var(--border2);
