@@ -4090,7 +4090,7 @@
       if (!idToUse) {
         const typed = (_pendingModId || '').trim().replace(/[^a-zA-Z0-9_]/g, '');
         if (typed) {
-          const taken = _adminModsCache.some(m => m.id === typed) || ['images','launch','squid'].includes(typed);
+          const taken = _adminModsCache.some(m => m.id === typed) || ['images','launch'].includes(typed);
           if (taken) { suggToast('Ese ID ya está en uso. Elegí otro.', 'err'); return; }
         }
         idToUse = typed || null; // null = se genera uno automático
@@ -4109,7 +4109,7 @@
     const newId = (document.getElementById('mod-id-input').value || '').trim().replace(/[^a-zA-Z0-9_]/g, '');
     if (!newId) { suggToast('Escribí un ID válido (letras, números, guión bajo).', 'err'); return; }
     if (newId === _editorId) { suggToast('Ese ya es el ID actual.', 'err'); return; }
-    const taken = _adminModsCache.some(m => m.id === newId) || ['images','launch','squid'].includes(newId);
+    const taken = _adminModsCache.some(m => m.id === newId) || ['images','launch'].includes(newId);
     if (taken) { suggToast('Ese ID ya está en uso por otro mod.', 'err'); return; }
     try {
       const oldId = _editorId;
