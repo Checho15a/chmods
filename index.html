@@ -4129,5 +4129,74 @@
     } catch(e) { suggToast('Error al cambiar el ID: ' + (e.message||''), 'err'); }
   }
 </script>
+
+<style>
+  #cookie-banner {
+    position: fixed; left: 1rem; right: 1rem; bottom: 1rem; z-index: 500;
+    max-width: 640px; margin: 0 auto;
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 12px; padding: 1.1rem 1.3rem;
+    box-shadow: 0 12px 40px rgba(0,0,0,.18);
+    display: none; flex-direction: column; gap: .8rem;
+    font-family: 'Nunito', sans-serif;
+  }
+  #cookie-banner.show { display: flex; }
+  .cb-text { font-size: .83rem; color: var(--dim); line-height: 1.6; }
+  .cb-text strong { color: var(--text); }
+  .cb-text a { color: var(--accent); text-decoration: underline; }
+  .cb-details { display: none; font-size: .78rem; color: var(--dim); line-height: 1.6; margin-top: -.3rem; }
+  .cb-details.show { display: block; }
+  .cb-details ul { padding-left: 1.1rem; margin-top: .3rem; }
+  .cb-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+  .cb-btn {
+    padding: .5rem 1rem; border-radius: var(--r); font-family: 'Nunito', sans-serif;
+    font-size: .8rem; font-weight: 700; cursor: pointer; transition: all var(--ease); border: none;
+  }
+  .cb-accept { background: var(--accent); color: #0c0c0c; }
+  .cb-accept:hover { background: var(--accent2); }
+  .cb-reject { background: var(--bg3); border: 1px solid var(--border2) !important; color: var(--dim); }
+  .cb-reject:hover { border-color: var(--dim); color: var(--text); }
+  .cb-more { background: none; border: none; color: var(--accent); font-size: .8rem; font-weight: 700; cursor: pointer; padding: .5rem .2rem; }
+  .cb-more:hover { text-decoration: underline; }
+</style>
+
+<div id="cookie-banner">
+  <div class="cb-text">
+    Usamos cookies propias y de terceros (Google AdSense, Firebase) para el funcionamiento del
+    sitio y para publicidad. Podés aceptar todas, rechazar las no esenciales, o ver más detalle.
+    Más info en nuestra <a href="privacidad.html">Política de Privacidad</a>.
+  </div>
+  <div class="cb-details" id="cb-details">
+    <strong style="color:var(--text)">Cookies esenciales:</strong> requeridas para iniciar sesión y usar el sitio (Firebase). No se pueden desactivar.<br/>
+    <strong style="color:var(--text)">Cookies de publicidad:</strong> usadas por Google AdSense para mostrar anuncios, personalizados solo si aceptás.
+  </div>
+  <div class="cb-actions">
+    <button class="cb-btn cb-accept" onclick="cookieConsent('accepted')">Aceptar</button>
+    <button class="cb-btn cb-reject" onclick="cookieConsent('rejected')">Rechazar</button>
+    <button class="cb-more" id="cb-more-btn" onclick="cookieToggleDetails()">Ver más</button>
+  </div>
+</div>
+
+<script>
+  function cookieToggleDetails() {
+    const d = document.getElementById('cb-details');
+    const btn = document.getElementById('cb-more-btn');
+    d.classList.toggle('show');
+    btn.textContent = d.classList.contains('show') ? 'Ver menos' : 'Ver más';
+  }
+  function cookieConsent(choice) {
+    localStorage.setItem('chm_cookie_consent', choice);
+    document.getElementById('cookie-banner').classList.remove('show');
+    // Si acepta después de haber cargado la página, activamos anuncios personalizados desde ya.
+    if (choice === 'accepted' && window.adsbygoogle) {
+      window.adsbygoogle.requestNonPersonalizedAds = 0;
+    }
+  }
+  window.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('chm_cookie_consent')) {
+      document.getElementById('cookie-banner').classList.add('show');
+    }
+  });
+</script>
 </body>
 </html>
