@@ -1,1 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Política de Privacidad — CH Mods</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
+  <style>
+    :root {
+      --bg:      #f4f4f2;
+      --bg2:     #ffffff;
+      --bg3:     #ebebeb;
+      --border:  #e0e0e0;
+      --border2: #cccccc;
+      --text:    #2a2a2a;
+      --dim:     #777;
+      --dim2:    #aaa;
+      --white:   #111111;
+      --accent:  #e8820c;
+      --accent2: #f5a030;
+      --r:       8px;
+      --ease:    .28s cubic-bezier(.4,0,.2,1);
+    }
+    .dark {
+      --bg:      #0e0e0e;
+      --bg2:     #161616;
+      --bg3:     #1e1e1e;
+      --border:  #2a2a2a;
+      --border2: #383838;
+      --text:    #e0e0e0;
+      --dim:     #a8a8a8;
+      --dim2:    #777;
+      --white:   #f0eeea;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      transition: background var(--ease), color var(--ease);
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        repeating-linear-gradient(-55deg, transparent 0px, transparent 80px,
+          rgba(0,0,0,.025) 80px, rgba(0,0,0,.025) 82px),
+        repeating-linear-gradient(35deg, transparent 0px, transparent 120px,
+          rgba(0,0,0,.015) 120px, rgba(0,0,0,.015) 122px);
+    }
+    body.dark::before {
+      background:
+        repeating-linear-gradient(-55deg, transparent 0px, transparent 80px,
+          rgba(255,255,255,.013) 80px, rgba(255,255,255,.013) 82px),
+        repeating-linear-gradient(35deg, transparent 0px, transparent 120px,
+          rgba(255,255,255,.008) 120px, rgba(255,255,255,.008) 122px);
+    }
+
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      height: 56px;
+      background: rgba(244,244,242,.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 clamp(1rem, 5vw, 3rem);
+      transition: background var(--ease), border-color var(--ease);
+    }
+    body.dark nav { background: rgba(10,10,10,.92); }
+
+    .nav-home-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px;
+      border: 1px solid var(--border2); border-radius: 7px;
+      background: var(--bg3); cursor: pointer;
+      font-size: .95rem; flex-shrink: 0;
+      transition: all var(--ease); color: var(--dim); text-decoration: none;
+      font-family: 'DM Mono', monospace;
+    }
+    .nav-home-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(232,130,12,.06); }
+    .nav-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; margin: 0 1rem; }
+    .nav-brand {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.05rem; font-weight: 800;
+      color: var(--white); letter-spacing: .02em; flex: 1;
+    }
+    .nav-brand span { color: var(--accent); }
+
+    .theme-toggle {
+      width: 34px; height: 34px;
+      border: 1px solid var(--border2); border-radius: 50%;
+      background: var(--bg3); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem; transition: all var(--ease); flex-shrink: 0;
+    }
+    .theme-toggle:hover { border-color: var(--accent); }
+
+    main {
+      position: relative; z-index: 1;
+      max-width: 720px; margin: 0 auto;
+      padding: 3rem clamp(1rem, 5vw, 2rem) 5rem;
+    }
+
+    .p-tag {
+      font-family: 'DM Mono', monospace; font-size: .63rem; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: .6rem;
+    }
+    .p-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.7rem, 4.5vw, 2.3rem); font-weight: 800;
+      color: var(--white); line-height: 1.1; margin-bottom: .5rem;
+    }
+    .p-updated {
+      font-family: 'DM Mono', monospace; font-size: .65rem;
+      color: var(--dim2); margin-bottom: 1rem;
+    }
+    .p-intro {
+      font-size: .88rem; color: var(--dim); line-height: 1.8;
+      padding-bottom: 1.6rem; margin-bottom: 1.8rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .p-intro strong { color: var(--text); font-weight: 600; }
+
+    .p-sec { margin-bottom: 1.7rem; }
+    .p-h2 {
+      font-family: 'Syne', sans-serif; font-size: 1.02rem; font-weight: 700;
+      color: var(--white); margin-bottom: .6rem;
+    }
+    .p-p {
+      font-size: .87rem; color: var(--dim); line-height: 1.8; margin-bottom: .6rem;
+    }
+    .p-p strong, .p-p b { color: var(--text); font-weight: 600; }
+    .p-list { margin: 0 0 .6rem 0; padding-left: 1.1rem; }
+    .p-list li {
+      font-size: .87rem; color: var(--dim); line-height: 1.75; margin-bottom: .35rem;
+    }
+    .p-list li strong { color: var(--text); font-weight: 600; }
+
+    .p-table {
+      width: 100%; border-collapse: collapse;
+      font-size: .82rem; margin-bottom: .8rem;
+      border: 1px solid var(--border); border-radius: 9px; overflow: hidden;
+    }
+    .p-table th, .p-table td {
+      padding: .55rem .75rem; border-bottom: 1px solid var(--border);
+      text-align: left; vertical-align: top;
+    }
+    .p-table th {
+      font-family: 'DM Mono', monospace; font-size: .6rem;
+      letter-spacing: .07em; text-transform: uppercase;
+      color: var(--dim2); background: var(--bg3);
+    }
+    .p-table td { color: var(--dim); }
+    .p-table tr:last-child td { border-bottom: none; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.4rem clamp(1rem, 5vw, 3rem);
+      text-align: center;
+      background: var(--bg3);
+      font-family: 'DM Mono', monospace; font-size: .6rem;
+      color: var(--dim2); letter-spacing: .06em;
+      transition: background var(--ease), border-color var(--ease);
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-home-btn" href="index.html" title="Volver a CH Mods">←</a>
+    <div class="nav-sep"></div>
+    <div class="nav-brand"><span>CH</span> Mods</div>
+    <button class="theme-toggle" id="themeBtn" aria-label="Cambiar tema">☀</button>
+  </nav>
+
+  <main>
+    <div class="p-tag">Legal</div>
+    <h1 class="p-title">Política de Privacidad</h1>
+    <div class="p-updated">Última actualización: agosto de 2026</div>
+    <p class="p-intro">
+      Esta política describe qué información recolecta <strong>CH Mods</strong>
+      (<a href="https://checho15a.github.io/chmods/" target="_blank" rel="noopener">checho15a.github.io/chmods</a>),
+      con qué finalidad, y qué opciones tenés como usuario. El responsable de este sitio es su
+      creador, Checho, y podés escribir a
+      <a href="mailto:escalanteortizsergio6@gmail.com">escalanteortizsergio6@gmail.com</a>
+      ante cualquier consulta relacionada con tus datos.
+    </p>
+
+    <div class="p-sec">
+      <div class="p-h2">Información que recolectamos</div>
+      <p class="p-p">Recolectamos únicamente lo necesario para llevar estadísticas del sitio y permitir la participación de la comunidad. No vendemos datos personales a terceros.</p>
+      <table class="p-table">
+        <tr><th>Dato</th><th>Finalidad</th></tr>
+        <tr><td>Nombre de usuario y correo</td><td>Crear y verificar tu cuenta, recuperar tu contraseña y llevar estadísticas internas de uso del sitio.</td></tr>
+        <tr><td>Contraseña</td><td>Almacenada de forma cifrada por Firebase Authentication (Google). No tenemos acceso a ella en texto plano.</td></tr>
+        <tr><td>Sugerencias, comentarios y likes</td><td>Recoger feedback de la comunidad para mejorar los mods, mostrado públicamente dentro del sitio.</td></tr>
+      </table>
+      <p class="p-p">No recolectamos datos de pago. Las donaciones a través de Ko-fi se procesan íntegramente en esa plataforma; no accedemos a ninguna información de esa transacción.</p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">Cookies y almacenamiento</div>
+      <p class="p-p">El sitio utiliza dos tipos de cookies:</p>
+      <ul class="p-list">
+        <li><strong>Firebase (Google):</strong> cookies técnicas necesarias para mantener la sesión y el funcionamiento de la cuenta.</li>
+        <li><strong>Google AdSense:</strong> cookies publicitarias de Google y sus socios, que pueden usarse para publicidad personalizada según tu navegación.</li>
+      </ul>
+      <p class="p-p">Podés gestionarlas desde la configuración de tu navegador. Bloquear las cookies técnicas puede impedir el inicio de sesión.</p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">Publicidad</div>
+      <p class="p-p">
+        Este sitio muestra anuncios mediante <strong>Google AdSense</strong>. Google, como
+        proveedor externo, puede usar cookies para publicar anuncios en función de visitas
+        anteriores a este u otros sitios web.
+      </p>
+      <p class="p-p">
+        Podés inhabilitar la publicidad personalizada desde la
+        <a href="https://adssettings.google.com/" target="_blank" rel="noopener">configuración de anuncios de Google</a>
+        o en <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener">aboutads.info</a>.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">Alcance y jurisdicción</div>
+      <p class="p-p">
+        CH Mods está disponible para cualquier usuario sin restricción geográfica. Si accedés
+        desde la Unión Europea o el Espacio Económico Europeo, aplican además los derechos
+        reconocidos por el RGPD (GDPR), incluyendo el derecho a acceder, corregir o eliminar tus
+        datos y a retirar el consentimiento de cookies no esenciales en cualquier momento.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">Tus derechos</div>
+      <ul class="p-list">
+        <li><strong>Eliminar tu cuenta:</strong> escribinos y eliminamos tu cuenta y los datos asociados.</li>
+        <li><strong>Eliminar tus sugerencias o comentarios:</strong> podés hacerlo vos mismo en cualquier momento desde el sitio.</li>
+        <li><strong>Navegar sin cuenta:</strong> los mods y wikis son visibles como invitado; solo se pide cuenta para dar like, comentar o publicar sugerencias.</li>
+      </ul>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">Seguridad</div>
+      <p class="p-p">
+        Los datos se almacenan en la infraestructura de Firebase (Google Cloud), con reglas de
+        acceso que restringen quién puede leer o modificar cada registro. No compartimos
+        información con terceros más allá de los proveedores necesarios para operar el sitio
+        (Firebase y Google AdSense).
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">Cambios a esta política</div>
+      <p class="p-p">
+        Esta política puede actualizarse con el tiempo. Cualquier cambio se reflejará en esta
+        misma página junto con la fecha de actualización.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">Contacto</div>
+      <p class="p-p">
+        Ante cualquier consulta sobre esta política o tus datos, escribinos a
+        <a href="mailto:escalanteortizsergio6@gmail.com">escalanteortizsergio6@gmail.com</a>.
+      </p>
+    </div>
+  </main>
+
+  <footer>
+    © 2026 Checho — CH Mods · <a href="index.html">Volver al inicio</a>
+  </footer>
+
+  <script>
+    function applyTheme(dark) {
+      document.body.classList.toggle('dark', dark);
+      document.getElementById('themeBtn').textContent = dark ? '☾' : '☀';
+    }
+    document.getElementById('themeBtn').addEventListener('click', () =>
+      applyTheme(!document.body.classList.contains('dark')));
+  </script>
+
+</body>
+</html>
