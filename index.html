@@ -4131,44 +4131,93 @@
 </script>
 
 <style>
+  #cookie-overlay {
+    position: fixed; inset: 0; z-index: 499;
+    background: rgba(0,0,0,.45);
+    display: none;
+  }
+  #cookie-overlay.show { display: block; }
+
   #cookie-banner {
     position: fixed; left: 1rem; right: 1rem; bottom: 1rem; z-index: 500;
-    max-width: 640px; margin: 0 auto;
-    background: var(--bg2); border: 1px solid var(--border2);
-    border-radius: 12px; padding: 1.1rem 1.3rem;
-    box-shadow: 0 12px 40px rgba(0,0,0,.18);
-    display: none; flex-direction: column; gap: .8rem;
+    max-width: 620px; margin: 0 auto;
+    background: var(--bg2);
+    border: 1px solid rgba(232,130,12,.4);
+    border-radius: 14px; padding: 1.6rem 1.8rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    display: none; flex-direction: column; gap: 1rem;
     font-family: 'Nunito', sans-serif;
+    position: fixed;
+  }
+  #cookie-banner::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    border-radius: 14px 14px 0 0;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
   }
   #cookie-banner.show { display: flex; }
-  .cb-text { font-size: .83rem; color: var(--dim); line-height: 1.6; }
+
+  .cb-head { display: flex; align-items: center; gap: .7rem; }
+  .cb-icon {
+    width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0;
+    background: rgba(232,130,12,.12); border: 1px solid rgba(232,130,12,.3);
+    display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
+  }
+  .cb-title {
+    font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700;
+    color: var(--white);
+  }
+  .cb-text { font-size: .87rem; color: var(--dim); line-height: 1.7; }
   .cb-text strong { color: var(--text); }
-  .cb-text a { color: var(--accent); text-decoration: underline; }
-  .cb-details { display: none; font-size: .78rem; color: var(--dim); line-height: 1.6; margin-top: -.3rem; }
+  .cb-text a { color: var(--accent); text-decoration: underline; font-weight: 600; }
+
+  .cb-details { display: none; font-size: .82rem; color: var(--dim); line-height: 1.7; }
   .cb-details.show { display: block; }
-  .cb-details ul { padding-left: 1.1rem; margin-top: .3rem; }
-  .cb-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+  .cb-details-box {
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 9px; padding: .8rem 1rem;
+  }
+  .cb-details strong { color: var(--text); }
+
+  .cb-actions { display: flex; gap: .7rem; flex-wrap: wrap; align-items: center; }
   .cb-btn {
-    padding: .5rem 1rem; border-radius: var(--r); font-family: 'Nunito', sans-serif;
-    font-size: .8rem; font-weight: 700; cursor: pointer; transition: all var(--ease); border: none;
+    padding: .65rem 1.3rem; border-radius: var(--r); font-family: 'Nunito', sans-serif;
+    font-size: .84rem; font-weight: 700; cursor: pointer; transition: all var(--ease); border: none;
   }
   .cb-accept { background: var(--accent); color: #0c0c0c; }
-  .cb-accept:hover { background: var(--accent2); }
-  .cb-reject { background: var(--bg3); border: 1px solid var(--border2) !important; color: var(--dim); }
+  .cb-accept:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 0 20px var(--aglow); }
+  .cb-reject {
+    background: transparent; border: 1px solid var(--border2) !important; color: var(--dim);
+  }
   .cb-reject:hover { border-color: var(--dim); color: var(--text); }
-  .cb-more { background: none; border: none; color: var(--accent); font-size: .8rem; font-weight: 700; cursor: pointer; padding: .5rem .2rem; }
+  .cb-more {
+    background: none; border: none; color: var(--accent); font-size: .84rem; font-weight: 700;
+    cursor: pointer; padding: .5rem .2rem; margin-left: auto;
+  }
   .cb-more:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    #cookie-banner { padding: 1.3rem 1.4rem; }
+    .cb-more { margin-left: 0; }
+  }
 </style>
 
+<div id="cookie-overlay"></div>
+
 <div id="cookie-banner">
+  <div class="cb-head">
+    <div class="cb-icon">🍪</div>
+    <div class="cb-title">Cookies y privacidad</div>
+  </div>
   <div class="cb-text">
     Usamos cookies propias y de terceros (Google AdSense, Firebase) para el funcionamiento del
-    sitio y para publicidad. Podés aceptar todas, rechazar las no esenciales, o ver más detalle.
-    Más info en nuestra <a href="privacidad.html">Política de Privacidad</a>.
+    sitio y para publicidad. Podés aceptar todas, rechazar las no esenciales, o ver el detalle.
+    Más información en nuestra <a href="privacidad.html">Política de Privacidad</a>.
   </div>
   <div class="cb-details" id="cb-details">
-    <strong style="color:var(--text)">Cookies esenciales:</strong> requeridas para iniciar sesión y usar el sitio (Firebase). No se pueden desactivar.<br/>
-    <strong style="color:var(--text)">Cookies de publicidad:</strong> usadas por Google AdSense para mostrar anuncios, personalizados solo si aceptás.
+    <div class="cb-details-box">
+      <strong>Cookies esenciales:</strong> requeridas para iniciar sesión y usar el sitio (Firebase). No se pueden desactivar.<br/><br/>
+      <strong>Cookies de publicidad:</strong> usadas por Google AdSense para mostrar anuncios, personalizados solo si aceptás.
+    </div>
   </div>
   <div class="cb-actions">
     <button class="cb-btn cb-accept" onclick="cookieConsent('accepted')">Aceptar</button>
@@ -4187,7 +4236,7 @@
   function cookieConsent(choice) {
     localStorage.setItem('chm_cookie_consent', choice);
     document.getElementById('cookie-banner').classList.remove('show');
-    // Si acepta después de haber cargado la página, activamos anuncios personalizados desde ya.
+    document.getElementById('cookie-overlay').classList.remove('show');
     if (choice === 'accepted' && window.adsbygoogle) {
       window.adsbygoogle.requestNonPersonalizedAds = 0;
     }
@@ -4195,6 +4244,7 @@
   window.addEventListener('DOMContentLoaded', () => {
     if (!localStorage.getItem('chm_cookie_consent')) {
       document.getElementById('cookie-banner').classList.add('show');
+      document.getElementById('cookie-overlay').classList.add('show');
     }
   });
 </script>
