@@ -2511,13 +2511,25 @@
 
     // descarga (editable por mod, con valores por defecto si no está definida)
     const dl = { ...DESCARGA_DEFAULT, ...(data.descarga || {}) };
+    const isDirect = !!(data.descarga && data.descarga.direct);
     document.getElementById('ws-descarga-intro').innerHTML = dl.intro;
-    document.getElementById('ws-descarga-note').innerHTML = dl.note;
-    document.getElementById('ws-descarga-boxtitle').textContent = dl.boxTitle;
-    document.getElementById('ws-descarga-boxtext').innerHTML = dl.boxText;
-    document.getElementById('ws-descarga-discordbtn').href = dl.discordUrl;
-    document.getElementById('ws-descarga-discorduser').textContent = dl.discordUser;
-    document.getElementById('ws-descarga-discordid').textContent = dl.discordId;
+    document.getElementById('ws-descarga-note-wrap').style.display = isDirect ? 'none' : '';
+    document.getElementById('ws-download-box').style.display = isDirect ? 'none' : '';
+    document.getElementById('ws-download-direct-box').style.display = isDirect ? 'flex' : 'none';
+
+    if (isDirect) {
+      document.getElementById('ws-descarga-directbtn').href = dl.downloadUrl || '#';
+      document.getElementById('ws-descarga-directbtn').setAttribute('download', dl.fileName || '');
+      document.getElementById('ws-descarga-directversion').textContent = dl.version ? ('v' + dl.version) : '';
+      document.getElementById('ws-descarga-filehint').textContent = dl.fileName || '';
+    } else {
+      document.getElementById('ws-descarga-note').innerHTML = dl.note;
+      document.getElementById('ws-descarga-boxtitle').textContent = dl.boxTitle;
+      document.getElementById('ws-descarga-boxtext').innerHTML = dl.boxText;
+      document.getElementById('ws-descarga-discordbtn').href = dl.discordUrl;
+      document.getElementById('ws-descarga-discorduser').textContent = dl.discordUser;
+      document.getElementById('ws-descarga-discordid').textContent = dl.discordId;
+    }
 
     // secciones personalizadas (creadas desde el Panel OP)
     const sbCustom = document.getElementById('sb-custom-container');
