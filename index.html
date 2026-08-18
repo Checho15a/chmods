@@ -2083,11 +2083,15 @@
         <div class="ws-tag">Distribución del mod</div>
         <h1 class="ws-h1">Descarga</h1>
         <div class="ws-p" id="ws-descarga-intro"></div>
-        <div class="ws-note">
-          <span class="ws-note-icon">ℹ️</span>
-          <span id="ws-descarga-note"></span>
+
+        <div id="ws-descarga-note-wrap">
+          <div class="ws-note">
+            <span class="ws-note-icon">ℹ️</span>
+            <span id="ws-descarga-note"></span>
+          </div>
         </div>
-        <div class="ws-download-box">
+
+        <div class="ws-download-box" id="ws-download-box">
           <div class="ws-download-title" id="ws-descarga-boxtitle"></div>
           <div class="ws-p" style="margin-bottom:.3rem" id="ws-descarga-boxtext"></div>
           <a class="ws-discord-btn" id="ws-descarga-discordbtn" href="https://discord.gg/WvehBVr2Sj" target="_blank" rel="noopener">
@@ -2096,6 +2100,13 @@
           <div class="ws-discord-info">
             Usuario: <span id="ws-descarga-discorduser"></span> &nbsp;·&nbsp; ID: <span id="ws-descarga-discordid"></span>
           </div>
+        </div>
+
+        <div class="ws-download-direct-box" id="ws-download-direct-box" style="display:none">
+          <a class="ws-download-btn-gold" id="ws-descarga-directbtn" href="#" download onclick="handleDirectDownload()">
+            ⬇ &nbsp;Descargar <span id="ws-descarga-directversion"></span>
+          </a>
+          <div class="ws-download-filehint" id="ws-descarga-filehint"></div>
         </div>
       </div>
 
