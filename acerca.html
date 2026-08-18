@@ -280,7 +280,7 @@
   <script>
     function applyTheme(dark) {
       document.body.classList.toggle('dark', dark);
-      document.getElementById('themeBtn').textContent = dark ? '☾' : '☀';
+      document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
     }
     document.getElementById('themeBtn').addEventListener('click', () =>
       applyTheme(!document.body.classList.contains('dark')));
