@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acerca de — CH Mods</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:      #f4f4f2;
+      --bg2:     #ffffff;
+      --bg3:     #ebebeb;
+      --border:  #e0e0e0;
+      --border2: #cccccc;
+      --text:    #2a2a2a;
+      --dim:     #777;
+      --dim2:    #aaa;
+      --white:   #111111;
+      --accent:  #e8820c;
+      --accent2: #f5a030;
+      --r:       8px;
+      --ease:    .28s cubic-bezier(.4,0,.2,1);
+    }
+    .dark {
+      --bg:      #0e0e0e;
+      --bg2:     #161616;
+      --bg3:     #1e1e1e;
+      --border:  #2a2a2a;
+      --border2: #383838;
+      --text:    #e0e0e0;
+      --dim:     #a8a8a8;
+      --dim2:    #777;
+      --white:   #f0eeea;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      transition: background var(--ease), color var(--ease);
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        repeating-linear-gradient(-55deg, transparent 0px, transparent 80px,
+          rgba(0,0,0,.025) 80px, rgba(0,0,0,.025) 82px),
+        repeating-linear-gradient(35deg, transparent 0px, transparent 120px,
+          rgba(0,0,0,.015) 120px, rgba(0,0,0,.015) 122px);
+    }
+    body.dark::before {
+      background:
+        repeating-linear-gradient(-55deg, transparent 0px, transparent 80px,
+          rgba(255,255,255,.013) 80px, rgba(255,255,255,.013) 82px),
+        repeating-linear-gradient(35deg, transparent 0px, transparent 120px,
+          rgba(255,255,255,.008) 120px, rgba(255,255,255,.008) 122px);
+    }
+
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      height: 56px;
+      background: rgba(244,244,242,.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 clamp(1rem, 5vw, 3rem);
+      transition: background var(--ease), border-color var(--ease);
+    }
+    body.dark nav { background: rgba(10,10,10,.92); }
+
+    .nav-home-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px;
+      border: 1px solid var(--border2); border-radius: 7px;
+      background: var(--bg3); cursor: pointer;
+      font-size: .95rem; flex-shrink: 0;
+      transition: all var(--ease); color: var(--dim); text-decoration: none;
+      font-family: 'DM Mono', monospace;
+    }
+    .nav-home-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(232,130,12,.06); }
+    .nav-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; margin: 0 1rem; }
+    .nav-brand {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.05rem; font-weight: 800;
+      color: var(--white); letter-spacing: .02em; flex: 1;
+    }
+    .nav-brand span { color: var(--accent); }
+
+    .theme-toggle {
+      width: 34px; height: 34px;
+      border: 1px solid var(--border2); border-radius: 50%;
+      background: var(--bg3); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem; transition: all var(--ease); flex-shrink: 0;
+    }
+    .theme-toggle:hover { border-color: var(--accent); }
+
+    main {
+      position: relative; z-index: 1;
+      max-width: 720px; margin: 0 auto;
+      padding: 3rem clamp(1rem, 5vw, 2rem) 5rem;
+    }
+
+    .p-tag {
+      font-family: 'DM Mono', monospace; font-size: .63rem; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: .6rem;
+    }
+    .p-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.7rem, 4.5vw, 2.3rem); font-weight: 800;
+      color: var(--white); line-height: 1.1; margin-bottom: 1.1rem;
+    }
+    .p-intro {
+      font-size: .89rem; color: var(--dim); line-height: 1.85;
+      padding-bottom: 1.6rem; margin-bottom: 1.8rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .p-intro strong { color: var(--text); font-weight: 600; }
+
+    .p-sec { margin-bottom: 1.8rem; }
+    .p-h2 {
+      font-family: 'Syne', sans-serif; font-size: 1.02rem; font-weight: 700;
+      color: var(--white); margin-bottom: .65rem;
+    }
+    .p-p {
+      font-size: .88rem; color: var(--dim); line-height: 1.85; margin-bottom: .8rem;
+    }
+    .p-p strong, .p-p b { color: var(--text); font-weight: 600; }
+    .p-p em { color: var(--accent); font-style: normal; font-weight: 600; }
+
+    .p-list { margin: 0 0 .6rem 0; padding-left: 1.1rem; }
+    .p-list li {
+      font-size: .88rem; color: var(--dim); line-height: 1.8; margin-bottom: .4rem;
+    }
+    .p-list li strong { color: var(--text); font-weight: 600; }
+
+    .p-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 11px; padding: 1.3rem 1.5rem; margin: 1.2rem 0;
+    }
+    .p-card-title {
+      font-family: 'Syne', sans-serif; font-size: .92rem; font-weight: 700;
+      color: var(--white); margin-bottom: .5rem;
+    }
+    .p-card .p-p { margin-bottom: 0; }
+
+    .p-contact-box {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 11px; padding: 1.3rem 1.5rem;
+    }
+    .p-contact-row {
+      display: flex; align-items: center; gap: .6rem;
+      font-size: .87rem; color: var(--dim); padding: .4rem 0;
+    }
+    .p-contact-row strong { color: var(--text); min-width: 90px; display: inline-block; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.4rem clamp(1rem, 5vw, 3rem);
+      text-align: center;
+      background: var(--bg3);
+      font-family: 'DM Mono', monospace; font-size: .6rem;
+      color: var(--dim2); letter-spacing: .06em;
+      transition: background var(--ease), border-color var(--ease);
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-home-btn" href="index.html" title="Volver a CH Mods">←</a>
+    <div class="nav-sep"></div>
+    <div class="nav-brand"><span>CH</span> Mods</div>
+    <button class="theme-toggle" id="themeBtn" aria-label="Cambiar tema">☀</button>
+  </nav>
+
+  <main>
+    <div class="p-tag">Sobre el proyecto</div>
+    <h1 class="p-title">Acerca de CH Mods</h1>
+    <p class="p-intro">
+      CH Mods es un proyecto independiente dedicado al desarrollo de mods para Minecraft Java,
+      liderado por su creador, Checho. Nació como una rama del proyecto más amplio
+      <strong>CH Projects</strong>, enfocada específicamente en modding, herramientas y
+      funcionalidades pensadas para eventos y servidores de Minecraft.
+    </p>
+
+    <div class="p-sec">
+      <div class="p-h2">Cómo empezó</div>
+      <p class="p-p">
+        El proyecto surgió mientras colaboraba en la creación de un servidor de Minecraft
+        inspirado en la serie Dessafio Minecraft, donde me encargué de programar eventos
+        personalizados con el plugin ConditionalEvents, como los cambios de dificultad propios
+        de ese formato. Ese trabajo despertó un interés más amplio por el modelado 3D y la
+        creación de plugins y mods.
+      </p>
+      <p class="p-p">
+        Al intentar recrear ese tipo de eventos usando solo plugins, me encontré con las
+        limitaciones propias de esa herramienta frente a lo que permite un mod. Eso me llevó a
+        adentrarme en el desarrollo de mods para Minecraft Java, con la idea de crear
+        funcionalidades reutilizables para distintos proyectos de eventos, no solo para uno en
+        particular. Así nació la marca <strong>CH</strong>.
+      </p>
+      <p class="p-p">
+        El primer desarrollo importante fue <strong>CH Images</strong>, un mod para proyectar
+        contenido multimedia dentro de Minecraft, pensado para cinemáticas y pantallas de espera
+        en eventos grandes. La idea original no fue mía: nació de una conversación con Samu, de
+        un estudio de eventos, quien confió el concepto para que lo desarrollara y definiera por
+        completo. El desarrollo tomó bastante tiempo y pasó por varios rediseños hasta llegar a
+        su versión actual.
+      </p>
+      <p class="p-p">
+        A partir de ahí seguí colaborando con distintos estudios de eventos, y CH Mods se fue
+        consolidando como un portafolio de proyectos de modding, junto con otras áreas en las que
+        también tengo experiencia, como el desarrollo de plugins, páginas web y modelado y
+        animación 3D.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">Cómo trabajamos</div>
+      <p class="p-p">
+        La mayoría de los mods listados en el sitio se desarrollan por encargo para estudios y
+        organizadores de eventos de Minecraft. Cada mod se adapta a las texturas, modelos y
+        recursos visuales que aporta quien lo solicita, por lo que esos recursos no me
+        pertenecen y no pueden redistribuirse desde este sitio. Por eso los mods personalizados
+        no tienen descarga directa: el contacto por Discord permite coordinar un mod similar,
+        adaptado con los recursos propios de cada proyecto.
+      </p>
+      <div class="p-card">
+        <div class="p-card-title">Excepción: CH Images</div>
+        <p class="p-p">
+          CH Images es el único mod del portafolio desarrollado íntegramente por mí, sin
+          depender de recursos de terceros. Es el proyecto base que mejor representa el trabajo
+          propio de CH Mods.
+        </p>
+      </div>
+      <p class="p-p">
+        Cuando un mod utiliza recursos aportados por otro creador o estudio, se acredita a esa
+        persona dentro de la wiki correspondiente del mod.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">Qué encontrarás en el sitio</div>
+      <ul class="p-list">
+        <li><strong>Wikis de cada mod</strong> con su documentación, guía de inicio y ejemplos de uso.</li>
+        <li><strong>Una sección de sugerencias</strong>, donde la comunidad puede proponer y votar ideas para futuros mods.</li>
+        <li><strong>Información de contacto</strong> para quienes buscan un mod similar hecho a medida para su propio evento o servidor.</li>
+      </ul>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">Contacto</div>
+      <div class="p-contact-box">
+        <div class="p-contact-row">
+          <strong>Correo</strong>
+          <a href="mailto:chprojectsoficial@gmail.com">chprojectsoficial@gmail.com</a>
+        </div>
+        <div class="p-contact-row">
+          <strong>Discord</strong>
+          <a href="https://discord.gg/WvehBVr2Sj" target="_blank" rel="noopener">Servidor de CH Mods</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    © 2026 Checho — CH Mods · <a href="index.html">Volver al inicio</a>
+  </footer>
+
+  <script>
+    function applyTheme(dark) {
+      document.body.classList.toggle('dark', dark);
+      document.getElementById('themeBtn').textContent = dark ? '☾' : '☀';
+    }
+    document.getElementById('themeBtn').addEventListener('click', () =>
+      applyTheme(!document.body.classList.contains('dark')));
+  </script>
+
+</body>
+</html>
