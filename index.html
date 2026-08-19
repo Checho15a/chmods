@@ -2702,39 +2702,38 @@
      TOAST KO-FI (descarga directa)
 ═══════════════════════════════════════════════════ -->
 <div id="toast-kofi" style="
-  position:fixed; bottom:1.5rem; right:1.5rem; z-index:400;
-  background:var(--bg2); border:1px solid #c9a227;
-  border-radius:10px; padding:.85rem 1.1rem .85rem 1.2rem;
-  display:flex; align-items:center; gap:.8rem;
-  min-width:280px; max-width:360px;
-  box-shadow:0 8px 28px rgba(0,0,0,.2);
-  transform:translateY(120%); opacity:0; pointer-events:none;
+  position:fixed; top:72px; right:1rem; z-index:400;
+  background:var(--bg2); border:1.5px solid #f0b100;
+  border-radius:11px; padding:1rem 1.2rem 1rem 1.3rem;
+  display:flex; align-items:flex-start; gap:.85rem;
+  min-width:300px; max-width:380px;
+  box-shadow:0 10px 32px rgba(0,0,0,.25);
+  transform:translateX(120%); opacity:0; pointer-events:none;
   transition:transform .35s cubic-bezier(.4,0,.2,1), opacity .35s;
   font-family:'Nunito',sans-serif;
 ">
-  <span style="font-size:1.1rem;flex-shrink:0">☕</span>
-  <span style="flex:1;font-size:.8rem;color:var(--dim);line-height:1.5">
-    <strong style="display:block;color:var(--text);margin-bottom:.15rem">¡Gracias por descargar CH Images!</strong>
+  <span style="font-size:1.3rem;flex-shrink:0;margin-top:.05rem">☕</span>
+  <span style="flex:1;font-size:.82rem;color:var(--dim);line-height:1.55">
+    <strong style="display:block;color:var(--text);font-size:.88rem;margin-bottom:.25rem">¡Gracias por descargar CH Images!</strong>
     Si te resultó útil, podés invitarme un café en
-    <a href="https://ko-fi.com/sergio40583" target="_blank" rel="noopener" style="color:#c9a227;font-weight:700">Ko-fi</a>. No es obligatorio, pero se valora mucho.
+    <a href="https://ko-fi.com/sergio40583" target="_blank" rel="noopener" style="color:#f0b100;font-weight:800">Ko-fi</a>. No es obligatorio, pero se valora mucho.
   </span>
-  <button id="toast-kofi-x" style="background:none;border:none;color:var(--dim2);font-size:.9rem;cursor:pointer;padding:.1rem .2rem;flex-shrink:0">✕</button>
+  <button id="toast-kofi-x" style="background:none;border:none;color:var(--dim2);font-size:.95rem;cursor:pointer;padding:.1rem .2rem;flex-shrink:0">✕</button>
 </div>
 
 <script>
   const _kofiToast = document.getElementById('toast-kofi');
-  let _kofiLocked = false, _kofiTimer = null;
+  let _kofiLocked = false;
   function showKofiToast() {
     if (_kofiLocked) return;
     _kofiLocked = true;
-    _kofiToast.style.transform = 'translateY(0)';
+    _kofiToast.style.transform = 'translateX(0)';
     _kofiToast.style.opacity = '1';
     _kofiToast.style.pointerEvents = 'all';
-    _kofiTimer = setTimeout(hideKofiToast, 6000);
+    // Ya no se oculta solo — permanece hasta que el usuario lo cierre con la X.
   }
   function hideKofiToast() {
-    clearTimeout(_kofiTimer);
-    _kofiToast.style.transform = 'translateY(120%)';
+    _kofiToast.style.transform = 'translateX(120%)';
     _kofiToast.style.opacity = '0';
     _kofiToast.style.pointerEvents = 'none';
     setTimeout(() => { _kofiLocked = false; }, 350);
