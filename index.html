@@ -16,10 +16,10 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js";
-    import {
+    mport {
       getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
       sendEmailVerification, onAuthStateChanged, signOut, sendPasswordResetEmail,
-      GoogleAuthProvider, signInWithPopup
+      GoogleAuthProvider, signInWithPopup, deleteUser
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
       getFirestore, doc, getDoc, setDoc, collection,
