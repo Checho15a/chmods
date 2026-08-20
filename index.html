@@ -1207,8 +1207,8 @@
     const logoutBtn = document.getElementById('nav-logout-btn');
 
     if (guest) {
-      document.getElementById('nav-user').innerHTML  = 'Invitado';
-      document.getElementById('nav-badge').textContent = 'invitado';
+      document.getElementById('nav-user').innerHTML  = '';
+      document.getElementById('nav-badge').textContent = 'Invitado';
       document.getElementById('nav-badge').className   = 'nav-badge g';
       if (loginBtn)  loginBtn.style.display  = 'inline-block';
       if (logoutBtn) logoutBtn.style.display = 'none';
