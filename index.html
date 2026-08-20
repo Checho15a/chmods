@@ -1238,21 +1238,12 @@
 
   // ── Cargar mods personalizados desde Firestore y pintarlos en la grilla ──
   let _customModsToken = 0;
-  async function loadCustomMods() {
-    const myToken = ++_customModsToken;
+
+  // Pinta las tarjetas de mods personalizados (y la de "Añadir mod" si aplica) en la grilla.
+  function renderCustomModsGrid(mods, isAdmin) {
     const grid = document.querySelector('.mods-grid');
     document.querySelectorAll('.mod-card--custom, .mod-card--addnew').forEach(el => el.remove());
-    const isAdmin = window._chm.isAdmin();
 
-    let mods = [];
-    try {
-      mods = isAdmin ? await window._chm.adminGetAllMods() : await window._chm.getPublishedMods();
-    } catch(e) { console.error('Error cargando mods personalizados', e); }
-
-    // Si mientras esperábamos la respuesta se disparó una llamada más nueva, descartamos esta.
-    if (myToken !== _customModsToken) return;
-
-    document.querySelectorAll('.mod-card--custom, .mod-card--addnew').forEach(el => el.remove());
     mods.forEach(m => {
       MOD_DATA[m.id] = m; // integra con la wiki genérica (openWiki/_buildWiki)
       if (!isAdmin && !m.published) return;
@@ -1279,6 +1270,35 @@
           </div>
         </div>`);
     }
+  }
+
+  async function loadCustomMods() {
+    const myToken = ++_customModsToken;
+    const isAdmin = window._chm.isAdmin();
+
+    // 1) Pintado instantáneo desde una copia local guardada la última vez que
+    //    cargó el sitio, para que no haya espera visible en visitas repetidas.
+    try {
+      const cached = JSON.parse(localStorage.getItem('chm_custom_mods_cache') || '[]');
+      if (cached.length) renderCustomModsGrid(cached, isAdmin);
+    } catch(e) {}
+
+    // 2) Traer los datos reales desde Firestore (siempre, para tener info actualizada).
+    let mods = [];
+    try {
+      mods = isAdmin ? await window._chm.adminGetAllMods() : await window._chm.getPublishedMods();
+    } catch(e) { console.error('Error cargando mods personalizados', e); }
+
+    // Si mientras esperábamos la respuesta se disparó una llamada más nueva, descartamos esta.
+    if (myToken !== _customModsToken) return;
+
+    renderCustomModsGrid(mods, isAdmin);
+
+    // 3) Actualizamos la copia local (solo mods publicados) para la próxima visita.
+    try {
+      const toCache = mods.filter(m => m.published);
+      localStorage.setItem('chm_custom_mods_cache', JSON.stringify(toCache));
+    } catch(e) {}
   }
 
   function renderCustomModCard(m) {
