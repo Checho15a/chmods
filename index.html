@@ -282,7 +282,7 @@
     onAuthStateChanged(auth, u => {
       _user = u;
       _isAdmin = !!(u?.emailVerified && u.email === ADMIN_EMAIL);
-      if (u?.emailVerified) window._chm_onAuth?.(u);
+      if (u?.emailVerified && !_suppressAutoEnter) window._chm_onAuth?.(u);
     });
   </script>
 
