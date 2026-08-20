@@ -1250,6 +1250,70 @@
       btn.textContent = originalText;
     }
   }
+
+  // ── Google ────────────────────────────────────────────────────
+  async function doGoogleLogin() {
+    clearMsg();
+    const btn = document.getElementById('google-btn');
+    btn.disabled = true;
+    try {
+      window._chm.setSuppressAutoEnter(true);
+      const { user, isNew } = await window._chm.loginWithGoogle();
+      if (isNew) {
+        showGoogleUsernameScreen();
+      } else {
+        window._chm.setSuppressAutoEnter(false);
+        enterApp(user, false);
+      }
+    } catch(e) {
+      window._chm.setSuppressAutoEnter(false);
+      if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
+        showMsg(fbErr(e.code), 'err');
+      }
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function showGoogleUsernameScreen() {
+    document.getElementById('auth-tabs').style.display   = 'none';
+    document.getElementById('google-btn').style.display  = 'none';
+    document.querySelector('.auth-sep').style.display    = 'none';
+    document.getElementById('form-in').style.display     = 'none';
+    document.getElementById('form-reg').style.display    = 'none';
+    document.getElementById('verify-view').style.display = 'none';
+    document.getElementById('forgot-view').style.display = 'none';
+    document.getElementById('google-username-view').style.display = 'block';
+    document.getElementById('google-username-input').value = '';
+    clearMsg();
+  }
+
+  async function submitGoogleUsername() {
+    clearMsg();
+    const username = document.getElementById('google-username-input').value.trim();
+    if (!username) { showMsg('Escribí un nombre de usuario.', 'err'); return; }
+
+    const btn = document.getElementById('google-username-btn');
+    btn.disabled = true;
+
+    try {
+      await window._chm.completeGoogleSignup(username);
+      window._chm.setSuppressAutoEnter(false);
+      enterApp(window._chm.user(), false);
+    } catch(e) {
+      if (e.code === 'auth/username-short') showMsg('El usuario debe tener al menos 3 caracteres.', 'err');
+      else if (e.code === 'auth/username-invalid') showMsg('Solo letras, números y guión bajo.', 'err');
+      else if (e.code === 'auth/username-taken') showMsg('Ese nombre de usuario ya está en uso. Elegí otro.', 'err');
+      else showMsg(fbErr(e.code), 'err');
+      btn.disabled = false;
+    }
+  }
+
+  async function cancelGoogleSignup() {
+    window._chm.setSuppressAutoEnter(false);
+    try { await window._chm.logout(); } catch(e) {}
+    switchTab('in');
+  }
   
   // ── Invitado ──────────────────────────────────────────────────
   function doGuest() { window._chm.setGuest(true); enterApp(null, true); }
