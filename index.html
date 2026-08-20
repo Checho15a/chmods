@@ -103,6 +103,27 @@
         return email;
       },
 
+      async loginWithGoogle() {
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        const snap = await getDoc(doc(db, "users", result.user.uid));
+        return { user: result.user, isNew: !snap.exists() };
+      },
+      async completeGoogleSignup(username) {
+        if (!_user) throw new Error('No autenticado');
+        if (username.length < 3) throw { code: 'auth/username-short' };
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) throw { code: 'auth/username-invalid' };
+        if (await usernameExists(username)) throw { code: 'auth/username-taken' };
+        await setDoc(doc(db, "users", _user.uid), {
+          username,
+          usernameLower: username.toLowerCase(),
+          email: _user.email,
+          createdAt: serverTimestamp(),
+          role: "user"
+        });
+      },
+      setSuppressAutoEnter: v => { _suppressAutoEnter = v; },
+
       async getSuggestions() {
         const q = query(
           collection(db, 'suggestions'),
