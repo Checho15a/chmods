@@ -469,6 +469,16 @@
     .auth-sep::before, .auth-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
     .auth-sep span { font-family: 'DM Mono', monospace; font-size: .58rem; color: var(--dim2); }
 
+    .google-btn {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: .6rem;
+      padding: .68rem; background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: var(--r); font-family: 'Nunito', sans-serif;
+      font-size: .84rem; font-weight: 700; color: var(--text);
+      cursor: pointer; transition: all var(--ease); margin-bottom: 1rem;
+    }
+    .google-btn:hover { border-color: var(--dim); background: var(--bg3); }
+    .google-btn:disabled { opacity: .5; cursor: not-allowed; }
+
     .guest-btn {
       width: 100%; padding: .65rem; background: transparent;
       border: 1px solid var(--border2); border-radius: var(--r);
