@@ -3652,7 +3652,7 @@
   async function renderAdminList() {
     const myToken = ++_adminListToken;
     const body = document.getElementById('admin-body');
-    body.innerHTML = `<div class="admin-title">🛠️ Tus mods</div><div class="admin-empty">Cargando...</div>`;
+    body.innerHTML = `<div class="admin-title">🛠️ Mis Mods</div><div class="admin-empty">Cargando...</div>`;
     let mods = [];
     try {
       mods = await window._chm.adminGetAllMods();
