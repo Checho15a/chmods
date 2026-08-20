@@ -1100,7 +1100,10 @@
     document.getElementById('form-reg').style.display   = t==='reg' ? 'block' : 'none';
     document.getElementById('verify-view').style.display = 'none';
     document.getElementById('forgot-view').style.display = 'none';
+    document.getElementById('google-username-view').style.display = 'none';
     document.getElementById('auth-tabs').style.display  = 'flex';
+    document.getElementById('google-btn').style.display = 'flex';
+    document.querySelector('.auth-sep').style.display = 'flex';
     document.getElementById('tab-in').classList.toggle('on',  t==='in');
     document.getElementById('tab-reg').classList.toggle('on', t==='reg');
     clearMsg();
