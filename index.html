@@ -42,6 +42,14 @@
     };
 
     const app     = initializeApp(firebaseConfig);
+
+    // App Check + reCAPTCHA v3: protección invisible contra bots, sin fricción para el usuario.
+    // Reemplazá TU_CLAVE_DEL_SITIO por la "Clave del sitio" que copiaste en el paso 1.
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider('TU_CLAVE_DEL_SITIO'),
+      isTokenAutoRefreshEnabled: true
+    });
+
     const auth    = getAuth(app);
     const db      = getFirestore(app);
     const storage = getStorage(app);
