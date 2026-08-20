@@ -209,6 +209,17 @@
             likes: (data.likes || 0) + 1,
             likedBy: [...(data.likedBy || []), _user.uid]
           });
+          if (data.uid && data.uid !== _user.uid) {
+            await addDoc(collection(db, 'notifications'), {
+              toUid: data.uid,
+              type: 'like',
+              suggId: id,
+              suggTextPreview: (data.text || '').slice(0, 60),
+              fromUsername: _user.displayName || _user.email.split('@')[0],
+              read: false,
+              createdAt: serverTimestamp()
+            });
+          }
         }
       },
 
