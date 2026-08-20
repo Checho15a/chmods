@@ -1085,10 +1085,12 @@
   </div>
 
   <nav>
-    <div class="nav-brand"><span>CH</span> Mods</div>
     <div class="nav-right">
-      <div class="nav-user" id="nav-user"></div>
+      <div class="nav-user" id="nav-user" onclick="openProfileModal()" style="cursor:pointer"></div>
       <span class="nav-badge" id="nav-badge"></span>
+      <button class="nav-bell" id="nav-bell-btn" onclick="toggleNotifPanel()" style="display:none" aria-label="Notificaciones">
+        🔔<span class="nav-bell-dot" id="nav-bell-dot" style="display:none"></span>
+      </button>
       <button class="theme-toggle" id="themeBtn" aria-label="Cambiar tema">☀️</button>
       <button class="nav-logout" id="nav-login-btn" onclick="openAuthModal()" style="display:none">Iniciar sesión</button>
       <button class="nav-logout" id="nav-logout-btn" onclick="doLogout()">Cerrar sesión</button>
