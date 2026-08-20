@@ -891,6 +891,21 @@
         <button class="v-back-btn" onclick="backToLogin()">← Volver al inicio de sesión</button>
       </div>
 
+      <!-- Elegir usuario (primera vez con Google) -->
+      <div id="google-username-view" style="display:none; text-align:center; padding:.4rem 0">
+        <div class="v-icon">👋</div>
+        <div class="v-title">¡Un último paso!</div>
+        <div class="v-text">
+          Elegí un nombre de usuario para tu cuenta. Es lo único que falta para terminar.
+        </div>
+        <div class="auth-field" style="text-align:left">
+          <label>Nombre de usuario</label>
+          <input type="text" id="google-username-input" placeholder="Ejm: Usuario123" autocomplete="off" />
+        </div>
+        <button class="v-btn" id="google-username-btn" onclick="submitGoogleUsername()">Continuar</button>
+        <button class="v-back-btn" onclick="cancelGoogleSignup()">← Cancelar</button>
+      </div>
+      
       <!-- Olvidé mi contraseña -->
       <div id="forgot-view">
         <div class="v-icon">🔑</div>
