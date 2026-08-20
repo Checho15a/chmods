@@ -239,6 +239,17 @@
         await updateDoc(ref, {
           comments: [...(data.comments || []), comment]
         });
+        if (data.uid && data.uid !== _user.uid) {
+          await addDoc(collection(db, 'notifications'), {
+            toUid: data.uid,
+            type: 'comment',
+            suggId: suggId,
+            suggTextPreview: (data.text || '').slice(0, 60),
+            fromUsername: username,
+            read: false,
+            createdAt: serverTimestamp()
+          });
+        }
       },
 
       async deleteComment(suggId, commentIdx) {
