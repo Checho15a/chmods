@@ -671,6 +671,92 @@
     }
     .nav-logout:hover { border-color: var(--red); color: var(--red); }
 
+    .nav-bell {
+      position: relative;
+      width: 34px; height: 34px;
+      border: 1px solid var(--border2); border-radius: 50%;
+      background: var(--bg3); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .95rem; transition: all var(--ease); flex-shrink: 0;
+    }
+    .nav-bell:hover { border-color: var(--accent); }
+    .nav-bell-dot {
+      position: absolute; top: 4px; right: 4px;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--red); border: 1.5px solid var(--bg2);
+    }
+
+    #notif-panel {
+      position: fixed; top: 62px; right: 1rem; z-index: 200;
+      width: 320px; max-height: 420px; overflow-y: auto;
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 12px; box-shadow: 0 14px 40px rgba(0,0,0,.2);
+      display: none; flex-direction: column;
+    }
+    #notif-panel.show { display: flex; }
+    .notif-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .8rem 1rem; border-bottom: 1px solid var(--border);
+      font-family: 'Syne', sans-serif; font-size: .88rem; font-weight: 700; color: var(--white);
+    }
+    .notif-markall {
+      background: none; border: none; color: var(--accent);
+      font-family: 'Nunito', sans-serif; font-size: .72rem; font-weight: 700; cursor: pointer;
+    }
+    .notif-markall:hover { text-decoration: underline; }
+    .notif-item {
+      display: flex; gap: .6rem; padding: .8rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: .82rem; color: var(--dim); line-height: 1.5;
+      cursor: pointer; transition: background var(--ease);
+    }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-item:hover { background: rgba(232,130,12,.05); }
+    .notif-item.unread { background: rgba(232,130,12,.04); }
+    .notif-icon { flex-shrink: 0; font-size: 1rem; }
+    .notif-item strong { color: var(--text); }
+    .notif-empty { padding: 2rem 1rem; text-align: center; color: var(--dim2); font-size: .82rem; }
+
+    #profile-modal {
+      position: fixed; inset: 0; z-index: 95;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; padding: 1rem;
+    }
+    #profile-modal.show { display: flex; }
+    .profile-box {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.8rem 1.6rem; width: 100%; max-width: 420px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.3);
+    }
+    .profile-title {
+      font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700;
+      color: var(--white); margin-bottom: 1.2rem;
+    }
+    .profile-danger {
+      margin-top: 1.6rem; padding-top: 1.2rem; border-top: 1px solid var(--border);
+    }
+    .profile-danger-title {
+      font-family: 'Syne', sans-serif; font-size: .88rem; font-weight: 700;
+      color: var(--red); margin-bottom: .5rem;
+    }
+    .profile-danger-text {
+      font-size: .8rem; color: var(--dim); line-height: 1.6; margin-bottom: .8rem;
+    }
+    .profile-danger-btn {
+      width: 100%; padding: .65rem; background: transparent;
+      border: 1px solid var(--red); border-radius: var(--r);
+      font-family: 'Nunito', sans-serif; font-size: .82rem; font-weight: 700;
+      color: var(--red); cursor: pointer; transition: all var(--ease);
+    }
+    .profile-danger-btn:hover { background: rgba(192,57,43,.08); }
+    .profile-close-btn {
+      width: 100%; margin-top: .6rem; padding: .55rem; background: transparent;
+      border: 1px solid var(--border2); border-radius: var(--r);
+      font-family: 'Nunito', sans-serif; font-size: .82rem; font-weight: 600;
+      color: var(--dim); cursor: pointer; transition: all var(--ease);
+    }
+    .profile-close-btn:hover { border-color: var(--accent); color: var(--accent); }
+
     .hero {
       padding-top: 56px; min-height: 52vh;
       display: flex; flex-direction: column;
