@@ -132,6 +132,41 @@
       },
       setSuppressAutoEnter: v => { _suppressAutoEnter = v; },
 
+      async getNotifications() {
+        if (!_user) return [];
+        const q = query(
+          collection(db, 'notifications'),
+          where('toUid', '==', _user.uid),
+          orderBy('createdAt', 'desc'),
+          limit(30)
+        );
+        const snap = await getDocs(q);
+        return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+      },
+      async markNotificationsRead(ids) {
+        if (!_user || !ids.length) return;
+        await Promise.all(ids.map(id => updateDoc(doc(db, 'notifications', id), { read: true })));
+      },
+      async updateUsername(newUsername) {
+        if (!_user) throw new Error('No autenticado');
+        if (newUsername.length < 3) throw { code: 'auth/username-short' };
+        if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) throw { code: 'auth/username-invalid' };
+        const currentSnap = await getDoc(doc(db, 'users', _user.uid));
+        const currentLower = currentSnap.exists() ? (currentSnap.data().usernameLower || '') : '';
+        if (newUsername.toLowerCase() !== currentLower) {
+          if (await usernameExists(newUsername)) throw { code: 'auth/username-taken' };
+        }
+        await updateDoc(doc(db, 'users', _user.uid), {
+          username: newUsername,
+          usernameLower: newUsername.toLowerCase()
+        });
+      },
+      async deleteAccount() {
+        if (!_user) throw new Error('No autenticado');
+        try { await deleteDoc(doc(db, 'users', _user.uid)); } catch(e) {}
+        await deleteUser(auth.currentUser);
+      },
+
       async getSuggestions() {
         const q = query(
           collection(db, 'suggestions'),
