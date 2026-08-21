@@ -639,13 +639,20 @@
       color: var(--white); letter-spacing: .02em;
     }
     .nav-brand span { color: var(--accent); }
-    .nav-right { display: flex; align-items: center; gap: .9rem; }
+    .nav-right { display: flex; align-items: center; gap: .7rem; }
     .nav-user {
       font-family: 'DM Mono', monospace;
       font-size: .62rem; letter-spacing: .1em;
       text-transform: uppercase; color: var(--dim);
     }
     .nav-user b { color: var(--accent); font-weight: 500; }
+    .nav-user-icon {
+      width: 30px; height: 30px; border-radius: 50%;
+      border: 1px solid var(--border2); background: var(--bg3);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; transition: all var(--ease); flex-shrink: 0;
+    }
+    .nav-user-icon:hover { border-color: var(--accent); background: rgba(232,130,12,.08); }
     .nav-badge {
       font-family: 'DM Mono', monospace;
       font-size: .58rem; padding: .18rem .5rem; border-radius: 999px;
