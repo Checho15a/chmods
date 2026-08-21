@@ -1839,8 +1839,7 @@
   // una sesión guardada, Firebase la detecta un instante después y _chm_onAuth
   // se encarga de pasar automáticamente a modo logueado.
   window.addEventListener('DOMContentLoaded', () => {
-    if (window._chm) window._chm.setGuest(true);
-    enterApp(null, true);
+    enterApp(null, true, true);
   });
 
   // ── Errores Firebase legibles ─────────────────────────────────
