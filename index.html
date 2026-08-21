@@ -1643,12 +1643,14 @@
   // Nota: ya NO hay muro de login. Cualquiera (invitado o logueado) entra directo
   // a ver los mods y sus wikis. El login solo se pide puntualmente al querer
   // interactuar (dar like, comentar, publicar sugerencias) — ver openAuthRequiredModal().
-  function enterApp(user, guest) {
-    window._chm.setGuest(guest);
+  function enterApp(user, guest, provisional) {
+    if (!provisional) window._chm.setGuest(guest);
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app-screen').style.display  = 'block';
     const loginBtn  = document.getElementById('nav-login-btn');
-    const logoutBtn = document.getElementById('nav-logout-btn');
+    const userIcon  = document.getElementById('nav-user-icon');
+    const badge     = document.getElementById('nav-badge');
+    const bellBtn   = document.getElementById('nav-bell-btn');
 
     if (guest) {
       document.getElementById('nav-user-icon').style.display = 'none';
