@@ -1915,6 +1915,27 @@
     display: flex; flex: 1; overflow: hidden;
   }
 
+  @media (max-width: 700px) {
+    .wiki-layout {
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .wiki-sidebar {
+      width: 100%;
+      max-height: 240px;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .wiki-content {
+      max-width: 100%;
+      padding: 1.5rem 1.2rem;
+    }
+    .wiki-ad-rail {
+      display: none !important;
+    }
+  }
+
   .wiki-sidebar {
     width: 230px; flex-shrink: 0;
     background: var(--bg2);
