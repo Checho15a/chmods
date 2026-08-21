@@ -347,7 +347,13 @@
     onAuthStateChanged(auth, u => {
       _user = u;
       _isAdmin = !!(u?.emailVerified && u.email === ADMIN_EMAIL);
-      if (u?.emailVerified && !_suppressAutoEnter) window._chm_onAuth?.(u);
+      const firstCheck = !window._chm_authChecked;
+      window._chm_authChecked = true;
+      if (u?.emailVerified && !_suppressAutoEnter) {
+        window._chm_onAuth?.(u);
+      } else if (firstCheck && !_suppressAutoEnter) {
+        window._chm_onGuestConfirmed?.();
+      }
     });
   </script>
 
