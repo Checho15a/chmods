@@ -1638,6 +1638,7 @@
   // a ver los mods y sus wikis. El login solo se pide puntualmente al querer
   // interactuar (dar like, comentar, publicar sugerencias) — ver openAuthRequiredModal().
   function enterApp(user, guest) {
+    window._chm.setGuest(guest);
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app-screen').style.display  = 'block';
     const loginBtn  = document.getElementById('nav-login-btn');
