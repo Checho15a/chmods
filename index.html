@@ -1644,6 +1644,7 @@
     const logoutBtn = document.getElementById('nav-logout-btn');
 
     if (guest) {
+      document.getElementById('nav-user-icon').style.display = 'none';
       document.getElementById('nav-user').innerHTML  = '';
       document.getElementById('nav-badge').textContent = 'Invitado';
       document.getElementById('nav-badge').className   = 'nav-badge g';
@@ -1652,6 +1653,7 @@
     } else {
       const name = user.displayName || user.email.split('@')[0];
       const isAdmin = window._chm.isAdmin();
+      document.getElementById('nav-user-icon').style.display = 'flex';
       document.getElementById('nav-user').innerHTML  = `Hola, <b>${name}</b>`;
       document.getElementById('nav-badge').textContent = isAdmin ? 'OP' : 'usuario';
       document.getElementById('nav-badge').className   = 'nav-badge u' + (isAdmin ? ' nav-badge-op' : '');
