@@ -1266,6 +1266,120 @@
     document.body.removeChild(ta);
   }
 
+  // ── Perfil de usuario ───────────────────────────────────────────
+  function openProfileModal() {
+    if (!window._chm.user() || window._chm.isGuest()) { openAuthModal(); return; }
+    const u = window._chm.user();
+    document.getElementById('profile-username-input').value = u.displayName || u.email.split('@')[0];
+    document.getElementById('profile-msg').className = 'auth-msg';
+    document.getElementById('profile-msg').textContent = '';
+    document.getElementById('profile-modal').classList.add('show');
+  }
+  function closeProfileModal() {
+    document.getElementById('profile-modal').classList.remove('show');
+  }
+  function pShowMsg(txt, type) {
+    const el = document.getElementById('profile-msg');
+    el.textContent = txt; el.className = 'auth-msg ' + type;
+  }
+  async function saveProfileUsername() {
+    const val = document.getElementById('profile-username-input').value.trim();
+    if (!val) { pShowMsg('Escribí un nombre de usuario.', 'err'); return; }
+    const btn = document.getElementById('profile-save-btn');
+    btn.disabled = true;
+    try {
+      await window._chm.updateUsername(val);
+      pShowMsg('✓ Usuario actualizado.', 'ok');
+      document.getElementById('nav-user').innerHTML = `Hola, <b>${escHtml(val)}</b>`;
+    } catch(e) {
+      if (e.code === 'auth/username-short') pShowMsg('El usuario debe tener al menos 3 caracteres.', 'err');
+      else if (e.code === 'auth/username-invalid') pShowMsg('Solo letras, números y guión bajo.', 'err');
+      else if (e.code === 'auth/username-taken') pShowMsg('Ese nombre de usuario ya está en uso.', 'err');
+      else pShowMsg('Error al actualizar. Intentá de nuevo.', 'err');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+  async function confirmDeleteAccount() {
+    if (!confirm('¿Seguro que querés eliminar tu cuenta? Esta acción no se puede deshacer.')) return;
+    try {
+      await window._chm.deleteAccount();
+      closeProfileModal();
+      window._chm.setGuest(true);
+      enterApp(null, true);
+      suggToast('Tu cuenta fue eliminada.', 'ok');
+    } catch(e) {
+      if (e.code === 'auth/requires-recent-login') {
+        pShowMsg('Por seguridad, cerrá sesión, volvé a entrar, y probá eliminar la cuenta de nuevo.', 'err');
+      } else {
+        pShowMsg('No se pudo eliminar la cuenta. Intentá de nuevo.', 'err');
+      }
+    }
+  }
+
+  // ── Notificaciones ───────────────────────────────────────────
+  let _notifCache = [];
+  async function refreshNotifBell() {
+    if (!window._chm.user() || window._chm.isGuest()) {
+      document.getElementById('nav-bell-btn').style.display = 'none';
+      return;
+    }
+    document.getElementById('nav-bell-btn').style.display = 'flex';
+    try {
+      _notifCache = await window._chm.getNotifications();
+      const unread = _notifCache.filter(n => !n.read).length;
+      document.getElementById('nav-bell-dot').style.display = unread > 0 ? 'block' : 'none';
+    } catch(e) {}
+  }
+  function toggleNotifPanel() {
+    const panel = document.getElementById('notif-panel');
+    if (panel.classList.contains('show')) { panel.classList.remove('show'); return; }
+    panel.classList.add('show');
+    renderNotifPanel();
+  }
+  function renderNotifPanel() {
+    const list = document.getElementById('notif-list');
+    if (!_notifCache.length) {
+      list.innerHTML = '<div class="notif-empty">Todavía no tenés notificaciones.</div>';
+      return;
+    }
+    list.innerHTML = _notifCache.map(n => {
+      const icon = n.type === 'like' ? '♥' : '💬';
+      const action = n.type === 'like' ? 'le dio like a' : 'comentó en';
+      const preview = escHtml(n.suggTextPreview || '');
+      return `
+        <div class="notif-item${n.read ? '' : ' unread'}" onclick="openNotifTarget('${n.id}')">
+          <span class="notif-icon">${icon}</span>
+          <span><strong>${escHtml(n.fromUsername)}</strong> ${action} tu sugerencia: "${preview}${preview.length >= 60 ? '…' : ''}"</span>
+        </div>`;
+    }).join('');
+  }
+  async function markAllNotifsRead() {
+    const unreadIds = _notifCache.filter(n => !n.read).map(n => n.id);
+    if (!unreadIds.length) return;
+    await window._chm.markNotificationsRead(unreadIds);
+    _notifCache.forEach(n => n.read = true);
+    renderNotifPanel();
+    document.getElementById('nav-bell-dot').style.display = 'none';
+  }
+  async function openNotifTarget(notifId) {
+    const n = _notifCache.find(x => x.id === notifId);
+    if (n && !n.read) {
+      await window._chm.markNotificationsRead([notifId]);
+      n.read = true;
+      renderNotifPanel();
+    }
+    document.getElementById('notif-panel').classList.remove('show');
+    openSuggestions();
+  }
+  document.addEventListener('click', e => {
+    const panel = document.getElementById('notif-panel');
+    const bell = document.getElementById('nav-bell-btn');
+    if (panel && panel.classList.contains('show') && !panel.contains(e.target) && e.target !== bell && !bell.contains(e.target)) {
+      panel.classList.remove('show');
+    }
+  });
+
   // ── Toggle tema (sincroniza ambos botones) ────────────────────
   function applyTheme(dark) {
     document.body.classList.toggle('dark', dark);
