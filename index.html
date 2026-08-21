@@ -43,11 +43,13 @@
 
     const app     = initializeApp(firebaseConfig);
 
-    // App Check + reCAPTCHA v3: protección invisible contra bots, sin fricción para el usuario.
-    initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider('6Ld_Mo8tAAAAAL8FEVDnffAtL5pB5gFai1qvmjAh'),
-      isTokenAutoRefreshEnabled: true
-    });
+    // App Check + reCAPTCHA v3: DESACTIVADO TEMPORALMENTE — la clave está dando error 400
+    // al validar, lo que satura las peticiones a Firebase. Reactivar una vez confirmado
+    // que la clave de reCAPTCHA está bien configurada (ver pasos de verificación abajo).
+    // initializeAppCheck(app, {
+    //   provider: new ReCaptchaV3Provider('6Ld_Mo8tAAAAAL8FEVDnffAtL5pB5gFai1qvmjAh'),
+    //   isTokenAutoRefreshEnabled: true
+    // });
 
     const auth    = getAuth(app);
     const db      = getFirestore(app);
