@@ -1097,6 +1097,37 @@
     </div>
   </nav>
 
+  <div id="notif-panel">
+    <div class="notif-header">
+      <span>Notificaciones</span>
+      <button class="notif-markall" onclick="markAllNotifsRead()">Marcar todas como leídas</button>
+    </div>
+    <div id="notif-list"><div class="notif-empty">Cargando...</div></div>
+  </div>
+
+  <div id="profile-modal">
+    <div class="profile-box">
+      <div class="profile-title">Mi perfil</div>
+      <div class="auth-field">
+        <label>Nombre de usuario</label>
+        <input type="text" id="profile-username-input" placeholder="Usuario123" autocomplete="off" />
+      </div>
+      <div class="auth-msg" id="profile-msg"></div>
+      <button class="auth-btn" id="profile-save-btn" onclick="saveProfileUsername()">Guardar cambios</button>
+
+      <div class="profile-danger">
+        <div class="profile-danger-title">Zona de peligro</div>
+        <div class="profile-danger-text">
+          Eliminar tu cuenta borra tu perfil y no se puede deshacer. Tus sugerencias y comentarios
+          publicados quedarán como están, pero ya no vas a poder editarlos ni borrarlos.
+        </div>
+        <button class="profile-danger-btn" onclick="confirmDeleteAccount()">Eliminar mi cuenta</button>
+      </div>
+
+      <button class="profile-close-btn" onclick="closeProfileModal()">Cerrar</button>
+    </div>
+  </div>
+
   <section class="hero">
     <div class="hero-tag">// Minecraft Java Mods</div>
     <h1 class="hero-title"><span>CH</span> Mods</h1>
