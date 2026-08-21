@@ -1822,6 +1822,9 @@
   window._chm_onAuth = function(user) {
     enterApp(user, false);
   };
+  window._chm_onGuestConfirmed = function() {
+    enterApp(null, true);
+  };
 
   // ── Entrada automática sin muro de login ───────────────────────
   // Al cargar la página, cualquiera entra directo como invitado. Si además tenía
