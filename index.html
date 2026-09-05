@@ -853,13 +853,13 @@
     }
     .mod-card {
       background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 11px; padding: 1.5rem;
+      border-radius: 11px; padding: 0;
       cursor: pointer; position: relative; overflow: hidden;
       transition: all var(--ease); display: flex; flex-direction: column;
     }
     .mod-card::before {
       content: ''; position: absolute; top: 0; left: 0; right: 0;
-      height: 2px; background: var(--accent);
+      height: 2px; background: var(--accent); z-index: 2;
       transform: scaleX(0); transform-origin: left; transition: transform var(--ease);
     }
     .mod-card:hover { transform: translateY(-4px); border-color: rgba(205,164,60,.35); box-shadow: 0 14px 40px rgba(0,0,0,.12); }
@@ -867,6 +867,10 @@
     .mod-card.locked { cursor: default; }
     .mod-card.locked:hover { transform: none; border-color: var(--border); box-shadow: none; }
     .mod-card.locked::before { display: none; }
+
+    .card-banner { width: 100%; aspect-ratio: 3 / 1; overflow: hidden; background: var(--bg3); flex-shrink: 0; }
+    .card-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card-body { padding: 1.4rem 1.5rem 1.5rem; display: flex; flex-direction: column; flex: 1; }
 
     .card-head { display: flex; align-items: center; gap: .7rem; margin-bottom: .9rem; }
     .card-icon {
@@ -1164,66 +1168,57 @@
     <div class="mods-grid">
 
       <div class="mod-card" id="mc-images" onclick="openMod('images')">
-        <div class="card-head">
-          <div class="card-icon">🖼️</div>
-          <div>
-            <div class="card-type">Forge 1.20.1</div>
-            <div class="card-name">CH Images</div>
-          </div>
-        </div>
-        <p class="card-desc">Proyectá imágenes, videos y GIFs en el mundo de Minecraft mediante comandos o una interfaz visual integrada. Completamente configurable.</p>
-        <div class="card-foot">
-          <div class="card-tags">
-            <span class="card-tag">Forge</span>
-            <span class="card-tag">Media</span>
-            <span class="card-tag">GUI</span>
-          </div>
-          <div class="card-foot-actions">
-            <button class="card-share-btn" onclick="event.stopPropagation(); shareModLink('images', this)" title="Copiar link directo a este mod">🔗</button>
-            <span class="card-arrow">↗</span>
+        <div class="card-banner"><img src="banners/CHImagesBanner.png" alt="CH Images" loading="lazy" /></div>
+        <div class="card-body">
+          <div class="card-type">Forge 1.20.1</div>
+          <p class="card-desc">Proyectá imágenes, videos y GIFs en el mundo de Minecraft mediante comandos o una interfaz visual integrada. Completamente configurable.</p>
+          <div class="card-foot">
+            <div class="card-tags">
+              <span class="card-tag">Forge</span>
+              <span class="card-tag">Media</span>
+              <span class="card-tag">GUI</span>
+            </div>
+            <div class="card-foot-actions">
+              <button class="card-share-btn" onclick="event.stopPropagation(); shareModLink('images', this)" title="Copiar link directo a este mod">🔗</button>
+              <span class="card-arrow">↗</span>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- ── NUEVO MOD: CH Launch ── -->
       <div class="mod-card" id="mc-launch" onclick="openMod('launch')">
-        <div class="card-head">
-          <div class="card-icon">🚀</div>
-          <div>
-            <div class="card-type">Forge 1.20.1</div>
-            <div class="card-name">CH Launch</div>
-          </div>
-        </div>
-        <p class="card-desc">Reemplaza las diferentes interfaces del Minecraft Vanilla, incluido la interfaz de carga de Mojang y Forge, con funcionalidades de conexión directa con el servidor, y música personalizada en el menu principal.</p>
-        <div class="card-foot">
-          <div class="card-tags">
-            <span class="card-tag">Forge</span>
-            <span class="card-tag">Client</span>
-            <span class="card-tag">Eventos</span>
-            <span class="card-tag">UI</span>
-          </div>
-          <div class="card-foot-actions">
-            <button class="card-share-btn" onclick="event.stopPropagation(); shareModLink('launch', this)" title="Copiar link directo a este mod">🔗</button>
-            <span class="card-arrow">↗</span>
+        <div class="card-banner"><img src="banners/CHLaunchBanner.png" alt="CH Launch" loading="lazy" /></div>
+        <div class="card-body">
+          <div class="card-type">Forge 1.20.1</div>
+          <p class="card-desc">Reemplaza las diferentes interfaces del Minecraft Vanilla, incluido la interfaz de carga de Mojang y Forge, con funcionalidades de conexión directa con el servidor, y música personalizada en el menu principal.</p>
+          <div class="card-foot">
+            <div class="card-tags">
+              <span class="card-tag">Forge</span>
+              <span class="card-tag">Client</span>
+              <span class="card-tag">Eventos</span>
+              <span class="card-tag">UI</span>
+            </div>
+            <div class="card-foot-actions">
+              <button class="card-share-btn" onclick="event.stopPropagation(); shareModLink('launch', this)" title="Copiar link directo a este mod">🔗</button>
+              <span class="card-arrow">↗</span>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="mod-card mod-card--suggest" id="mc-suggest" onclick="openSuggestions()">
-        <div class="card-head">
-          <div class="card-icon" style="background:rgba(46,204,113,.1);border-color:rgba(46,204,113,.25)">💡</div>
-          <div>
-            <div class="card-type" style="color:#27ae60">Comunidad</div>
-            <div class="card-name">Sugerencias</div>
+        <div class="card-banner"><img src="banners/SugerenciasBanner.png" alt="Sugerencias" loading="lazy" /></div>
+        <div class="card-body">
+          <div class="card-type" style="color:#27ae60">Comunidad</div>
+          <p class="card-desc">¿Tenés ideas para nuevos mods, funciones o mejoras? Dejá tu sugerencia y la comunidad puede apoyarla con likes y comentarios.</p>
+          <div class="card-foot">
+            <div class="card-tags">
+              <span class="card-tag">Ideas</span>
+              <span class="card-tag">Comunidad</span>
+            </div>
+            <span class="card-arrow" style="color:#27ae60">↗</span>
           </div>
-        </div>
-        <p class="card-desc">¿Tenés ideas para nuevos mods, funciones o mejoras? Dejá tu sugerencia y la comunidad puede apoyarla con likes y comentarios.</p>
-        <div class="card-foot">
-          <div class="card-tags">
-            <span class="card-tag">Ideas</span>
-            <span class="card-tag">Comunidad</span>
-          </div>
-          <span class="card-arrow" style="color:#27ae60">↗</span>
         </div>
       </div>
 
@@ -1711,17 +1706,19 @@
     if (isAdmin) {
       grid.insertAdjacentHTML('beforeend', `
         <div class="mod-card mod-card--addnew" onclick="openAdminPanel()">
-          <div class="card-head">
-            <div class="card-icon" style="background:rgba(205,164,60,.14);border-color:rgba(205,164,60,.35)">➕</div>
-            <div>
-              <div class="card-type" style="color:var(--accent)">Panel OP</div>
-              <div class="card-name">Añadir mod</div>
+          <div class="card-body">
+            <div class="card-head">
+              <div class="card-icon" style="background:rgba(205,164,60,.14);border-color:rgba(205,164,60,.35)">➕</div>
+              <div>
+                <div class="card-type" style="color:var(--accent)">Panel OP</div>
+                <div class="card-name">Añadir mod</div>
+              </div>
             </div>
-          </div>
-          <p class="card-desc">Creá un mod nuevo, editá los que ya existen o gestioná qué está publicado.</p>
-          <div class="card-foot">
-            <div class="card-tags"><span class="card-tag">Admin</span></div>
-            <span class="card-arrow">↗</span>
+            <p class="card-desc">Creá un mod nuevo, editá los que ya existen o gestioná qué está publicado.</p>
+            <div class="card-foot">
+              <div class="card-tags"><span class="card-tag">Admin</span></div>
+              <span class="card-arrow">↗</span>
+            </div>
           </div>
         </div>`);
     }
@@ -1759,21 +1756,34 @@
   function renderCustomModCard(m) {
     const draftBadge = !m.published ? `<span class="card-tag" style="border-color:rgba(230,126,34,.4);color:#e67e22">Borrador</span>` : '';
     const tags = (m.cardTags || []).map(t => `<span class="card-tag">${escHtml(t)}</span>`).join('');
-    return `
-      <div class="mod-card mod-card--custom" id="mc-${m.id}" onclick="openMod('${m.id}')">
+    // Si el mod tiene banner configurado, se muestra la imagen y se ocultan ícono/nombre
+    // (ya van incluidos en el propio banner). Si todavía no le pusieron banner, se usa
+    // el header viejo de ícono+nombre como respaldo, para que la tarjeta no quede vacía.
+    const banner = m.bannerUrl
+      ? `<div class="card-banner"><img src="${escAttr(m.bannerUrl)}" alt="${escAttr(m.name || 'Mod')}" loading="lazy" /></div>`
+      : '';
+    const head = m.bannerUrl ? '' : `
         <div class="card-head">
           <div class="card-icon">${m.icon || '🧩'}</div>
           <div>
             <div class="card-type">${escHtml(m.version || '')}</div>
             <div class="card-name">${escHtml(m.name || 'Mod sin nombre')}</div>
           </div>
-        </div>
-        <p class="card-desc">${escHtml(m.cardDesc || '')}</p>
-        <div class="card-foot">
-          <div class="card-tags">${tags}${draftBadge}</div>
-          <div class="card-foot-actions">
-            <button class="card-share-btn" onclick="event.stopPropagation(); shareModLink('${m.id}', this)" title="Copiar link directo a este mod">🔗</button>
-            <span class="card-arrow">↗</span>
+        </div>`;
+    const typeLine = m.bannerUrl ? `<div class="card-type">${escHtml(m.version || '')}</div>` : '';
+    return `
+      <div class="mod-card mod-card--custom" id="mc-${m.id}" onclick="openMod('${m.id}')">
+        ${banner}
+        <div class="card-body">
+          ${head}
+          ${typeLine}
+          <p class="card-desc">${escHtml(m.cardDesc || '')}</p>
+          <div class="card-foot">
+            <div class="card-tags">${tags}${draftBadge}</div>
+            <div class="card-foot-actions">
+              <button class="card-share-btn" onclick="event.stopPropagation(); shareModLink('${m.id}', this)" title="Copiar link directo a este mod">🔗</button>
+              <span class="card-arrow">↗</span>
+            </div>
           </div>
         </div>
       </div>`;
@@ -4173,8 +4183,8 @@
   }
 
   const CORE_META = {
-    images: { icon: '🖼️', cardDesc: 'Proyectá imágenes, videos y GIFs en el mundo de Minecraft mediante comandos o una interfaz visual integrada. Completamente configurable.', cardTags: ['Forge','Media','GUI'] },
-    launch: { icon: '🚀', cardDesc: 'Reemplaza las diferentes interfaces del Minecraft Vanilla, incluido la interfaz de carga de Mojang y Forge, con funcionalidades de conexión directa con el servidor, y música personalizada en el menu principal.', cardTags: ['Forge','Client','Eventos','UI'] },
+    images: { icon: '🖼️', cardDesc: 'Proyectá imágenes, videos y GIFs en el mundo de Minecraft mediante comandos o una interfaz visual integrada. Completamente configurable.', cardTags: ['Forge','Media','GUI'], bannerUrl: 'banners/CHImagesBanner.png' },
+    launch: { icon: '🚀', cardDesc: 'Reemplaza las diferentes interfaces del Minecraft Vanilla, incluido la interfaz de carga de Mojang y Forge, con funcionalidades de conexión directa con el servidor, y música personalizada en el menu principal.', cardTags: ['Forge','Client','Eventos','UI'], bannerUrl: 'banners/CHLaunchBanner.png' },
   };
     
   async function adminImportCoreMods(silent) {
@@ -4186,6 +4196,7 @@
         data.icon = CORE_META[id].icon;
         data.cardDesc = CORE_META[id].cardDesc;
         data.cardTags = CORE_META[id].cardTags;
+        data.bannerUrl = CORE_META[id].bannerUrl;
         data.published = true;
         if (data.general) data.general.table = normalizeTable(data.general.table);
         (data.tutorial?.blocks || []).forEach(b => { if (b.rows) b.rows = normalizeTable(b.rows); });
@@ -4232,7 +4243,7 @@
 
   function blankModTemplate() {
     return {
-      name: '', version: 'Forge 1.20.1', icon: '🧩', cardDesc: '', cardTags: [],
+      name: '', version: 'Forge 1.20.1', icon: '🧩', cardDesc: '', cardTags: [], bannerUrl: '',
       general: { chips: [], table: [], desc: '', extra: '', extraBlocks: [] },
       inicio: { intro: '', steps: [], extra: '', extraBlocks: [] },
       tutorial: { tag: 'Tutorial paso a paso', title: 'Tutorial', intro: '', showComandos: false, blocks: [] },
@@ -4264,6 +4275,7 @@
       _editorState = blankModTemplate();
     }
     // rellena campos nuevos por si el mod se guardó antes de que existieran
+    if (_editorState.bannerUrl === undefined) _editorState.bannerUrl = '';
     if (!_editorState.general.extraBlocks) _editorState.general.extraBlocks = [];
     if (!_editorState.inicio.extraBlocks) _editorState.inicio.extraBlocks = [];
     if (!_editorState.customSections) _editorState.customSections = [];
@@ -4516,9 +4528,14 @@
           <label>Descripción corta (la de la tarjeta)</label>
           <textarea rows="2" data-bind="cardDesc" oninput="s_input(this)">${escHtml(s.cardDesc)}</textarea>
         </div>
-        <div class="aform-field">
+        <div class="aform-field" style="margin-bottom:.8rem">
           <label>Etiquetas de la tarjeta (separadas por coma)</label>
           <input type="text" value="${escAttr((s.cardTags||[]).join(', '))}" oninput="s_setCsv('cardTags', this.value)" placeholder="Forge, Media, GUI" />
+        </div>
+        <div class="aform-field">
+          <label>Banner de la tarjeta (ruta o URL de la imagen, 900×300)</label>
+          <input type="text" value="${escAttr(s.bannerUrl)}" data-bind="bannerUrl" oninput="s_input(this)" placeholder="banners/MiModBanner.png" />
+          <div class="aform-hint">Si dejás esto vacío, la tarjeta muestra el ícono y el nombre como respaldo. Con banner, el ícono y el nombre se ocultan (ya van incluidos en la imagen).</div>
         </div>
       </div>
 
