@@ -677,12 +677,12 @@
     }
     .mod-card--addnew:hover { background: rgba(205,164,60,.04); }
     .nav-logout {
-      background: none; border: 1px solid var(--border2);
-      border-radius: 5px; padding: .25rem .65rem;
-      font-family: 'DM Mono', monospace; font-size: .6rem;
-      color: var(--dim); cursor: pointer; transition: all var(--ease);
+      background: var(--accent); border: none;
+      border-radius: 7px; padding: .45rem 1.1rem;
+      font-family: 'Nunito', sans-serif; font-size: .78rem; font-weight: 700;
+      color: #fff; cursor: pointer; transition: all var(--ease);
     }
-    .nav-logout:hover { border-color: var(--red); color: var(--red); }
+    .nav-logout:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 4px 14px var(--aglow); }
 
     .nav-bell {
       position: relative;
@@ -966,11 +966,19 @@
   </style>
 </head>
 <body>
+<script>
+  // La página siempre arranca en modo oscuro, salvo que el usuario haya elegido
+  // "Claro" antes desde su perfil (se recuerda en localStorage).
+  (function() {
+    var pref = localStorage.getItem('chm_theme');
+    if (pref !== 'light') document.body.classList.add('dark');
+  })();
+</script>
 
 <!-- AUTH (ahora es un modal opcional: no bloquea la entrada a la página) -->
 <div id="auth-screen" style="display:none">
   <button class="auth-theme-btn" id="authCloseBtn" style="right:auto;left:1rem" onclick="closeAuthModal()" aria-label="Cerrar" title="Cerrar">✕</button>
-  <button class="auth-theme-btn" id="authThemeBtn" aria-label="Cambiar tema">☀️</button>
+  <button class="auth-theme-btn" id="authThemeBtn" aria-label="Cambiar tema" style="display:none">☀️</button>
   <div class="auth-wrap">
     <div class="auth-logo-top">
       <h1><span>CH</span> Mods</h1>
@@ -1109,7 +1117,7 @@
       <button class="nav-bell" id="nav-bell-btn" onclick="toggleNotifPanel()" style="display:none" aria-label="Notificaciones">
         🔔<span class="nav-bell-dot" id="nav-bell-dot" style="display:none"></span>
       </button>
-      <button class="theme-toggle" id="themeBtn" aria-label="Cambiar tema" style="margin-left:.3rem">☀️</button>
+      <button class="theme-toggle" id="themeBtn" aria-label="Cambiar tema" style="display:none">☀️</button>
       <button class="nav-logout" id="nav-login-btn" onclick="openAuthModal()" style="display:none">Iniciar sesión</button>
     </div>
   </nav>
@@ -1131,6 +1139,15 @@
       </div>
       <div class="auth-msg" id="profile-msg"></div>
       <button class="auth-btn" id="profile-save-btn" onclick="saveProfileUsername()">Guardar cambios</button>
+
+      <div style="margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--border)">
+        <label style="display:block;font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem">Tema</label>
+        <div class="auth-tabs" style="margin-bottom:0">
+          <button class="auth-tab" id="profile-theme-light" onclick="applyTheme(false)">☀️ Claro</button>
+          <button class="auth-tab" id="profile-theme-dark" onclick="applyTheme(true)">🌙 Oscuro</button>
+        </div>
+      </div>
+
       <button class="profile-close-btn" onclick="closeProfileModal(); doLogout();">Cerrar sesión</button>
 
       <div class="profile-danger">
@@ -1282,6 +1299,9 @@
     document.getElementById('profile-username-input').value = u.displayName || u.email.split('@')[0];
     document.getElementById('profile-msg').className = 'auth-msg';
     document.getElementById('profile-msg').textContent = '';
+    const isDark = document.body.classList.contains('dark');
+    document.getElementById('profile-theme-light').classList.toggle('on', !isDark);
+    document.getElementById('profile-theme-dark').classList.toggle('on', isDark);
     document.getElementById('profile-modal').classList.add('show');
   }
   function closeProfileModal() {
@@ -1389,12 +1409,22 @@
     }
   });
 
-  // ── Toggle tema (sincroniza ambos botones) ────────────────────
+  // ── Toggle tema (ahora solo se activa desde el perfil; esta función
+  //    sigue sincronizando todos los indicadores internos) ──────────
   function applyTheme(dark) {
     document.body.classList.toggle('dark', dark);
+    try { localStorage.setItem('chm_theme', dark ? 'dark' : 'light'); } catch(e) {}
     const icon = dark ? '🌙' : '☀️';
-    document.getElementById('themeBtn').textContent     = icon;
-    document.getElementById('authThemeBtn').textContent = icon;
+    ['themeBtn','authThemeBtn','wikiThemeBtn','suggThemeBtn','adminThemeBtn'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = icon;
+    });
+    const lightBtn = document.getElementById('profile-theme-light');
+    const darkBtn  = document.getElementById('profile-theme-dark');
+    if (lightBtn && darkBtn) {
+      lightBtn.classList.toggle('on', !dark);
+      darkBtn.classList.toggle('on', dark);
+    }
   }
   document.getElementById('themeBtn').addEventListener('click', () =>
     applyTheme(!document.body.classList.contains('dark')));
@@ -2368,7 +2398,7 @@
     <div class="wiki-nav-sep"></div>
     <div class="wiki-nav-brand" id="wn-brand">Wiki</div>
     <span class="wiki-version-badge" id="wn-badge">Forge 1.20.1</span>
-    <button class="wiki-nav-theme" id="wikiThemeBtn" aria-label="Cambiar tema">☀️</button>
+    <button class="wiki-nav-theme" id="wikiThemeBtn" aria-label="Cambiar tema" style="display:none">☀️</button>
   </nav>
 
   <div class="wiki-layout">
@@ -3558,7 +3588,7 @@
     <button class="sugg-home-btn" onclick="closeSuggestions()" title="Volver">🏠</button>
     <div class="sugg-nav-sep"></div>
     <div class="sugg-nav-title"><span>CH</span> Mods — Sugerencias</div>
-    <button class="wiki-nav-theme" id="suggThemeBtn" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:all var(--ease)" aria-label="Cambiar tema">☀️</button>
+    <button class="wiki-nav-theme" id="suggThemeBtn" style="display:none" aria-label="Cambiar tema">☀️</button>
   </nav>
 
   <div class="sugg-body">
@@ -3707,11 +3737,18 @@
 
   function applyTheme(dark) {
     document.body.classList.toggle('dark', dark);
+    try { localStorage.setItem('chm_theme', dark ? 'dark' : 'light'); } catch(e) {}
     const icon = dark ? '🌙' : '☀️';
-    ['themeBtn','authThemeBtn','wikiThemeBtn','suggThemeBtn'].forEach(id => {
+    ['themeBtn','authThemeBtn','wikiThemeBtn','suggThemeBtn','adminThemeBtn'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.textContent = icon;
     });
+    const lightBtn = document.getElementById('profile-theme-light');
+    const darkBtn  = document.getElementById('profile-theme-dark');
+    if (lightBtn && darkBtn) {
+      lightBtn.classList.toggle('on', !dark);
+      darkBtn.classList.toggle('on', dark);
+    }
   }
 
   function renderSuggForm() {
@@ -4099,7 +4136,7 @@
     <button class="wiki-home-btn" onclick="closeAdminPanel()" title="Volver">🏠</button>
     <div class="wiki-nav-sep"></div>
     <div class="wiki-nav-brand">Panel <span>OP</span></div>
-    <button class="wiki-nav-theme" id="adminThemeBtn" aria-label="Cambiar tema">☀️</button>
+    <button class="wiki-nav-theme" id="adminThemeBtn" aria-label="Cambiar tema" style="display:none">☀️</button>
   </nav>
   <div class="admin-body" id="admin-body"></div>
 </div>
