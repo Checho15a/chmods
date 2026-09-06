@@ -738,20 +738,64 @@
     #profile-modal.show { display: flex; }
     .profile-box {
       background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 14px; padding: 1.8rem 1.6rem; width: 100%; max-width: 420px;
+      border-radius: 14px; padding: 1.5rem 1.6rem 1.7rem; width: 100%; max-width: 420px;
       box-shadow: 0 24px 60px rgba(0,0,0,.3);
+    }
+    .profile-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.3rem;
     }
     .profile-title {
       font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700;
-      color: var(--white); margin-bottom: 1.2rem;
+      color: var(--white);
     }
-    .profile-danger {
-      margin-top: 1.6rem; padding-top: 1.2rem; border-top: 1px solid var(--border);
+    .profile-x-btn {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      border: 1px solid var(--border2); background: var(--bg3);
+      color: var(--dim); font-size: .85rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all var(--ease);
     }
-    .profile-danger-title {
+    .profile-x-btn:hover { border-color: var(--red); color: var(--red); }
+
+    .profile-section { }
+    .profile-section--sep { margin-top: 1.3rem; padding-top: 1.2rem; border-top: 1px solid var(--border); }
+    .profile-section-label {
+      display: block; font-family: 'DM Mono', monospace; font-size: .6rem;
+      letter-spacing: .13em; text-transform: uppercase; color: var(--dim); margin-bottom: .6rem;
+    }
+    .profile-btn-row { display: flex; gap: .6rem; }
+    .profile-reset-btn {
+      flex-shrink: 0; padding: 0 1rem; background: transparent;
+      border: 1px solid var(--border2); border-radius: var(--r);
+      font-family: 'Nunito', sans-serif; font-size: .82rem; font-weight: 600;
+      color: var(--dim); cursor: pointer; transition: all var(--ease);
+    }
+    .profile-reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .profile-close-btn {
+      width: 100%; padding: .6rem; background: transparent;
+      border: 1px solid var(--border2); border-radius: var(--r);
+      font-family: 'Nunito', sans-serif; font-size: .82rem; font-weight: 600;
+      color: var(--dim); cursor: pointer; transition: all var(--ease);
+    }
+    .profile-close-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .profile-danger-toggle {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      background: none; border: none; padding: 0; cursor: pointer;
       font-family: 'Syne', sans-serif; font-size: .88rem; font-weight: 700;
-      color: var(--red); margin-bottom: .5rem;
+      color: var(--red); transition: opacity var(--ease);
     }
+    .profile-danger-toggle:hover { opacity: .8; }
+    .profile-danger-chevron {
+      font-size: .8rem; color: var(--red); transition: transform var(--ease);
+    }
+    .profile-danger-toggle.open .profile-danger-chevron { transform: rotate(90deg); }
+    .profile-danger-body {
+      display: none; margin-top: .9rem;
+    }
+    .profile-danger-body.open { display: block; }
     .profile-danger-text {
       font-size: .8rem; color: var(--dim); line-height: 1.6; margin-bottom: .8rem;
     }
@@ -762,13 +806,40 @@
       color: var(--red); cursor: pointer; transition: all var(--ease);
     }
     .profile-danger-btn:hover { background: rgba(192,57,43,.08); }
-    .profile-close-btn {
-      width: 100%; margin-top: .6rem; padding: .55rem; background: transparent;
+
+    /* Confirmación de borrado — un segundo modal por encima del de perfil */
+    #delete-confirm-modal {
+      position: fixed; inset: 0; z-index: 97;
+      background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; padding: 1rem;
+    }
+    #delete-confirm-modal.show { display: flex; }
+    .delete-confirm-box {
+      background: var(--bg2); border: 1px solid var(--red); border-radius: 14px;
+      padding: 1.8rem 1.6rem; width: 100%; max-width: 380px; text-align: center;
+      box-shadow: 0 24px 60px rgba(0,0,0,.35);
+    }
+    .delete-confirm-icon { font-size: 2.1rem; margin-bottom: .6rem; }
+    .delete-confirm-title {
+      font-family: 'Syne', sans-serif; font-size: 1.02rem; font-weight: 700;
+      color: var(--white); margin-bottom: .6rem;
+    }
+    .delete-confirm-text { font-size: .84rem; color: var(--dim); line-height: 1.6; margin-bottom: 1.3rem; }
+    .delete-confirm-actions { display: flex; gap: .6rem; }
+    .delete-confirm-cancel {
+      flex: 1; padding: .6rem; background: transparent;
       border: 1px solid var(--border2); border-radius: var(--r);
       font-family: 'Nunito', sans-serif; font-size: .82rem; font-weight: 600;
       color: var(--dim); cursor: pointer; transition: all var(--ease);
     }
-    .profile-close-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .delete-confirm-cancel:hover { border-color: var(--accent); color: var(--accent); }
+    .delete-confirm-ok {
+      flex: 1; padding: .6rem; background: var(--red); color: #fff;
+      border: none; border-radius: var(--r);
+      font-family: 'Nunito', sans-serif; font-size: .82rem; font-weight: 700;
+      cursor: pointer; transition: all var(--ease);
+    }
+    .delete-confirm-ok:hover { background: #d64535; }
 
     .hero {
       padding-top: 56px; min-height: 52vh;
@@ -1111,7 +1182,7 @@
 
   <nav>
     <div class="nav-right">
-      <button class="nav-user-icon" id="nav-user-icon" onclick="openProfileModal()" title="Mi perfil" style="display:none">👤</button>
+      <button class="nav-user-icon" id="nav-user-icon" onclick="openProfileModal()" title="Mi perfil" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg></button>
       <div class="nav-user" id="nav-user"></div>
       <span class="nav-badge" id="nav-badge"></span>
       <button class="nav-bell" id="nav-bell-btn" onclick="toggleNotifPanel()" style="display:none" aria-label="Notificaciones">
@@ -1132,34 +1203,64 @@
 
   <div id="profile-modal">
     <div class="profile-box">
-      <div class="profile-title">Mi perfil</div>
-      <div class="auth-field">
-        <label>Nombre de usuario</label>
-        <input type="text" id="profile-username-input" placeholder="Usuario123" autocomplete="off" />
+      <div class="profile-header">
+        <div class="profile-title">Mi perfil</div>
+        <button class="profile-x-btn" onclick="closeProfileModal()" aria-label="Cerrar">✕</button>
       </div>
-      <div class="auth-msg" id="profile-msg"></div>
-      <button class="auth-btn" id="profile-save-btn" onclick="saveProfileUsername()">Guardar cambios</button>
 
-      <div style="margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--border)">
-        <label style="display:block;font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem">Tema</label>
+      <div class="profile-section">
+        <div class="auth-field" style="margin-bottom:.7rem">
+          <label>Nombre de usuario</label>
+          <input type="text" id="profile-username-input" placeholder="Usuario123" autocomplete="off" />
+        </div>
+        <div class="auth-msg" id="profile-msg"></div>
+        <div class="profile-btn-row">
+          <button class="profile-reset-btn" onclick="resetProfileUsername()">Restablecer</button>
+          <button class="auth-btn" id="profile-save-btn" onclick="saveProfileUsername()" style="margin-bottom:0">Guardar cambios</button>
+        </div>
+      </div>
+
+      <div class="profile-section profile-section--sep">
+        <label class="profile-section-label">Tema</label>
         <div class="auth-tabs" style="margin-bottom:0">
           <button class="auth-tab" id="profile-theme-light" onclick="applyTheme(false)">☀️ Claro</button>
           <button class="auth-tab" id="profile-theme-dark" onclick="applyTheme(true)">🌙 Oscuro</button>
         </div>
       </div>
 
-      <button class="profile-close-btn" onclick="closeProfileModal(); doLogout();">Cerrar sesión</button>
-
-      <div class="profile-danger">
-        <div class="profile-danger-title">Zona de peligro</div>
-        <div class="profile-danger-text">
-          Eliminar tu cuenta borra tu perfil y no se puede deshacer. Tus sugerencias y comentarios
-          publicados quedarán como están, pero ya no vas a poder editarlos ni borrarlos.
-        </div>
-        <button class="profile-danger-btn" onclick="confirmDeleteAccount()">Eliminar mi cuenta</button>
+      <div class="profile-section profile-section--sep">
+        <button class="profile-close-btn" onclick="closeProfileModal(); doLogout();">Cerrar sesión</button>
       </div>
 
-      <button class="profile-close-btn" onclick="closeProfileModal()">Cerrar</button>
+      <div class="profile-section profile-section--sep" style="padding-top:1rem">
+        <button class="profile-danger-toggle" id="danger-toggle-btn" onclick="toggleDangerZone()">
+          <span>Zona de peligro</span>
+          <span class="profile-danger-chevron" id="danger-chevron">›</span>
+        </button>
+        <div class="profile-danger-body" id="danger-body">
+          <div class="profile-danger-text">
+            Eliminar tu cuenta borra tu perfil y no se puede deshacer. Tus sugerencias y comentarios
+            publicados quedarán como están, pero ya no vas a poder editarlos ni borrarlos.
+          </div>
+          <button class="profile-danger-btn" onclick="confirmDeleteAccount()">Eliminar mi cuenta</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmación de borrado de cuenta (aparece por encima del modal de perfil) -->
+  <div id="delete-confirm-modal">
+    <div class="delete-confirm-box">
+      <div class="delete-confirm-icon">⚠️</div>
+      <div class="delete-confirm-title">¿Eliminar tu cuenta?</div>
+      <div class="delete-confirm-text">
+        Esta acción es <strong style="color:var(--red)">permanente</strong>. Tu perfil, tu nombre de
+        usuario y tu acceso a la cuenta se van a eliminar por completo y no se pueden recuperar.
+      </div>
+      <div class="delete-confirm-actions">
+        <button class="delete-confirm-cancel" onclick="closeDeleteConfirmModal()">Cancelar</button>
+        <button class="delete-confirm-ok" onclick="doDeleteAccount()">Sí, eliminar</button>
+      </div>
     </div>
   </div>
 
@@ -1302,10 +1403,24 @@
     const isDark = document.body.classList.contains('dark');
     document.getElementById('profile-theme-light').classList.toggle('on', !isDark);
     document.getElementById('profile-theme-dark').classList.toggle('on', isDark);
+    // La Zona de peligro siempre arranca cerrada, para que no sea lo primero que se ve.
+    document.getElementById('danger-toggle-btn').classList.remove('open');
+    document.getElementById('danger-body').classList.remove('open');
     document.getElementById('profile-modal').classList.add('show');
   }
   function closeProfileModal() {
     document.getElementById('profile-modal').classList.remove('show');
+  }
+  function toggleDangerZone() {
+    document.getElementById('danger-toggle-btn').classList.toggle('open');
+    document.getElementById('danger-body').classList.toggle('open');
+  }
+  function resetProfileUsername() {
+    const u = window._chm.user();
+    if (!u) return;
+    document.getElementById('profile-username-input').value = u.displayName || u.email.split('@')[0];
+    document.getElementById('profile-msg').className = 'auth-msg';
+    document.getElementById('profile-msg').textContent = '';
   }
   function pShowMsg(txt, type) {
     const el = document.getElementById('profile-msg');
@@ -1320,17 +1435,26 @@
       await window._chm.updateUsername(val);
       pShowMsg('✓ Usuario actualizado.', 'ok');
       document.getElementById('nav-user').innerHTML = `Hola, <b>${escHtml(val)}</b>`;
+      // Se cierra solo tras guardar, dando medio segundo para ver la confirmación.
+      setTimeout(closeProfileModal, 600);
     } catch(e) {
       if (e.code === 'auth/username-short') pShowMsg('El usuario debe tener al menos 3 caracteres.', 'err');
       else if (e.code === 'auth/username-invalid') pShowMsg('Solo letras, números y guión bajo.', 'err');
       else if (e.code === 'auth/username-taken') pShowMsg('Ese nombre de usuario ya está en uso.', 'err');
       else pShowMsg('Error al actualizar. Intentá de nuevo.', 'err');
-    } finally {
       btn.disabled = false;
     }
   }
-  async function confirmDeleteAccount() {
-    if (!confirm('¿Seguro que querés eliminar tu cuenta? Esta acción no se puede deshacer.')) return;
+
+  // ── Confirmación de borrado de cuenta (modal en dos pasos) ──────
+  function confirmDeleteAccount() {
+    document.getElementById('delete-confirm-modal').classList.add('show');
+  }
+  function closeDeleteConfirmModal() {
+    document.getElementById('delete-confirm-modal').classList.remove('show');
+  }
+  async function doDeleteAccount() {
+    closeDeleteConfirmModal();
     try {
       await window._chm.deleteAccount();
       closeProfileModal();
@@ -2394,7 +2518,7 @@
 <div id="wiki-screen">
 
   <nav class="wiki-nav">
-    <button class="wiki-home-btn" onclick="closeWiki()" title="Volver a CH Mods">🏠</button>
+    <button class="wiki-home-btn" onclick="closeWiki()" title="Volver a CH Mods"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg></button>
     <div class="wiki-nav-sep"></div>
     <div class="wiki-nav-brand" id="wn-brand">Wiki</div>
     <span class="wiki-version-badge" id="wn-badge">Forge 1.20.1</span>
@@ -2870,6 +2994,7 @@
   const DEFAULT_SECTION_ORDER = ['general', 'inicio', 'tutorial', 'descarga'];
 
   let _wikiMod = null;
+  const ICON_HOME_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>';
 
   function openWiki(modId) {
     const data = MOD_DATA[modId];
@@ -2877,7 +3002,7 @@
     _wikiMod = modId;
     _wikiPreviewActive = false;
     const homeBtn = document.querySelector('#wiki-screen .wiki-home-btn');
-    if (homeBtn) { homeBtn.textContent = '🏠'; homeBtn.title = 'Volver a CH Mods'; }
+    if (homeBtn) { homeBtn.innerHTML = ICON_HOME_SVG; homeBtn.title = 'Volver a CH Mods'; }
     _buildWiki(data);
     document.getElementById('wiki-screen').classList.add('show');
     document.body.style.overflow = 'hidden';
@@ -2918,7 +3043,7 @@
     if (_wikiPreviewActive) {
       _wikiPreviewActive = false;
       const homeBtn = document.querySelector('#wiki-screen .wiki-home-btn');
-      if (homeBtn) { homeBtn.textContent = '🏠'; homeBtn.title = 'Volver a CH Mods'; }
+      if (homeBtn) { homeBtn.innerHTML = ICON_HOME_SVG; homeBtn.title = 'Volver a CH Mods'; }
       document.getElementById('admin-screen').classList.add('show');
       document.body.style.overflow = 'hidden'; // seguimos dentro del panel a pantalla completa
     } else {
@@ -3212,6 +3337,10 @@
       closeAuthModal();
     if (e.key === 'Escape' && document.getElementById('auth-required-modal')?.style.display === 'flex')
       closeAuthRequiredModal();
+    if (e.key === 'Escape' && document.getElementById('delete-confirm-modal')?.classList.contains('show'))
+      closeDeleteConfirmModal();
+    else if (e.key === 'Escape' && document.getElementById('profile-modal')?.classList.contains('show'))
+      closeProfileModal();
   });
 </script>
 <!-- ═══════════════════════════════════════════════════
@@ -3585,7 +3714,7 @@
 <!-- HTML Sugerencias -->
 <div id="sugg-screen">
   <nav class="sugg-nav">
-    <button class="sugg-home-btn" onclick="closeSuggestions()" title="Volver">🏠</button>
+    <button class="sugg-home-btn" onclick="closeSuggestions()" title="Volver"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg></button>
     <div class="sugg-nav-sep"></div>
     <div class="sugg-nav-title"><span>CH</span> Mods — Sugerencias</div>
     <button class="wiki-nav-theme" id="suggThemeBtn" style="display:none" aria-label="Cambiar tema">☀️</button>
@@ -4133,7 +4262,7 @@
 
 <div id="admin-screen">
   <nav class="wiki-nav">
-    <button class="wiki-home-btn" onclick="closeAdminPanel()" title="Volver">🏠</button>
+    <button class="wiki-home-btn" onclick="closeAdminPanel()" title="Volver"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg></button>
     <div class="wiki-nav-sep"></div>
     <div class="wiki-nav-brand">Panel <span>OP</span></div>
     <button class="wiki-nav-theme" id="adminThemeBtn" aria-label="Cambiar tema" style="display:none">☀️</button>
