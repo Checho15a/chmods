@@ -3465,9 +3465,9 @@
     </div>
 
     <div id="ad-gate-watching" style="display:none">
-      <div class="ad-gate-watching-title">El anuncio se abrió en una pestaña nueva</div>
+      <div class="ad-gate-watching-title">El anuncio se abrió en una ventana nueva</div>
       <div class="ad-gate-ad-slot">
-        <span class="ad-gate-ad-placeholder">Revisalo ahí — acá te avisamos cuándo está lista tu descarga</span>
+        <span class="ad-gate-ad-placeholder">Revisala ahí — acá te avisamos cuándo está lista tu descarga</span>
       </div>
       <div class="ad-gate-progress"><div class="ad-gate-progress-fill" id="ad-gate-progress-fill"></div></div>
       <div class="ad-gate-countdown-label">Tu descarga empieza en <span id="ad-gate-countdown">30</span>s</div>
@@ -3497,8 +3497,15 @@
     // Se oculta la X: una vez que empieza el anuncio, hay que verlo completo.
     document.getElementById('ad-gate-close-x').style.display = 'none';
 
-    // Abre el anuncio real de Monetag en una pestaña nueva.
-    window.open(MONETAG_DIRECT_LINK, '_blank');
+    // Abre el anuncio real de Monetag como ventana aparte (no pestaña), centrada en pantalla.
+    const _popupW = 860, _popupH = 620;
+    const _popupLeft = Math.max(0, (window.screen.width  - _popupW) / 2);
+    const _popupTop  = Math.max(0, (window.screen.height - _popupH) / 2);
+    window.open(
+      MONETAG_DIRECT_LINK,
+      'chmodsAdWindow',
+      `width=${_popupW},height=${_popupH},left=${_popupLeft},top=${_popupTop},resizable=yes,scrollbars=yes,noopener,noreferrer`
+    );
 
     let secondsLeft = 30;
     const countdownEl = document.getElementById('ad-gate-countdown');
