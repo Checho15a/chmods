@@ -633,12 +633,14 @@
       background: rgba(244,244,242,.92);
       backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: flex-end;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 0 clamp(1rem, 5vw, 3rem);
       transition: background var(--ease), border-color var(--ease);
     }
     body.dark nav { background: rgba(10,10,10,.92); }
 
+    .nav-brand-wrap { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; }
+    .nav-logo-img { height: 30px; width: 30px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }
     .nav-brand {
       font-family: 'Syne', sans-serif;
       font-size: 1.15rem; font-weight: 800;
@@ -1181,6 +1183,10 @@
   </div>
 
   <nav>
+    <div class="nav-brand-wrap">
+      <img class="nav-logo-img" src="logo.png" alt="CH Mods" onerror="this.style.display='none'" />
+      <span class="nav-brand"><span>CH</span> Mods</span>
+    </div>
     <div class="nav-right">
       <button class="nav-user-icon" id="nav-user-icon" onclick="openProfileModal()" title="Mi perfil" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg></button>
       <div class="nav-user" id="nav-user"></div>
