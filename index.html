@@ -3345,7 +3345,7 @@
     else if (e.key === 'Escape' && document.getElementById('profile-modal')?.classList.contains('show'))
       closeProfileModal();
     else if (e.key === 'Escape' && document.getElementById('ad-gate-modal')?.classList.contains('show')
-      && document.getElementById('ad-gate-offer').style.display !== 'none')
+      && document.getElementById('ad-gate-watching').style.display === 'none')
       closeAdGateModal();
   });
 </script>
@@ -3458,16 +3458,27 @@
       <div class="ad-gate-icon">☕</div>
       <div class="ad-gate-title">Antes de tu descarga</div>
       <div class="ad-gate-text">
-        Desarrollo y mantengo estos mods por mi cuenta, en mi tiempo libre. Ver un anuncio de
-        30 segundos ayuda a que pueda seguir dedicándole tiempo a esto — gracias por el apoyo.
+        Desarrollo y mantengo estos mods por mi cuenta, en mi tiempo libre. Ver un anuncio corto
+        ayuda a que pueda seguir dedicándole tiempo a esto. Gracias por el apoyo.
       </div>
-      <button class="ad-gate-btn" onclick="startAdCountdown()">▶ Ver anuncio y descargar</button>
+      <button class="ad-gate-btn" onclick="showAdInstructions()">▶ Ver anuncio y descargar</button>
+    </div>
+
+    <div id="ad-gate-instructions" style="display:none">
+      <div class="ad-gate-icon">🪟</div>
+      <div class="ad-gate-title">Antes de continuar</div>
+      <div class="ad-gate-text">
+        Se va a abrir una ventana nueva con el anuncio, encima de esta página. Dejala abierta
+        durante 30 segundos para que tu descarga se complete. No hace falta que hagas nada más
+        en ella, solo que quede abierta ese tiempo.
+      </div>
+      <button class="ad-gate-btn" onclick="startAdCountdown()">Continuar</button>
     </div>
 
     <div id="ad-gate-watching" style="display:none">
       <div class="ad-gate-watching-title">El anuncio se abrió en una ventana nueva</div>
       <div class="ad-gate-ad-slot">
-        <span class="ad-gate-ad-placeholder">Revisala ahí — acá te avisamos cuándo está lista tu descarga</span>
+        <span class="ad-gate-ad-placeholder">Revisala ahí. Acá te avisamos cuándo está lista tu descarga</span>
       </div>
       <div class="ad-gate-progress"><div class="ad-gate-progress-fill" id="ad-gate-progress-fill"></div></div>
       <div class="ad-gate-countdown-label">Tu descarga empieza en <span id="ad-gate-countdown">30</span>s</div>
@@ -3483,6 +3494,7 @@
 
   function openAdGateModal() {
     document.getElementById('ad-gate-offer').style.display = 'block';
+    document.getElementById('ad-gate-instructions').style.display = 'none';
     document.getElementById('ad-gate-watching').style.display = 'none';
     document.getElementById('ad-gate-close-x').style.display = 'flex';
     document.getElementById('ad-gate-modal').classList.add('show');
@@ -3491,8 +3503,13 @@
     document.getElementById('ad-gate-modal').classList.remove('show');
     if (_adCountdownTimer) { clearInterval(_adCountdownTimer); _adCountdownTimer = null; }
   }
-  function startAdCountdown() {
+  function showAdInstructions() {
     document.getElementById('ad-gate-offer').style.display = 'none';
+    document.getElementById('ad-gate-instructions').style.display = 'block';
+    // La X sigue disponible acá: todavía no se abrió nada ni arrancó el conteo.
+  }
+  function startAdCountdown() {
+    document.getElementById('ad-gate-instructions').style.display = 'none';
     document.getElementById('ad-gate-watching').style.display = 'block';
     // Se oculta la X: una vez que empieza el anuncio, hay que verlo completo.
     document.getElementById('ad-gate-close-x').style.display = 'none';
