@@ -3465,10 +3465,9 @@
     </div>
 
     <div id="ad-gate-watching" style="display:none">
-      <div class="ad-gate-watching-title">Reproduciendo anuncio…</div>
+      <div class="ad-gate-watching-title">El anuncio se abrió en una pestaña nueva</div>
       <div class="ad-gate-ad-slot">
-        <!-- Acá va el snippet real de la red de anuncios que elijas (Monetag, Adsterra, etc.) -->
-        <span class="ad-gate-ad-placeholder">Espacio del anuncio</span>
+        <span class="ad-gate-ad-placeholder">Revisalo ahí — acá te avisamos cuándo está lista tu descarga</span>
       </div>
       <div class="ad-gate-progress"><div class="ad-gate-progress-fill" id="ad-gate-progress-fill"></div></div>
       <div class="ad-gate-countdown-label">Tu descarga empieza en <span id="ad-gate-countdown">30</span>s</div>
@@ -3477,6 +3476,9 @@
 </div>
 
 <script>
+  // Link "Direct Link" de Monetag para la zona de descarga.
+  const MONETAG_DIRECT_LINK = 'https://omg10.com/4/11751520';
+
   let _adCountdownTimer = null;
 
   function openAdGateModal() {
@@ -3494,6 +3496,9 @@
     document.getElementById('ad-gate-watching').style.display = 'block';
     // Se oculta la X: una vez que empieza el anuncio, hay que verlo completo.
     document.getElementById('ad-gate-close-x').style.display = 'none';
+
+    // Abre el anuncio real de Monetag en una pestaña nueva.
+    window.open(MONETAG_DIRECT_LINK, '_blank');
 
     let secondsLeft = 30;
     const countdownEl = document.getElementById('ad-gate-countdown');
