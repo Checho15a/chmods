@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CH Mods</title>
+  <link rel="icon" type="image/png" href="logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -633,14 +634,12 @@
       background: rgba(244,244,242,.92);
       backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex; align-items: center; justify-content: flex-end;
       padding: 0 clamp(1rem, 5vw, 3rem);
       transition: background var(--ease), border-color var(--ease);
     }
     body.dark nav { background: rgba(10,10,10,.92); }
 
-    .nav-brand-wrap { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; }
-    .nav-logo-img { height: 30px; width: 30px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }
     .nav-brand {
       font-family: 'Syne', sans-serif;
       font-size: 1.15rem; font-weight: 800;
@@ -1183,10 +1182,6 @@
   </div>
 
   <nav>
-    <div class="nav-brand-wrap">
-      <img class="nav-logo-img" src="logo.png" alt="CH Mods" onerror="this.style.display='none'" />
-      <span class="nav-brand"><span>CH</span> Mods</span>
-    </div>
     <div class="nav-right">
       <button class="nav-user-icon" id="nav-user-icon" onclick="openProfileModal()" title="Mi perfil" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg></button>
       <div class="nav-user" id="nav-user"></div>
@@ -2771,7 +2766,7 @@
         </div>
 
         <div class="ws-download-direct-box" id="ws-download-direct-box" style="display:none">
-          <a class="ws-download-btn-gold" id="ws-descarga-directbtn" href="#" download onclick="handleDirectDownload()">
+          <a class="ws-download-btn-gold" id="ws-descarga-directbtn" href="#" download onclick="event.preventDefault(); openAdGateModal();">
             ⬇ &nbsp;Descargar <span id="ws-descarga-directversion"></span>
           </a>
           <div class="ws-download-filehint" id="ws-descarga-filehint"></div>
@@ -3000,6 +2995,7 @@
   const DEFAULT_SECTION_ORDER = ['general', 'inicio', 'tutorial', 'descarga'];
 
   let _wikiMod = null;
+  let _currentDownload = { url: '#', fileName: '' };
   const ICON_HOME_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>';
 
   function openWiki(modId) {
@@ -3198,6 +3194,7 @@
       document.getElementById('ws-descarga-directbtn').setAttribute('download', dl.fileName || '');
       document.getElementById('ws-descarga-directversion').textContent = dl.version ? ('v' + dl.version) : '';
       document.getElementById('ws-descarga-filehint').textContent = dl.fileName || '';
+      _currentDownload = { url: dl.downloadUrl || '#', fileName: dl.fileName || '' };
     } else {
       document.getElementById('ws-descarga-note').innerHTML = dl.note;
       document.getElementById('ws-descarga-boxtitle').textContent = dl.boxTitle;
@@ -3347,6 +3344,9 @@
       closeDeleteConfirmModal();
     else if (e.key === 'Escape' && document.getElementById('profile-modal')?.classList.contains('show'))
       closeProfileModal();
+    else if (e.key === 'Escape' && document.getElementById('ad-gate-modal')?.classList.contains('show')
+      && document.getElementById('ad-gate-offer').style.display !== 'none')
+      closeAdGateModal();
   });
 </script>
 <!-- ═══════════════════════════════════════════════════
@@ -3394,6 +3394,137 @@
   <button id="toast-kofi-x" style="background:none;border:none;color:var(--dim2);font-size:.95rem;cursor:pointer;padding:.1rem .2rem;flex-shrink:0">✕</button>
 </div>
 
+<!-- ═══════════════════════════════════════════════════
+     MODAL: anuncio de 30s antes de la descarga directa
+═══════════════════════════════════════════════════ -->
+<style>
+  #ad-gate-modal {
+    position: fixed; inset: 0; z-index: 98;
+    background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; padding: 1rem;
+  }
+  #ad-gate-modal.show { display: flex; }
+  .ad-gate-box {
+    position: relative; background: var(--bg2); border: 1px solid var(--accent);
+    border-radius: 14px; padding: 1.8rem 1.6rem; width: 100%; max-width: 400px;
+    text-align: center; box-shadow: 0 24px 60px rgba(0,0,0,.35);
+  }
+  .ad-gate-close {
+    position: absolute; top: .8rem; right: .8rem;
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid var(--border2); background: var(--bg3);
+    color: var(--dim); font-size: .85rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all var(--ease);
+  }
+  .ad-gate-close:hover { border-color: var(--red); color: var(--red); }
+  .ad-gate-icon { font-size: 2rem; margin-bottom: .6rem; }
+  .ad-gate-title {
+    font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700;
+    color: var(--white); margin-bottom: .7rem;
+  }
+  .ad-gate-text { font-size: .85rem; color: var(--dim); line-height: 1.65; margin-bottom: 1.4rem; }
+  .ad-gate-btn {
+    width: 100%; padding: .75rem; background: var(--accent); color: #0c0c0c;
+    border: none; border-radius: var(--r); font-family: 'Nunito', sans-serif;
+    font-size: .88rem; font-weight: 700; cursor: pointer; transition: all var(--ease);
+  }
+  .ad-gate-btn:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 0 18px var(--aglow); }
+
+  .ad-gate-watching-title {
+    font-family: 'Syne', sans-serif; font-size: .95rem; font-weight: 700;
+    color: var(--white); margin-bottom: 1rem;
+  }
+  .ad-gate-ad-slot {
+    background: var(--bg3); border: 1px dashed var(--border2); border-radius: 9px;
+    height: 160px; display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1rem;
+  }
+  .ad-gate-ad-placeholder {
+    font-family: 'DM Mono', monospace; font-size: .68rem; letter-spacing: .08em;
+    color: var(--dim2); text-transform: uppercase;
+  }
+  .ad-gate-progress { height: 6px; background: var(--bg3); border-radius: 999px; overflow: hidden; margin-bottom: .7rem; }
+  .ad-gate-progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width 1s linear; }
+  .ad-gate-countdown-label { font-family: 'DM Mono', monospace; font-size: .72rem; color: var(--dim); }
+  .ad-gate-countdown-label span { color: var(--accent); font-weight: 700; }
+</style>
+
+<div id="ad-gate-modal">
+  <div class="ad-gate-box">
+    <button class="ad-gate-close" id="ad-gate-close-x" onclick="closeAdGateModal()" aria-label="Cerrar">✕</button>
+
+    <div id="ad-gate-offer">
+      <div class="ad-gate-icon">☕</div>
+      <div class="ad-gate-title">Antes de tu descarga</div>
+      <div class="ad-gate-text">
+        Desarrollo y mantengo estos mods por mi cuenta, en mi tiempo libre. Ver un anuncio de
+        30 segundos ayuda a que pueda seguir dedicándole tiempo a esto — gracias por el apoyo.
+      </div>
+      <button class="ad-gate-btn" onclick="startAdCountdown()">▶ Ver anuncio y descargar</button>
+    </div>
+
+    <div id="ad-gate-watching" style="display:none">
+      <div class="ad-gate-watching-title">Reproduciendo anuncio…</div>
+      <div class="ad-gate-ad-slot">
+        <!-- Acá va el snippet real de la red de anuncios que elijas (Monetag, Adsterra, etc.) -->
+        <span class="ad-gate-ad-placeholder">Espacio del anuncio</span>
+      </div>
+      <div class="ad-gate-progress"><div class="ad-gate-progress-fill" id="ad-gate-progress-fill"></div></div>
+      <div class="ad-gate-countdown-label">Tu descarga empieza en <span id="ad-gate-countdown">30</span>s</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let _adCountdownTimer = null;
+
+  function openAdGateModal() {
+    document.getElementById('ad-gate-offer').style.display = 'block';
+    document.getElementById('ad-gate-watching').style.display = 'none';
+    document.getElementById('ad-gate-close-x').style.display = 'flex';
+    document.getElementById('ad-gate-modal').classList.add('show');
+  }
+  function closeAdGateModal() {
+    document.getElementById('ad-gate-modal').classList.remove('show');
+    if (_adCountdownTimer) { clearInterval(_adCountdownTimer); _adCountdownTimer = null; }
+  }
+  function startAdCountdown() {
+    document.getElementById('ad-gate-offer').style.display = 'none';
+    document.getElementById('ad-gate-watching').style.display = 'block';
+    // Se oculta la X: una vez que empieza el anuncio, hay que verlo completo.
+    document.getElementById('ad-gate-close-x').style.display = 'none';
+
+    let secondsLeft = 30;
+    const countdownEl = document.getElementById('ad-gate-countdown');
+    const fillEl = document.getElementById('ad-gate-progress-fill');
+    countdownEl.textContent = secondsLeft;
+    fillEl.style.width = '0%';
+
+    _adCountdownTimer = setInterval(() => {
+      secondsLeft--;
+      countdownEl.textContent = Math.max(secondsLeft, 0);
+      fillEl.style.width = (((30 - secondsLeft) / 30) * 100) + '%';
+      if (secondsLeft <= 0) {
+        clearInterval(_adCountdownTimer);
+        _adCountdownTimer = null;
+        finishAdAndDownload();
+      }
+    }, 1000);
+  }
+  function finishAdAndDownload() {
+    const a = document.createElement('a');
+    a.href = _currentDownload.url;
+    a.download = _currentDownload.fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    document.getElementById('ad-gate-modal').classList.remove('show');
+    document.getElementById('ad-gate-close-x').style.display = 'flex';
+    setTimeout(showKofiToast, 500);
+  }
+</script>
+
 <script>
   const _kofiToast = document.getElementById('toast-kofi');
   let _kofiLocked = false;
@@ -3412,9 +3543,6 @@
     setTimeout(() => { _kofiLocked = false; }, 350);
   }
   document.getElementById('toast-kofi-x').addEventListener('click', hideKofiToast);
-  function handleDirectDownload() {
-    setTimeout(showKofiToast, 600);
-  }
 </script>
 
 <!-- ═══════════════════════════════════════════════════
