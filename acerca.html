@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Acerca de — CH Mods</title>
+  <title>Acerca de</title>
+  <link rel="icon" type="image/png" href="logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -89,11 +90,17 @@
     .nav-home-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(205,164,60,.06); }
     .nav-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; margin: 0 1rem; }
     .nav-brand {
+      display: flex; align-items: center; gap: .55rem;
       font-family: 'Syne', sans-serif;
       font-size: 1.05rem; font-weight: 800;
       color: var(--white); letter-spacing: .02em; flex: 1;
     }
     .nav-brand span { color: var(--accent); }
+    .nav-logo-img {
+      width: 26px; height: 26px; border-radius: 7px;
+      object-fit: cover; flex-shrink: 0;
+      border: 1px solid var(--border2);
+    }
 
     .theme-toggle {
       width: 34px; height: 34px;
@@ -179,7 +186,10 @@
   <nav>
     <a class="nav-home-btn" href="index.html" title="Volver a CH Mods">←</a>
     <div class="nav-sep"></div>
-    <div class="nav-brand"><span>CH</span> Mods</div>
+    <div class="nav-brand">
+      <img class="nav-logo-img" src="logo.png" alt="Logo CH Mods" />
+      <span><span>CH</span> Mods</span>
+    </div>
     <button class="theme-toggle" id="themeBtn" aria-label="Cambiar tema">☀️</button>
   </nav>
 
@@ -267,14 +277,14 @@
         </div>
         <div class="p-contact-row">
           <strong>Discord</strong>
-          <a href="https://discord.gg/WvehBVr2Sj" target="_blank" rel="noopener">Servidor de CH Mods</a>
+          <a href="https://discord.gg/9jPktKYXDV" target="_blank" rel="noopener">Discord de CH Projects</a>
         </div>
       </div>
     </div>
   </main>
 
   <footer>
-    © 2026 Checho — CH Mods · <a href="index.html">Volver al inicio</a>
+    © 2026 Checho · <a href="index.html">Volver al inicio</a>
   </footer>
 
   <script>
