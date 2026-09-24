@@ -9,12 +9,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <script>
-    window.adsbygoogle = window.adsbygoogle || [];
-    window.adsbygoogle.requestNonPersonalizedAds =
-      localStorage.getItem('chm_cookie_consent') === 'accepted' ? 0 : 1;
-  </script>
-  
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js";
@@ -1272,16 +1266,6 @@
     <p class="hero-sub">Mods creados con identidad propia para Minecraft Java (Forge/Fabric). Cada mod tiene su propia wiki y documentación.</p>
   </section>
 
-  <div class="home-ad-wrap">
-    <div class="wiki-ad-label">Publicidad</div>
-    <ins class="adsbygoogle"
-         style="display:block"
-         data-ad-client="ca-pub-6501527131691677"
-         data-ad-slot="8943504688"
-         data-ad-format="auto"
-         data-full-width-responsive="true"></ins>
-  </div>
-
   <main class="mods-section">
     <div class="sec-label">Mods disponibles</div>
     <div class="sec-title">Lo que he construido</div>
@@ -1828,7 +1812,6 @@
     }
 
     if (!provisional) refreshNotifBell();
-    pushAd('homeAd');
 
     loadCustomMods().then(() => {
       // ── Si venimos de un link directo (?mod=id), abrimos esa wiki automáticamente ──
@@ -2211,7 +2194,7 @@
   .wiki-content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
   .wiki-ad-rail {
-    display: none; /* se muestra solo en pantallas anchas, ver media query */
+    display: none;
     width: 300px; flex-shrink: 0;
     padding: 2.5rem 1.5rem;
     border-left: 1px solid var(--border);
@@ -2223,9 +2206,6 @@
     font-family: 'DM Mono', monospace; font-size: .58rem;
     letter-spacing: .14em; text-transform: uppercase;
     color: var(--dim2); margin-bottom: .6rem; text-align: center;
-  }
-  @media (min-width: 1300px) {
-    .wiki-ad-rail { display: block; position: sticky; top: 0; align-self: flex-start; }
   }
 
   .ws { display: none; }
@@ -2778,14 +2758,7 @@
 
     </div>
 
-    <aside class="wiki-ad-rail">
-      <div class="wiki-ad-label">Publicidad</div>
-      <ins class="adsbygoogle"
-           style="display:block; width:300px; height:600px"
-           data-ad-client="ca-pub-6501527131691677"
-           data-ad-slot="6229857222"
-           data-full-width-responsive="false"></ins>
-    </aside>
+    <aside class="wiki-ad-rail"></aside>
 
   </div>
 </div>
@@ -3012,16 +2985,6 @@
     wikiSection('general');
     const dark = document.body.classList.contains('dark');
     document.getElementById('wikiThemeBtn').textContent = dark ? '🌙' : '☀️';
-    pushAd('wikiAd');
-  }
-
-  // Carga cada anuncio una sola vez, justo cuando su contenedor se vuelve visible.
-  const _adsPushed = {};
-  function pushAd(key) {
-    if (_adsPushed[key]) return;
-    _adsPushed[key] = true;
-    try { (window.adsbygoogle = window.adsbygoogle || []).push({}); }
-    catch(e) { console.warn('AdSense no pudo cargar el anuncio:', e); }
   }
 
   let _wikiPreviewActive = false;
@@ -5280,14 +5243,13 @@
     <div class="cb-title">Cookies y privacidad</div>
   </div>
   <div class="cb-text">
-    Usamos cookies propias y de terceros (Google AdSense, Firebase) para el funcionamiento del
-    sitio y para publicidad. Podés aceptar todas, rechazar las no esenciales, o ver el detalle.
+    Usamos cookies propias y de terceros (Firebase) para el funcionamiento del sitio.
+    Podés aceptar todas, rechazar las no esenciales, o ver el detalle.
     Más información en nuestra <a href="privacidad.html">Política de Privacidad</a>.
   </div>
   <div class="cb-details" id="cb-details">
     <div class="cb-details-box">
-      <strong>Cookies esenciales:</strong> requeridas para iniciar sesión, proteger las cuentas contra bots (Google reCAPTCHA) y usar el sitio (Firebase). No se pueden desactivar.<br/><br/>
-      <strong>Cookies de publicidad:</strong> usadas por Google AdSense para mostrar anuncios, personalizados solo si aceptás.
+      <strong>Cookies esenciales:</strong> requeridas para iniciar sesión, proteger las cuentas contra bots (Google reCAPTCHA) y usar el sitio (Firebase). No se pueden desactivar.
     </div>
   </div>
   <div class="cb-actions">
@@ -5308,9 +5270,6 @@
     localStorage.setItem('chm_cookie_consent', choice);
     document.getElementById('cookie-banner').classList.remove('show');
     document.getElementById('cookie-overlay').classList.remove('show');
-    if (choice === 'accepted' && window.adsbygoogle) {
-      window.adsbygoogle.requestNonPersonalizedAds = 0;
-    }
   }
   window.addEventListener('load', () => {
     if (!localStorage.getItem('chm_cookie_consent')) {
