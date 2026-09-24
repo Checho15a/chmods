@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Política de Privacidad — CH Mods</title>
+  <link rel="icon" type="image/png" href="logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -89,11 +90,17 @@
     .nav-home-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(205,164,60,.06); }
     .nav-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; margin: 0 1rem; }
     .nav-brand {
+      display: flex; align-items: center; gap: .55rem;
       font-family: 'Syne', sans-serif;
       font-size: 1.05rem; font-weight: 800;
       color: var(--white); letter-spacing: .02em; flex: 1;
     }
     .nav-brand span { color: var(--accent); }
+    .nav-logo-img {
+      width: 26px; height: 26px; border-radius: 7px;
+      object-fit: cover; flex-shrink: 0;
+      border: 1px solid var(--border2);
+    }
 
     .theme-toggle {
       width: 34px; height: 34px;
@@ -178,7 +185,10 @@
   <nav>
     <a class="nav-home-btn" href="index.html" title="Volver a CH Mods">←</a>
     <div class="nav-sep"></div>
-    <div class="nav-brand"><span>CH</span> Mods</div>
+    <div class="nav-brand">
+      <img class="nav-logo-img" src="logo.png" alt="Logo CH Mods" />
+      <span><span>CH</span> Mods</span>
+    </div>
     <button class="theme-toggle" id="themeBtn" aria-label="Cambiar tema">☀️</button>
   </nav>
 
@@ -214,24 +224,9 @@
       <p class="p-p">El sitio utiliza estas cookies y tecnologías similares:</p>
       <ul class="p-list">
         <li><strong>Firebase (Google):</strong> cookies técnicas necesarias para mantener la sesión y el funcionamiento de la cuenta.</li>
-        <li><strong>Google AdSense:</strong> cookies publicitarias de Google y sus socios, que pueden usarse para publicidad personalizada según tu navegación.</li>
         <li><strong>Google reCAPTCHA:</strong> usado de forma automática y sin intervención visible para distinguir el tráfico humano real de bots, y así proteger la cuenta y los datos de los usuarios.</li>
       </ul>
       <p class="p-p">Podés gestionarlas desde la configuración de tu navegador. Bloquear las cookies técnicas puede impedir el inicio de sesión.</p>
-    </div>
-
-    <div class="p-sec">
-      <div class="p-h2">Publicidad</div>
-      <p class="p-p">
-        Este sitio muestra anuncios mediante <strong>Google AdSense</strong>. Google, como
-        proveedor externo, puede usar cookies para publicar anuncios en función de visitas
-        anteriores a este u otros sitios web.
-      </p>
-      <p class="p-p">
-        Podés inhabilitar la publicidad personalizada desde la
-        <a href="https://adssettings.google.com/" target="_blank" rel="noopener">configuración de anuncios de Google</a>
-        o en <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener">aboutads.info</a>.
-      </p>
     </div>
 
     <div class="p-sec">
@@ -261,7 +256,7 @@
         acceso que restringen quién puede leer o modificar cada registro. Adicionalmente, el
         sitio usa Google reCAPTCHA para filtrar peticiones automatizadas o de bots. No
         compartimos información con terceros más allá de los proveedores necesarios para operar
-        el sitio (Firebase y Google AdSense).
+        el sitio (Firebase).
       </p>
     </div>
 
@@ -283,7 +278,7 @@
   </main>
 
   <footer>
-    © 2026 Checho — CH Mods · <a href="index.html">Volver al inicio</a>
+    © 2026 Checho · <a href="index.html">Volver al inicio</a>
   </footer>
 
   <script>
