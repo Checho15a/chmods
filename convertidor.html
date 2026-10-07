@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Convertidor — CH Images</title>
+  <link rel="icon" type="image/png" href="logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -238,8 +239,9 @@
     }
     .topbar-back:hover { color: var(--accent); border-color: var(--accent); }
     .topbar-sep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
-    .topbar-title { font-family: 'Syne', sans-serif; font-size: .92rem; font-weight: 700; color: var(--white); flex: 1; }
+    .topbar-title { font-family: 'Syne', sans-serif; font-size: .92rem; font-weight: 700; color: var(--white); flex: 1; display: flex; align-items: center; gap: .5rem; }
     .topbar-title span { color: var(--accent); }
+    .topbar-logo-img { width: 22px; height: 22px; border-radius: 5px; object-fit: cover; border: 1px solid var(--border2); flex-shrink: 0; }
     .topbar-user { font-family: 'DM Mono', monospace; font-size: .6rem; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
     .topbar-user b { color: var(--accent); font-weight: 500; }
     .theme-btn {
@@ -301,6 +303,18 @@
     .upload-icon { font-size: 2.2rem; margin-bottom: .6rem; }
     .upload-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: .3rem; }
     .upload-sub { font-size: .8rem; color: var(--dim); }
+    .upload-paste-hint {
+      margin-top: .5rem; display: inline-flex; align-items: center; gap: .35rem;
+      font-family: 'DM Mono', monospace; font-size: .62rem; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--accent);
+      background: rgba(205,164,60,.08); border: 1px solid rgba(205,164,60,.25);
+      border-radius: 999px; padding: .25rem .7rem;
+    }
+    .upload-paste-hint kbd {
+      font-family: 'DM Mono', monospace; font-size: .6rem;
+      background: var(--bg3); border: 1px solid var(--border2); border-radius: 3px;
+      padding: .02rem .3rem;
+    }
     .upload-formats { margin-top: .6rem; display: flex; justify-content: center; flex-wrap: wrap; gap: .3rem; }
     .upload-fmt {
       font-family: 'DM Mono', monospace; font-size: .6rem; padding: .18rem .5rem;
@@ -374,6 +388,10 @@
     .file-badge.mp4 {
       background: rgba(205,164,60,.12); color: var(--accent);
       border: 1px solid rgba(205,164,60,.3);
+    }
+    .file-badge.png-transparent {
+      background: rgba(39,174,96,.12); color: var(--green);
+      border: 1px solid rgba(39,174,96,.3);
     }
 
     /* Toast */
@@ -458,7 +476,10 @@
     aria-label="Cambiar tema">☀️</button>
   <div class="auth-wrap">
     <div class="auth-logo-top">
-      <h1><span>CH</span> Images</h1>
+      <div style="display:flex;align-items:center;justify-content:center;gap:.55rem">
+        <img src="logo.png" alt="Logo CH Mods" style="width:34px;height:34px;border-radius:8px;object-fit:cover;border:1px solid var(--border2)" />
+        <h1><span>CH</span> Images</h1>
+      </div>
       <p>// Convertidor de archivos</p>
     </div>
     <div class="auth-card">
@@ -489,7 +510,10 @@
   <header class="topbar">
     <a href="https://checho15a.github.io/chmods/" class="topbar-back">← CH Images</a>
     <div class="topbar-sep"></div>
-    <div class="topbar-title"><span>CH</span> Images — Convertidor</div>
+    <div class="topbar-title">
+      <img class="topbar-logo-img" src="logo.png" alt="Logo CH Mods" />
+      <span><span>CH</span> Images — Convertidor</span>
+    </div>
     <div class="topbar-user" id="topbar-user"></div>
     <button class="theme-btn" id="themeBtn" aria-label="Cambiar tema">☀️</button>
     <button class="logout-btn" onclick="doLogout()">Salir</button>
@@ -520,7 +544,8 @@
           onchange="handleImageUpload(this.files[0])" />
         <div class="upload-icon">🖼️</div>
         <div class="upload-title">Arrastrá o hacé click para subir</div>
-        <div class="upload-sub">Se convertirá automáticamente a JPG con link permanente</div>
+        <div class="upload-sub">Se convertirá automáticamente a JPG con link permanente (o a PNG si la imagen tiene transparencia)</div>
+        <div><span class="upload-paste-hint">📋 o pegá con <kbd>Ctrl</kbd> + <kbd>V</kbd></span></div>
         <div class="upload-formats">
           <span class="upload-fmt">PNG</span><span class="upload-fmt">WEBP</span>
           <span class="upload-fmt">JPEG</span><span class="upload-fmt">GIF</span>
@@ -534,6 +559,11 @@
           <span id="img-progress-pct">0%</span>
         </div>
         <div class="progress-bar"><div class="progress-fill" id="img-progress-fill"></div></div>
+      </div>
+
+      <div class="info-note">
+        <span style="flex-shrink:0">ℹ️</span>
+        <span>Si tu imagen tiene <strong>fondo transparente</strong> (por ejemplo un PNG recortado), se sube en PNG manteniendo la transparencia, sin agregarle fondo blanco ni negro. Si tiene un fondo normal, se convierte a JPG como siempre.</span>
       </div>
 
       <div class="gallery-title">Tus imágenes subidas</div>
@@ -586,6 +616,10 @@
 <script>
   const CLD_NAME   = 'djjl0okdo';
   const CLD_PRESET = 'chmods_upload';
+
+  // Sección actualmente activa ('images' o 'videos'), usada para saber si un
+  // Ctrl+V debe interpretarse como "pegar imagen" o ignorarse.
+  let _activeSection = 'images';
 
   // ── Tema ──────────────────────────────────────────────────────
   function applyTheme(dark) {
@@ -666,7 +700,36 @@
     document.querySelectorAll('.section-panel').forEach(p =>
       p.classList.remove('active'));
     document.getElementById('panel-' + sec).classList.add('active');
+    _activeSection = sec;
   }
+
+  // ── Pegar imagen con Ctrl+V ────────────────────────────────────
+  // Solo actúa cuando la app está visible, estamos en la pestaña de Imágenes,
+  // y lo que se pega no es texto dentro de un input (para no romper otros usos
+  // normales de pegar, como pegar un link en la vista previa).
+  document.addEventListener('paste', (e) => {
+    const appVisible = document.getElementById('app-screen').style.display !== 'none';
+    if (!appVisible || _activeSection !== 'images') return;
+
+    const target = e.target;
+    const isTypingField = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+    if (isTypingField) return;
+
+    const items = (e.clipboardData || window.clipboardData)?.items;
+    if (!items) return;
+
+    for (const item of items) {
+      if (item.type && item.type.indexOf('image') === 0) {
+        const blob = item.getAsFile();
+        if (blob) {
+          e.preventDefault();
+          showToast('📋 Imagen pegada — procesando...', 'ok');
+          handleImageUpload(blob);
+        }
+        break;
+      }
+    }
+  });
 
   // ── Helper: XHR con progreso ──────────────────────────────────
   function xhrUpload(url, formData, onProgress) {
@@ -696,7 +759,42 @@
     });
   }
 
-  // ── Upload imágenes → Cloudinary → .jpg ──────────────────────
+  // ── Detectar si una imagen tiene transparencia real ────────────
+  // JPEG y BMP nunca tienen canal alfa, así que se descartan directo sin
+  // gastar tiempo dibujando en canvas. Para el resto (PNG, WEBP, GIF, etc.)
+  // se dibuja en un canvas oculto y se revisa si algún píxel tiene alfa < 255.
+  function hasTransparency(file) {
+    return new Promise(resolve => {
+      if (file.type === 'image/jpeg' || file.type === 'image/bmp') {
+        resolve(false);
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          for (let i = 3; i < data.length; i += 4) {
+            if (data[i] < 255) { URL.revokeObjectURL(img.src); resolve(true); return; }
+          }
+          URL.revokeObjectURL(img.src);
+          resolve(false);
+        } catch (e) {
+          // Si el canvas se bloquea por algún motivo, no arriesgamos y asumimos que no hay transparencia.
+          URL.revokeObjectURL(img.src);
+          resolve(false);
+        }
+      };
+      img.onerror = () => resolve(false);
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  // ── Upload imágenes → Cloudinary → .jpg (o .png si tiene transparencia) ──
   async function handleImageUpload(file) {
     if (!file) return;
     const files = window._conv.getUserFiles();
@@ -709,9 +807,15 @@
     }
 
     showProgress('img', true);
-    setProgress('img', 5, 'Preparando...');
+    setProgress('img', 5, 'Analizando imagen...');
 
     try {
+      const transparent = await hasTransparency(file);
+      const outExt  = transparent ? 'png' : 'jpg';
+      const outFlag = transparent ? 'f_png' : 'f_jpg';
+
+      setProgress('img', 10, 'Preparando...');
+
       const fd = new FormData();
       fd.append('file', file);
       fd.append('upload_preset', CLD_PRESET);
@@ -721,22 +825,23 @@
       const res = await xhrUpload(
         `https://api.cloudinary.com/v1_1/${CLD_NAME}/image/upload`,
         fd,
-        pct => setProgress('img', 10 + pct * 85, 'Subiendo...')
+        pct => setProgress('img', 15 + pct * 80, 'Subiendo...')
       );
 
       setProgress('img', 97, 'Guardando...');
       const pId = res.public_id;
       await window._conv.saveFile('images', {
         publicId: pId,
-        url:      `https://res.cloudinary.com/${CLD_NAME}/image/upload/f_jpg,q_auto/${pId}.jpg`,
-        thumb:    `https://res.cloudinary.com/${CLD_NAME}/image/upload/f_jpg,q_auto,w_400/${pId}.jpg`,
-        name:     file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.jpg',
+        url:      `https://res.cloudinary.com/${CLD_NAME}/image/upload/${outFlag},q_auto/${pId}.${outExt}`,
+        thumb:    `https://res.cloudinary.com/${CLD_NAME}/image/upload/${outFlag},q_auto,w_400/${pId}.${outExt}`,
+        name:     file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.' + outExt,
         date:     new Date().toLocaleDateString('es-ES'),
+        format:   outExt,
       });
 
       setProgress('img', 100, '¡Listo!');
       setTimeout(() => showProgress('img', false), 1200);
-      showToast('✓ Imagen subida y convertida a JPG', 'ok');
+      showToast(transparent ? '✓ Imagen subida en PNG, sin fondo' : '✓ Imagen subida y convertida a JPG', 'ok');
       document.getElementById('img-file-input').value = '';
 
     } catch(e) {
@@ -836,6 +941,7 @@
           <img class="gallery-thumb" src="${f.thumb || f.url}" alt="${f.name}" loading="lazy"
             onerror="this.style.background='var(--bg3)'" />
           <div class="gallery-info">
+            ${f.format === 'png' ? '<div class="file-badge png-transparent">PNG · Sin fondo</div>' : ''}
             <div class="gallery-name" title="${f.name}">${f.name}</div>
             <div class="gallery-date">${f.date}</div>
             <div class="gallery-actions">
