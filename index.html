@@ -112,7 +112,7 @@
           email,
           createdAt: serverTimestamp(),
           termsAcceptedAt: serverTimestamp(),
-          termsVersion: "2026-10",
+          termsVersion: TERMS_VERSION,
           role: "user"
         });
         await logConsent('signup_email', c.user.uid);
@@ -151,10 +151,10 @@
           email: _user.email,
           createdAt: serverTimestamp(),
           termsAcceptedAt: serverTimestamp(),
-          termsVersion: "2026-10",
+          termsVersion: TERMS_VERSION,
           role: "user"
         });
-      await logConsent('signup_google', _user.uid);
+        await logConsent('signup_google', _user.uid);
       },
       setSuppressAutoEnter: v => { _suppressAutoEnter = v; },
       logConsent: (type, uid) => logConsent(type, uid),
@@ -166,11 +166,11 @@
       },
       async acceptTerms() {
         if (!_user) throw new Error('No autenticado');
-        await updateDoc(doc(db, "users", _user.uid);
-        await logConsent('terms_update', _user.uid),
+        await updateDoc(doc(db, "users", _user.uid), {
           termsAcceptedAt: serverTimestamp(),
           termsVersion: TERMS_VERSION
         });
+        await logConsent('terms_update', _user.uid);
       },
 
       async getNotifications() {
@@ -858,7 +858,7 @@
     }
     .profile-danger-btn:hover { background: rgba(192,57,43,.08); }
 
-    /* Confirmación de borrado — un segundo modal por encima del de perfil */
+    /* Aviso de términos para cuentas existentes */
     #terms-update-modal {
       position: fixed; inset: 0; z-index: 96;
       background: rgba(0,0,0,.65); backdrop-filter: blur(5px);
@@ -892,7 +892,8 @@
       background: var(--bg3); border: 1px solid var(--border2);
       border-radius: 9px; padding: .9rem 1rem .4rem; margin-bottom: 1.1rem;
     }
-    
+
+    /* Confirmación de borrado — un segundo modal por encima del de perfil */
     #delete-confirm-modal {
       position: fixed; inset: 0; z-index: 97;
       background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
@@ -5362,7 +5363,7 @@
 <style>
   #cookie-overlay {
     position: fixed; inset: 0; z-index: 499;
-    background: rgba(0,0,0,.10);;
+    background: rgba(0,0,0,.10);
     opacity: 0; pointer-events: none;
     transition: opacity .45s ease;
   }
@@ -5469,7 +5470,7 @@
     btn.textContent = d.classList.contains('show') ? 'Ver menos' : 'Ver más';
   }
   function cookieConsent(choice) {
-    localStorage.setItem('chm_cookie_consent', choice);
+    try { localStorage.setItem('chm_cookie_consent', choice); } catch(e) {}
     document.getElementById('cookie-banner').classList.remove('show');
     document.getElementById('cookie-overlay').classList.remove('show');
     try { window._chm?.logConsent('cookies_' + choice); } catch(e) {}
@@ -5478,6 +5479,15 @@
     document.getElementById('cookie-banner').classList.add('show');
     document.getElementById('cookie-overlay').classList.add('show');
   }
+  window.addEventListener('load', () => {
+    let saved = null;
+    try { saved = localStorage.getItem('chm_cookie_consent'); } catch(e) {}
+    if (!saved) {
+      setTimeout(() => {
+        document.getElementById('cookie-banner').classList.add('show');
+        document.getElementById('cookie-overlay').classList.add('show');
+      }, 600);
+    }
   });
 </script>
 </body>
