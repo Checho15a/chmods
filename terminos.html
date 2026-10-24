@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Términos y Condiciones — CH Mods</title>
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:      #f4f4f2;
+      --bg2:     #ffffff;
+      --bg3:     #ebebeb;
+      --border:  #e0e0e0;
+      --border2: #cccccc;
+      --text:    #2a2a2a;
+      --dim:     #777;
+      --dim2:    #aaa;
+      --white:   #111111;
+      --accent:  #cda43c;
+      --accent2: #e6c467;
+      --r:       8px;
+      --ease:    .28s cubic-bezier(.4,0,.2,1);
+    }
+    .dark {
+      --bg:      #0e0e0e;
+      --bg2:     #161616;
+      --bg3:     #1e1e1e;
+      --border:  #2a2a2a;
+      --border2: #383838;
+      --text:    #e0e0e0;
+      --dim:     #a8a8a8;
+      --dim2:    #777;
+      --white:   #f0eeea;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      transition: background var(--ease), color var(--ease);
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        repeating-linear-gradient(-55deg, transparent 0px, transparent 80px,
+          rgba(0,0,0,.025) 80px, rgba(0,0,0,.025) 82px),
+        repeating-linear-gradient(35deg, transparent 0px, transparent 120px,
+          rgba(0,0,0,.015) 120px, rgba(0,0,0,.015) 122px);
+    }
+    body.dark::before {
+      background:
+        repeating-linear-gradient(-55deg, transparent 0px, transparent 80px,
+          rgba(255,255,255,.013) 80px, rgba(255,255,255,.013) 82px),
+        repeating-linear-gradient(35deg, transparent 0px, transparent 120px,
+          rgba(255,255,255,.008) 120px, rgba(255,255,255,.008) 122px);
+    }
+
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      height: 56px;
+      background: rgba(244,244,242,.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 clamp(1rem, 5vw, 3rem);
+      transition: background var(--ease), border-color var(--ease);
+    }
+    body.dark nav { background: rgba(10,10,10,.92); }
+
+    .nav-home-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px;
+      border: 1px solid var(--border2); border-radius: 7px;
+      background: var(--bg3); cursor: pointer;
+      font-size: .95rem; flex-shrink: 0;
+      transition: all var(--ease); color: var(--dim); text-decoration: none;
+      font-family: 'DM Mono', monospace;
+    }
+    .nav-home-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(205,164,60,.06); text-decoration: none; }
+    .nav-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; margin: 0 1rem; }
+    .nav-brand {
+      display: flex; align-items: center; gap: .55rem;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.05rem; font-weight: 800;
+      color: var(--white); letter-spacing: .02em; flex: 1;
+    }
+    .nav-brand span { color: var(--accent); }
+    .nav-logo-img {
+      width: 26px; height: 26px; border-radius: 7px;
+      object-fit: cover; flex-shrink: 0;
+      border: 1px solid var(--border2);
+    }
+
+    .theme-toggle {
+      width: 34px; height: 34px;
+      border: 1px solid var(--border2); border-radius: 50%;
+      background: var(--bg3); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem; transition: all var(--ease); flex-shrink: 0;
+    }
+    .theme-toggle:hover { border-color: var(--accent); }
+
+    main {
+      position: relative; z-index: 1;
+      max-width: 720px; margin: 0 auto;
+      padding: 3rem clamp(1rem, 5vw, 2rem) 5rem;
+    }
+
+    .p-tag {
+      font-family: 'DM Mono', monospace; font-size: .63rem; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: .6rem;
+    }
+    .p-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.7rem, 4.5vw, 2.3rem); font-weight: 800;
+      color: var(--white); line-height: 1.1; margin-bottom: .5rem;
+    }
+    .p-updated {
+      font-family: 'DM Mono', monospace; font-size: .65rem;
+      color: var(--dim2); margin-bottom: 1rem;
+    }
+    .p-intro {
+      font-size: .88rem; color: var(--dim); line-height: 1.8;
+      padding-bottom: 1.6rem; margin-bottom: 1.8rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .p-intro strong { color: var(--text); font-weight: 600; }
+
+    .p-sec { margin-bottom: 1.7rem; }
+    .p-h2 {
+      font-family: 'Syne', sans-serif; font-size: 1.02rem; font-weight: 700;
+      color: var(--white); margin-bottom: .6rem;
+    }
+    .p-p {
+      font-size: .87rem; color: var(--dim); line-height: 1.8; margin-bottom: .6rem;
+    }
+    .p-p strong, .p-p b { color: var(--text); font-weight: 600; }
+    .p-list { margin: 0 0 .6rem 0; padding-left: 1.1rem; }
+    .p-list li {
+      font-size: .87rem; color: var(--dim); line-height: 1.75; margin-bottom: .35rem;
+    }
+    .p-list li strong { color: var(--text); font-weight: 600; }
+
+    .p-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 11px; padding: 1.2rem 1.4rem; margin: 1rem 0;
+    }
+    .p-card-title {
+      font-family: 'Syne', sans-serif; font-size: .92rem; font-weight: 700;
+      color: var(--white); margin-bottom: .5rem;
+    }
+    .p-card .p-p { margin-bottom: 0; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.4rem clamp(1rem, 5vw, 3rem);
+      text-align: center;
+      background: var(--bg3);
+      font-family: 'DM Mono', monospace; font-size: .6rem;
+      color: var(--dim2); letter-spacing: .06em;
+      transition: background var(--ease), border-color var(--ease);
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-home-btn" href="index.html" title="Volver a CH Mods">←</a>
+    <div class="nav-sep"></div>
+    <div class="nav-brand">
+      <img class="nav-logo-img" src="logo.png" alt="Logo CH Mods" />
+      <span><span>CH</span> Mods</span>
+    </div>
+    <button class="theme-toggle" id="themeBtn" aria-label="Cambiar tema">☀️</button>
+  </nav>
+
+  <main>
+    <div class="p-tag">Legal</div>
+    <h1 class="p-title">Términos y Condiciones</h1>
+    <div class="p-updated">Última actualización: octubre de 2026</div>
+    <p class="p-intro">
+      Estos términos regulan el uso de <strong>CH Mods</strong>
+      (<a href="https://checho15a.github.io/chmods/" target="_blank" rel="noopener">checho15a.github.io/chmods</a>),
+      un sitio independiente de mods para Minecraft Java creado por Checho. Al crear una cuenta
+      o usar el sitio, aceptás estos términos y nuestra
+      <a href="privacidad.html">Política de Privacidad</a>. Si no estás de acuerdo con
+      alguna parte, no uses el sitio.
+    </p>
+
+    <div class="p-sec">
+      <div class="p-h2">1. Uso del sitio y edad mínima</div>
+      <p class="p-p">
+        Podés navegar los mods y sus wikis sin cuenta. Para dar like, comentar, publicar
+        sugerencias o usar el Convertidor necesitás registrarte. Para crear una cuenta tenés
+        que tener <strong>al menos 13 años</strong>. Si sos menor de la edad mínima para dar
+        consentimiento en tu país, necesitás la autorización de tu madre, padre o tutor.
+        Si descubrimos que una cuenta pertenece a alguien que no cumple este requisito, la
+        podemos eliminar.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">2. Tu cuenta</div>
+      <ul class="p-list">
+        <li>Los datos que das al registrarte deben ser verdaderos y tu correo debe ser tuyo.</li>
+        <li>Sos responsable de mantener tu contraseña en secreto y de lo que se haga con tu cuenta.</li>
+        <li>No podés crear cuentas para suplantar a otras personas ni usar nombres de usuario ofensivos o engañosos.</li>
+        <li>Podés cambiar tu nombre de usuario o eliminar tu cuenta cuando quieras desde tu perfil.</li>
+      </ul>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">3. Sugerencias y comentarios</div>
+      <p class="p-p">Lo que publiques en la sección de Sugerencias es público. Al hacerlo, te comprometés a no publicar:</p>
+      <ul class="p-list">
+        <li>Contenido ofensivo, discriminatorio, acosador, amenazante o que incite al odio.</li>
+        <li>Contenido sexual, violento o ilegal.</li>
+        <li>Spam, publicidad no solicitada, links engañosos o malware.</li>
+        <li>Datos personales tuyos o de terceros (teléfonos, direcciones, etc.).</li>
+        <li>Contenido que infrinja derechos de autor o de otras personas.</li>
+      </ul>
+      <p class="p-p">
+        Seguís siendo dueño de lo que escribís, pero nos das permiso para mostrarlo dentro del
+        sitio. Una sugerencia no obliga a CH Mods a desarrollar nada. Si eliminás tu cuenta, tus
+        sugerencias y comentarios ya publicados pueden permanecer visibles en el sitio.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">4. Convertidor de archivos (CH Images)</div>
+      <p class="p-p">
+        El Convertidor te permite subir imágenes y videos para obtener un link público y
+        permanente, pensado exclusivamente para usarlo con el mod CH Images. Los archivos se
+        almacenan en un servicio externo (Cloudinary).
+      </p>
+      <div class="p-card">
+        <div class="p-card-title">Está prohibido subir</div>
+        <ul class="p-list" style="margin-bottom:0">
+          <li>Contenido sexual o de desnudos, en especial cualquier contenido que involucre a menores.</li>
+          <li>Contenido violento extremo, de odio, acoso o ilegal.</li>
+          <li>Material sobre el que no tengas derechos o permiso (películas, series, música, imágenes de terceros).</li>
+          <li>Archivos que contengan datos privados de otras personas sin su consentimiento.</li>
+          <li>Cualquier archivo con fines distintos a su uso en el mod, como usarlo como hosting masivo de contenido.</li>
+        </ul>
+      </div>
+      <p class="p-p">
+        Como los links son públicos, cualquier persona que los tenga puede ver el archivo.
+        Vos sos el único responsable de lo que subís. Podemos eliminar archivos, limitar el uso
+        o suspender el acceso al Convertidor en cualquier momento y sin previo aviso si
+        detectamos un incumplimiento. Los contenidos ilegales podrán ser denunciados ante las
+        autoridades y a Cloudinary. También se aplican límites de cantidad de archivos que
+        pueden cambiar con el tiempo.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">5. Los mods y las descargas</div>
+      <ul class="p-list">
+        <li><strong>CH Images</strong> es de descarga gratuita. Podés usarlo en tus servidores y eventos, incluso en eventos con fines comerciales o en transmisiones.</li>
+        <li>No podés vender el mod, ni subirlo a otros sitios de descargas sin permiso por escrito, ni presentarlo como propio.</li>
+        <li>No podés descompilar, modificar o redistribuir el código o los archivos del mod, salvo en lo que la ley permita expresamente.</li>
+        <li>Los mods personalizados (por encargo) se rigen por lo que se acuerde con cada cliente, y los recursos de terceros que contienen no pueden redistribuirse desde este sitio.</li>
+        <li>Se pueden publicar nuevas versiones, cambiar funciones o retirar mods del sitio en cualquier momento.</li>
+      </ul>
+      <p class="p-p">
+        Para pedir un mod a medida, la comunicación se hace por los canales de contacto
+        indicados abajo.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">6. Publicidad antes de la descarga</div>
+      <p class="p-p">
+        Para descargar CH Images se reproduce un anuncio de video breve. Esto ayuda a financiar
+        el desarrollo y mantenimiento de los mods. Los anuncios son entregados por proveedores
+        externos, por lo que no controlamos su contenido y no somos responsables de los
+        productos o sitios que anuncien. Si el anuncio no puede cargarse, la descarga continúa
+        igualmente. No nos hacemos responsables de lo que ocurra si interactuás con un
+        anuncio y entrás a sitios de terceros.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">7. Propiedad intelectual y no afiliación</div>
+      <p class="p-p">
+        El diseño del sitio, los textos, el logo y los mods creados por CH Mods son propiedad
+        de su creador, salvo los recursos de terceros que se acreditan en cada wiki.
+      </p>
+      <p class="p-p">
+        <strong>CH Mods no es un producto oficial de Minecraft ni está afiliado, aprobado o
+        respaldado por Mojang AB o Microsoft.</strong> Minecraft es una marca registrada de
+        Mojang AB. Todos los demás nombres y marcas pertenecen a sus respectivos dueños.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">8. Sin garantías y limitación de responsabilidad</div>
+      <p class="p-p">
+        Los mods y el sitio se ofrecen <strong>"tal cual"</strong> y "según disponibilidad",
+        sin garantías de ningún tipo. Los mods se desarrollan de forma independiente y pueden
+        tener errores, fallar o dejar de ser compatibles con futuras versiones de Minecraft o
+        de Forge. Usarlos es bajo tu propio riesgo: te recomendamos hacer copias de seguridad
+        de tus mundos antes de instalar cualquier mod.
+      </p>
+      <p class="p-p">
+        En la medida que la ley lo permita, CH Mods y su creador no serán responsables por
+        pérdida de datos, daños en tu equipo o mundo de juego, interrupciones del servicio, ni
+        por el contenido publicado por otros usuarios o por sitios externos enlazados.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">9. Moderación, suspensión y cierre de cuentas</div>
+      <p class="p-p">
+        Podemos eliminar contenido, advertir, suspender o borrar cuentas que incumplan estos
+        términos, que afecten la seguridad del sitio o que hagan un uso abusivo del Convertidor
+        o de los demás servicios, sin obligación de avisar previamente. También podemos
+        modificar o cerrar partes del sitio en cualquier momento.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">10. Denuncias y derechos de autor</div>
+      <p class="p-p">
+        Si creés que algún contenido del sitio infringe tus derechos o es inapropiado, escribí a
+        <a href="mailto:chprojectsoficial@gmail.com">chprojectsoficial@gmail.com</a> indicando
+        qué contenido es, dónde está y por qué debería eliminarse. Revisaremos la denuncia y,
+        si corresponde, retiraremos el contenido lo antes posible.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">11. Servicios de terceros</div>
+      <p class="p-p">
+        El sitio funciona con servicios de terceros (como Firebase, Cloudinary, Google, Discord
+        y Ko-fi), cada uno con sus propios términos y políticas. No controlamos esos servicios
+        ni respondemos por sus fallos o cambios.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">12. Cambios en los términos</div>
+      <p class="p-p">
+        Podemos actualizar estos términos con el tiempo. Los cambios se publicarán en esta
+        página con la nueva fecha de actualización. Si seguís usando el sitio después de un
+        cambio, se entiende que lo aceptás.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">13. Contacto</div>
+      <p class="p-p">
+        Para cualquier consulta sobre estos términos escribí a
+        <a href="mailto:chprojectsoficial@gmail.com">chprojectsoficial@gmail.com</a>.
+      </p>
+    </div>
+  </main>
+
+  <footer>
+    © 2026 Checho · <a href="index.html">Volver al inicio</a> · <a href="privacidad.html">Política de Privacidad</a>
+  </footer>
+
+  <script>
+    // Respeta el tema elegido en el sitio principal
+    (function () {
+      var pref = null;
+      try { pref = localStorage.getItem('chm_theme'); } catch (e) {}
+      applyTheme(pref !== 'light');
+    })();
+    function applyTheme(dark) {
+      document.body.classList.toggle('dark', dark);
+      document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+    }
+    document.getElementById('themeBtn').addEventListener('click', () =>
+      applyTheme(!document.body.classList.contains('dark')));
+  </script>
+
+</body>
+</html>
