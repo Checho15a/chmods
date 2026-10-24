@@ -1927,6 +1927,7 @@
     }
 
     if (!provisional) refreshNotifBell();
+    if (!provisional && !guest) checkTermsUpdate();
 
     loadCustomMods().then(() => {
       // ── Si venimos de un link directo (?mod=id), abrimos esa wiki automáticamente ──
