@@ -3743,6 +3743,7 @@
     document.getElementById('ad-gate-progress-fill').style.width = '0%';
     document.getElementById('ad-gate-countdown').textContent = '--';
 
+    try { await loadImaSdk(); } catch(e) {}
     if (typeof google === 'undefined' || !google.ima) {
       // El SDK no cargó (bloqueador de anuncios, sin conexión, etc.) — no dejamos a la persona trabada.
       finishAdAndDownload();
