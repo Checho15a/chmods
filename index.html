@@ -52,6 +52,29 @@
     let _suppressAutoEnter = false;
     const ADMIN_EMAIL = "escalanteortizsergio9@gmail.com";
     const TERMS_VERSION = "2026-10";
+    const PRIVACY_VERSION = "2026-10";
+
+    async function logConsent(type, uid) {
+      try {
+        let anon = null;
+        try {
+          anon = localStorage.getItem('chm_anon_id');
+          if (!anon) {
+            anon = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2));
+            localStorage.setItem('chm_anon_id', anon);
+          }
+        } catch(e) { anon = 'no-storage'; }
+        await addDoc(collection(db, 'consentLogs'), {
+          uid: uid || auth.currentUser?.uid || null,
+          anonId: anon,
+          type,
+          termsVersion: TERMS_VERSION,
+          privacyVersion: PRIVACY_VERSION,
+          userAgent: (navigator.userAgent || '').slice(0, 200),
+          createdAt: serverTimestamp()
+        });
+      } catch(e) { console.warn('consentLog', e); }
+    }
 
     async function usernameExists(username) {
       const q = query(
