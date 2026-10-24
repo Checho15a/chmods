@@ -132,6 +132,19 @@
         });
       },
       setSuppressAutoEnter: v => { _suppressAutoEnter = v; },
+      async needsTermsAcceptance() {
+        if (!_user) return false;
+        const snap = await getDoc(doc(db, "users", _user.uid));
+        if (!snap.exists()) return false;
+        return snap.data().termsVersion !== TERMS_VERSION;
+      },
+      async acceptTerms() {
+        if (!_user) throw new Error('No autenticado');
+        await updateDoc(doc(db, "users", _user.uid), {
+          termsAcceptedAt: serverTimestamp(),
+          termsVersion: TERMS_VERSION
+        });
+      },
 
       async getNotifications() {
         if (!_user) return [];
