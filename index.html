@@ -832,6 +832,40 @@
     .profile-danger-btn:hover { background: rgba(192,57,43,.08); }
 
     /* Confirmación de borrado — un segundo modal por encima del de perfil */
+    #terms-update-modal {
+      position: fixed; inset: 0; z-index: 96;
+      background: rgba(0,0,0,.65); backdrop-filter: blur(5px);
+      display: none; align-items: center; justify-content: center; padding: 1rem;
+    }
+    #terms-update-modal.show { display: flex; }
+    .terms-update-box {
+      position: relative; overflow: hidden;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 2rem 1.7rem 1.6rem;
+      width: 100%; max-width: 440px; text-align: center;
+      box-shadow: 0 24px 60px rgba(0,0,0,.35);
+    }
+    .terms-update-box::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+    .terms-update-tag {
+      font-family: 'DM Mono', monospace; font-size: .6rem; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: .5rem;
+    }
+    .terms-update-title {
+      font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 700;
+      color: var(--white); margin-bottom: .7rem;
+    }
+    .terms-update-text {
+      font-size: .84rem; color: var(--dim); line-height: 1.7; margin-bottom: 1.2rem;
+    }
+    .terms-update-text strong { color: var(--text); }
+    .terms-update-checks {
+      background: var(--bg3); border: 1px solid var(--border2);
+      border-radius: 9px; padding: .9rem 1rem .4rem; margin-bottom: 1.1rem;
+    }
+    
     #delete-confirm-modal {
       position: fixed; inset: 0; z-index: 97;
       background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
