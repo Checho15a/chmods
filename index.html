@@ -1768,6 +1768,9 @@
     clearMsg();
     const username = document.getElementById('google-username-input').value.trim();
     if (!username) { showMsg('Escribí un nombre de usuario.', 'err'); return; }
+    if (!document.getElementById('g-terms').checked || !document.getElementById('g-privacy').checked) {
+      showMsg('Debés aceptar los Términos y Condiciones y la Política de Privacidad para continuar.', 'err'); return;
+    }
 
     const btn = document.getElementById('google-username-btn');
     btn.disabled = true;
