@@ -115,6 +115,7 @@
           termsVersion: "2026-10",
           role: "user"
         });
+        await logConsent('signup_email', c.user.uid);
         return c.user;
       },
       async login(emailOrUsername, pw) {
