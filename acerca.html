@@ -288,12 +288,21 @@
   </footer>
 
   <script>
+    // Modo oscuro por defecto, salvo que la persona haya elegido "Claro" en el sitio
+    (function () {
+      var pref = null;
+      try { pref = localStorage.getItem('chm_theme'); } catch (e) {}
+      applyTheme(pref !== 'light');
+    })();
     function applyTheme(dark) {
       document.body.classList.toggle('dark', dark);
       document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
     }
-    document.getElementById('themeBtn').addEventListener('click', () =>
-      applyTheme(!document.body.classList.contains('dark')));
+    document.getElementById('themeBtn').addEventListener('click', () => {
+      const dark = !document.body.classList.contains('dark');
+      applyTheme(dark);
+      try { localStorage.setItem('chm_theme', dark ? 'dark' : 'light'); } catch (e) {}
+    });
   </script>
 
 </body>
