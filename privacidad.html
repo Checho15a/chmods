@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Política de Privacidad</title>
+  <title>Política de Privacidad — CH Mods</title>
   <link rel="icon" type="image/png" href="logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -87,7 +87,7 @@
       transition: all var(--ease); color: var(--dim); text-decoration: none;
       font-family: 'DM Mono', monospace;
     }
-    .nav-home-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(205,164,60,.06); }
+    .nav-home-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(205,164,60,.06); text-decoration: none; }
     .nav-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; margin: 0 1rem; }
     .nav-brand {
       display: flex; align-items: center; gap: .55rem;
@@ -152,10 +152,11 @@
     }
     .p-list li strong { color: var(--text); font-weight: 600; }
 
+    .p-table-wrap { overflow-x: auto; margin-bottom: .8rem; }
     .p-table {
       width: 100%; border-collapse: collapse;
-      font-size: .82rem; margin-bottom: .8rem;
-      border: 1px solid var(--border); border-radius: 9px; overflow: hidden;
+      font-size: .82rem;
+      border: 1px solid var(--border);
     }
     .p-table th, .p-table td {
       padding: .55rem .75rem; border-bottom: 1px solid var(--border);
@@ -167,6 +168,7 @@
       color: var(--dim2); background: var(--bg3);
     }
     .p-table td { color: var(--dim); }
+    .p-table td:first-child { color: var(--text); font-weight: 600; }
     .p-table tr:last-child td { border-bottom: none; }
 
     footer {
@@ -195,83 +197,165 @@
   <main>
     <div class="p-tag">Legal</div>
     <h1 class="p-title">Política de Privacidad</h1>
-    <div class="p-updated">Última actualización: agosto de 2026</div>
+    <div class="p-updated">Versión 2026-10 · Última actualización: octubre de 2026</div>
     <p class="p-intro">
-      Esta política describe qué información recolecta <strong>CH Mods</strong>
-      (<a href="https://checho15a.github.io/chmods/" target="_blank" rel="noopener">checho15a.github.io/chmods</a>),
-      con qué finalidad, y qué opciones tenés como usuario. El responsable de este sitio es su
-      creador, Checho, y podés escribir a
-      <a href="mailto:chprojectsoficial@gmail.com">chprojectsoficial@gmail.com</a>
-      ante cualquier consulta relacionada con tus datos.
+      Esta política describe cómo <strong>CH Mods</strong>
+      (<a href="https://checho15a.github.io/chmods/" target="_blank" rel="noopener">checho15a.github.io/chmods</a>)
+      trata tus datos personales, en cumplimiento de la Ley 1581 de 2012 de Colombia y sus
+      normas reglamentarias, y de forma complementaria del RGPD para quienes acceden desde la
+      Unión Europea. Al crear una cuenta aceptás esta política; al usar el sitio como invitado,
+      solo se aplican las partes que correspondan a la navegación.
     </p>
 
     <div class="p-sec">
-      <div class="p-h2">Información que recolectamos</div>
-      <p class="p-p">Recolectamos únicamente lo necesario para llevar estadísticas del sitio y permitir la participación de la comunidad. No vendemos datos personales a terceros.</p>
+      <div class="p-h2">1. Responsable del tratamiento</div>
+      <p class="p-p">
+        El responsable es <strong>Checho</strong>, creador de CH Mods, persona natural que opera
+        el sitio de forma independiente. Para cualquier consulta o ejercicio de derechos podés
+        escribir a <a href="mailto:chprojectsoficial@gmail.com">chprojectsoficial@gmail.com</a>.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">2. Datos que recolectamos y para qué</div>
+      <p class="p-p">Recolectamos solo lo necesario para operar el sitio, permitir la participación de la comunidad y llevar estadísticas. No vendemos datos personales.</p>
+      <div class="p-table-wrap">
       <table class="p-table">
         <tr><th>Dato</th><th>Finalidad</th></tr>
-        <tr><td>Nombre de usuario y correo</td><td>Crear y verificar tu cuenta, recuperar tu contraseña y llevar estadísticas internas de uso del sitio. Podés cambiar tu nombre de usuario en cualquier momento desde tu perfil.</td></tr>
-        <tr><td>Contraseña</td><td>Almacenada de forma cifrada por Firebase Authentication (Google). No tenemos acceso a ella en texto plano.</td></tr>
-        <tr><td>Cuenta de Google (si iniciás sesión así)</td><td>Si elegís "Continuar con Google", recibimos tu nombre y correo asociados a esa cuenta para crear tu perfil en el sitio, en lugar de pedirte una contraseña nueva.</td></tr>
-        <tr><td>Sugerencias, comentarios y likes</td><td>Recoger feedback de la comunidad para mejorar los mods, mostrado públicamente dentro del sitio.</td></tr>
-        <tr><td>Notificaciones</td><td>Cuando alguien da like o comenta en tu sugerencia, se guarda un aviso interno (con el nombre de quien interactuó) para mostrártelo a vos en la campana de notificaciones. Solo vos podés ver tus propias notificaciones.</td></tr>
+        <tr><td>Nombre de usuario y correo</td><td>Crear y verificar tu cuenta, permitir el inicio de sesión, recuperar tu contraseña y llevar estadísticas internas de uso. Podés cambiar tu nombre de usuario cuando quieras desde tu perfil.</td></tr>
+        <tr><td>Contraseña</td><td>Se almacena cifrada por Firebase Authentication (Google). No tenemos acceso a ella en texto plano.</td></tr>
+        <tr><td>Cuenta de Google</td><td>Si elegís "Continuar con Google", recibimos tu correo asociado para crear tu perfil, sin pedirte una contraseña nueva.</td></tr>
+        <tr><td>Sugerencias, comentarios y likes</td><td>Recoger la opinión de la comunidad. Son contenido público dentro del sitio.</td></tr>
+        <tr><td>Notificaciones</td><td>Avisarte cuando alguien da like o comenta tu sugerencia. Solo vos las podés ver.</td></tr>
+        <tr><td>Archivos del Convertidor</td><td>Las imágenes y videos que subas a la herramienta de CH Images se guardan en Cloudinary y quedan accesibles mediante un enlace público.</td></tr>
+        <tr><td>Registro de consentimientos</td><td>Dejar constancia de cuándo y cómo aceptaste los Términos, esta política, las cookies o los anuncios (ver sección 5).</td></tr>
+        <tr><td>Estadísticas de visitas</td><td>Medir visitas y páginas más vistas mediante GoatCounter, una herramienta sin cookies que no recolecta datos personales ni te identifica.</td></tr>
       </table>
-      <p class="p-p">No recolectamos datos de pago. Las donaciones a través de Ko-fi se procesan íntegramente en esa plataforma; no accedemos a ninguna información de esa transacción.</p>
+      </div>
+      <p class="p-p">No recolectamos datos de pago. Las donaciones a través de Ko-fi se procesan íntegramente en esa plataforma.</p>
     </div>
 
     <div class="p-sec">
-      <div class="p-h2">Cookies y almacenamiento</div>
-      <p class="p-p">El sitio utiliza estas cookies y tecnologías similares:</p>
+      <div class="p-h2">3. Base y autorización</div>
+      <p class="p-p">
+        El tratamiento se basa en tu <strong>autorización previa, expresa e informada</strong>,
+        que das al marcar las casillas de aceptación al registrarte, al aceptar las
+        actualizaciones de estos documentos, o al aceptar ver un anuncio para descargar un mod.
+        Podés revocarla eliminando tu cuenta o escribiéndonos, salvo cuando exista un deber
+        legal que lo impida. No recolectamos datos sensibles.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">4. Proveedores y terceros</div>
+      <p class="p-p">Para operar el sitio usamos estos servicios, cada uno con sus propias políticas de privacidad:</p>
       <ul class="p-list">
-        <li><strong>Firebase (Google):</strong> cookies técnicas necesarias para mantener la sesión y el funcionamiento de la cuenta.</li>
-        <li><strong>Google reCAPTCHA:</strong> usado de forma automática y sin intervención visible para distinguir el tráfico humano real de bots, y así proteger la cuenta y los datos de los usuarios.</li>
+        <li><strong>Firebase (Google):</strong> autenticación, base de datos y almacenamiento.</li>
+        <li><strong>Google reCAPTCHA y Firebase App Check:</strong> protección contra bots y tráfico automatizado. Pueden procesar datos técnicos del dispositivo.</li>
+        <li><strong>Cloudinary:</strong> alojamiento de las imágenes y videos subidos al Convertidor.</li>
+        <li><strong>Google IMA SDK y HilltopAds:</strong> reproducción de anuncios de video antes de descargar un mod. Estos proveedores pueden usar cookies e identificadores del dispositivo. Solo se cargan <strong>después de que aceptás verlos</strong> en la ventana de descarga.</li>
+        <li><strong>GoatCounter:</strong> estadísticas de visitas sin cookies.</li>
+        <li><strong>GitHub Pages:</strong> alojamiento del sitio. Puede registrar datos técnicos de acceso, como la dirección IP.</li>
+        <li><strong>Discord y Ko-fi:</strong> enlaces externos de contacto y apoyo. Al entrar a ellos se aplican sus propias políticas.</li>
       </ul>
-      <p class="p-p">Podés gestionarlas desde la configuración de tu navegador. Bloquear las cookies técnicas puede impedir el inicio de sesión.</p>
-    </div>
-
-    <div class="p-sec">
-      <div class="p-h2">Alcance y jurisdicción</div>
       <p class="p-p">
-        CH Mods está disponible para cualquier usuario sin restricción geográfica. Si accedés
-        desde la Unión Europea o el Espacio Económico Europeo, aplican además los derechos
-        reconocidos por el RGPD (GDPR), incluyendo el derecho a acceder, corregir o eliminar tus
-        datos y a retirar el consentimiento de cookies no esenciales en cualquier momento.
+        Algunos de estos proveedores tienen servidores fuera de Colombia (por ejemplo, en Estados
+        Unidos), por lo que tus datos pueden ser transferidos y tratados internacionalmente.
       </p>
     </div>
 
     <div class="p-sec">
-      <div class="p-h2">Tus derechos</div>
+      <div class="p-h2">5. Registro de consentimientos</div>
+      <p class="p-p">
+        Cuando aceptás algo (registro, actualización de términos, cookies o anuncios de descarga)
+        guardamos un registro con: tu identificador de cuenta (o un código aleatorio del
+        navegador si no tenés cuenta), el tipo de aceptación, la versión de los textos vigente, la
+        fecha y hora del servidor y el tipo de navegador. <strong>No guardamos tu dirección IP</strong>
+        en este registro. Lo conservamos como prueba de tu autorización, incluso si luego eliminás
+        tu cuenta, mientras sea necesario para acreditar el cumplimiento legal.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">6. Cookies y almacenamiento local</div>
       <ul class="p-list">
-        <li><strong>Eliminar tu cuenta:</strong> podés hacerlo vos mismo en cualquier momento, sin necesidad de contactarnos, desde tu perfil en el sitio (ícono de usuario, arriba a la derecha). Es una acción permanente y no se puede deshacer.</li>
-        <li><strong>Cambiar tu nombre de usuario:</strong> también disponible en cualquier momento desde tu perfil.</li>
-        <li><strong>Eliminar tus sugerencias o comentarios:</strong> podés hacerlo vos mismo en cualquier momento desde el sitio.</li>
-        <li><strong>Navegar sin cuenta:</strong> los mods y wikis son visibles como invitado; solo se pide cuenta para dar like, comentar o publicar sugerencias.</li>
+        <li><strong>Esenciales:</strong> mantienen tu sesión y protegen el sitio (Firebase y reCAPTCHA). No se pueden desactivar.</li>
+        <li><strong>Almacenamiento local del navegador:</strong> guardamos tu tema (claro u oscuro), tu elección de cookies y una copia temporal de los mods para que el sitio cargue más rápido.</li>
+        <li><strong>No esenciales (anuncios):</strong> solo se activan cuando aceptás ver el anuncio previo a una descarga.</li>
+      </ul>
+      <p class="p-p">
+        Podés cambiar tu elección en cualquier momento desde el enlace "Configurar cookies" al pie
+        del sitio, o borrando los datos del navegador. Si no aceptás los anuncios, el sitio sigue
+        funcionando, pero no podrás descargar los mods gratuitos que requieran verlos.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">7. Conservación de los datos</div>
+      <ul class="p-list">
+        <li><strong>Cuenta:</strong> mientras la mantengas. Al eliminarla se borra tu perfil.</li>
+        <li><strong>Sugerencias y comentarios:</strong> permanecen publicados tras eliminar la cuenta, pero ya no podrás editarlos ni borrarlos. Podés pedir su retiro por correo.</li>
+        <li><strong>Archivos del Convertidor:</strong> se quitan de tu lista al borrarlos, pero pueden tardar en eliminarse del proveedor. Podés pedir su eliminación definitiva por correo.</li>
+        <li><strong>Registro de consentimientos:</strong> se conserva como prueba legal, según lo indicado en la sección 5.</li>
       </ul>
     </div>
 
     <div class="p-sec">
-      <div class="p-h2">Seguridad</div>
+      <div class="p-h2">8. Menores de edad</div>
       <p class="p-p">
-        Los datos se almacenan en la infraestructura de Firebase (Google Cloud), con reglas de
-        acceso que restringen quién puede leer o modificar cada registro. Adicionalmente, el
-        sitio usa Google reCAPTCHA para filtrar peticiones automatizadas o de bots. No
-        compartimos información con terceros más allá de los proveedores necesarios para operar
-        el sitio (Firebase).
+        El registro está dirigido a personas de <strong>13 años o más</strong>. Si sos menor de la
+        edad en que tu país permite dar consentimiento digital, necesitás la autorización de tu
+        madre, padre o tutor. Si detectamos una cuenta que no cumple este requisito, la podemos
+        eliminar. Si sos madre, padre o tutor y creés que un menor se registró sin permiso,
+        escribinos y retiraremos sus datos.
       </p>
     </div>
 
     <div class="p-sec">
-      <div class="p-h2">Cambios a esta política</div>
+      <div class="p-h2">9. Tus derechos</div>
+      <p class="p-p">Como titular de los datos tenés derecho a:</p>
+      <ul class="p-list">
+        <li>Conocer, actualizar y rectificar tus datos.</li>
+        <li>Solicitar prueba de la autorización otorgada.</li>
+        <li>Ser informado del uso que se ha dado a tus datos.</li>
+        <li>Revocar la autorización y solicitar la supresión de tus datos.</li>
+        <li>Presentar quejas ante la Superintendencia de Industria y Comercio (SIC) por infracciones a la ley.</li>
+      </ul>
       <p class="p-p">
-        Esta política puede actualizarse con el tiempo. Cualquier cambio se reflejará en esta
-        misma página junto con la fecha de actualización.
+        <strong>Cómo ejercerlos:</strong> eliminar tu cuenta y cambiar tu usuario lo podés hacer
+        vos mismo desde tu perfil. Para lo demás, escribí a
+        <a href="mailto:chprojectsoficial@gmail.com">chprojectsoficial@gmail.com</a>. Responderemos
+        las <strong>consultas en un máximo de 10 días hábiles</strong> y los
+        <strong>reclamos en un máximo de 15 días hábiles</strong>, prorrogables según lo que
+        permite la ley. Si sos de la Unión Europea, también podés pedir la portabilidad de tus
+        datos y reclamar ante tu autoridad de control.
       </p>
     </div>
 
     <div class="p-sec">
-      <div class="p-h2">Contacto</div>
+      <div class="p-h2">10. Seguridad</div>
       <p class="p-p">
-        Ante cualquier consulta sobre esta política o tus datos, escribe a
+        Los datos se almacenan en la infraestructura de Firebase (Google Cloud) con reglas de
+        acceso, y el sitio usa reCAPTCHA para filtrar tráfico automatizado. Ningún sistema es
+        100 % seguro, pero aplicamos medidas razonables para proteger tu información. Si ocurre un
+        incidente que afecte tus datos, te lo comunicaremos y lo informaremos a la autoridad cuando
+        corresponda.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">11. Cambios a esta política</div>
+      <p class="p-p">
+        Podemos actualizar esta política con el tiempo. Los cambios se publican en esta página con
+        una nueva versión y fecha. Si el cambio es importante, te pediremos aceptarla de nuevo al
+        iniciar sesión.
+      </p>
+    </div>
+
+    <div class="p-sec">
+      <div class="p-h2">12. Contacto</div>
+      <p class="p-p">
+        Para cualquier consulta sobre esta política o tus datos, escribí a
         <a href="mailto:chprojectsoficial@gmail.com">chprojectsoficial@gmail.com</a>.
       </p>
     </div>
