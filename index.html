@@ -154,6 +154,7 @@
           termsVersion: "2026-10",
           role: "user"
         });
+      await logConsent('signup_google', _user.uid);
       },
       setSuppressAutoEnter: v => { _suppressAutoEnter = v; },
       logConsent: (type, uid) => logConsent(type, uid),
