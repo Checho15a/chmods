@@ -1163,6 +1163,14 @@
           <label>Nombre de usuario</label>
           <input type="text" id="google-username-input" placeholder="Ejm: Usuario123" autocomplete="off" />
         </div>
+        <label class="auth-check">
+          <input type="checkbox" id="g-terms" />
+          <span>Acepto los <a href="terminos.html" target="_blank" rel="noopener">Términos y Condiciones</a> y confirmo que tengo al menos 13 años.</span>
+        </label>
+        <label class="auth-check" style="margin-bottom:1rem">
+          <input type="checkbox" id="g-privacy" />
+          <span>Acepto la <a href="privacidad.html" target="_blank" rel="noopener">Política de Privacidad</a>.</span>
+        </label>
         <button class="v-btn" id="google-username-btn" onclick="submitGoogleUsername()">Continuar</button>
         <button class="v-back-btn" onclick="cancelGoogleSignup()">← Cancelar</button>
       </div>
