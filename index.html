@@ -1658,6 +1658,9 @@
     if (pw.length < 6) {
       showMsg('La contraseña debe tener al menos 6 caracteres.', 'err'); return;
     }
+    if (!document.getElementById('reg-terms').checked || !document.getElementById('reg-privacy').checked) {
+      showMsg('Debés aceptar los Términos y Condiciones y la Política de Privacidad para crear tu cuenta.', 'err'); return;
+    }
 
     setBtnLoading(true);
 
