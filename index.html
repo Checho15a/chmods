@@ -5470,14 +5470,12 @@
     localStorage.setItem('chm_cookie_consent', choice);
     document.getElementById('cookie-banner').classList.remove('show');
     document.getElementById('cookie-overlay').classList.remove('show');
+    try { window._chm?.logConsent('cookies_' + choice); } catch(e) {}
   }
-  window.addEventListener('load', () => {
-    if (!localStorage.getItem('chm_cookie_consent')) {
-      setTimeout(() => {
-        document.getElementById('cookie-banner').classList.add('show');
-        document.getElementById('cookie-overlay').classList.add('show');
-      }, 600);
-    }
+  function openCookieSettings() {
+    document.getElementById('cookie-banner').classList.add('show');
+    document.getElementById('cookie-overlay').classList.add('show');
+  }
   });
 </script>
 </body>
