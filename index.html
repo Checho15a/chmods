@@ -1940,6 +1940,40 @@
     });
   }
 
+  // ── Aviso de términos para cuentas existentes ──────────────────
+  async function checkTermsUpdate() {
+    try {
+      if (await window._chm.needsTermsAcceptance()) {
+        document.getElementById('tu-terms').checked = false;
+        document.getElementById('tu-privacy').checked = false;
+        document.getElementById('tu-msg').className = 'auth-msg';
+        document.getElementById('terms-update-modal').classList.add('show');
+      }
+    } catch(e) {}
+  }
+  async function acceptUpdatedTerms() {
+    const msg = document.getElementById('tu-msg');
+    if (!document.getElementById('tu-terms').checked || !document.getElementById('tu-privacy').checked) {
+      msg.textContent = 'Debés aceptar ambos documentos para continuar.';
+      msg.className = 'auth-msg err';
+      return;
+    }
+    const btn = document.getElementById('tu-accept-btn');
+    btn.disabled = true;
+    try {
+      await window._chm.acceptTerms();
+      document.getElementById('terms-update-modal').classList.remove('show');
+      suggToast('✓ Gracias por aceptar', 'ok');
+    } catch(e) {
+      msg.textContent = 'No se pudo guardar tu aceptación. Intentá de nuevo.';
+      msg.className = 'auth-msg err';
+    } finally { btn.disabled = false; }
+  }
+  async function declineUpdatedTerms() {
+    document.getElementById('terms-update-modal').classList.remove('show');
+    await doLogout();
+  }
+  
   // ── Cargar mods personalizados desde Firestore y pintarlos en la grilla ──
   let _customModsToken = 0;
 
