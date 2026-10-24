@@ -3665,6 +3665,24 @@
   let _imaProgressTimer = null;
   let _adMuted = false;
   let _adVolumeBeforeMute = 100;
+  let _imaSdkPromise = null;
+  function loadImaSdk() {
+    if (window.google && window.google.ima) return Promise.resolve();
+    if (_imaSdkPromise) return _imaSdkPromise;
+    _imaSdkPromise = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://imasdk.googleapis.com/js/sdkloader/ima3.js';
+      s.onload = resolve;
+      s.onerror = () => { _imaSdkPromise = null; reject(new Error('ima')); };
+      document.head.appendChild(s);
+    });
+    return _imaSdkPromise;
+  }
+  function acceptAdConsent() {
+    try { window._chm?.logConsent('ads_download'); } catch(e) {}
+    loadImaSdk().catch(() => {});
+    showAdInstructions();
+  }
 
   function _setAdVolume(val) {
     const pct = Math.max(0, Math.min(100, Number(val)));
