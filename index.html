@@ -1790,7 +1790,9 @@
 
   async function cancelGoogleSignup() {
     window._chm.setSuppressAutoEnter(false);
-    try { await window._chm.logout(); } catch(e) {}
+    try { await window._chm.deleteAccount(); } catch(e) {
+      try { await window._chm.logout(); } catch(e2) {}
+    }
     switchTab('in');
   }
   
