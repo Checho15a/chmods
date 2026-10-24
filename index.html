@@ -87,6 +87,8 @@
           usernameLower: username.toLowerCase(),
           email,
           createdAt: serverTimestamp(),
+          termsAcceptedAt: serverTimestamp(),
+          termsVersion: "2026-10",
           role: "user"
         });
         return c.user;
@@ -123,6 +125,8 @@
           usernameLower: username.toLowerCase(),
           email: _user.email,
           createdAt: serverTimestamp(),
+          termsAcceptedAt: serverTimestamp(),
+          termsVersion: "2026-10",
           role: "user"
         });
       },
