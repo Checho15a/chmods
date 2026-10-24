@@ -166,7 +166,8 @@
       },
       async acceptTerms() {
         if (!_user) throw new Error('No autenticado');
-        await updateDoc(doc(db, "users", _user.uid), {
+        await updateDoc(doc(db, "users", _user.uid);
+        await logConsent('terms_update', _user.uid),
           termsAcceptedAt: serverTimestamp(),
           termsVersion: TERMS_VERSION
         });
