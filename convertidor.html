@@ -631,7 +631,11 @@
     });
     localStorage.setItem('chTheme', dark ? 'dark' : 'light');
   }
-  applyTheme(localStorage.getItem('chTheme') === 'dark');
+  (function () {
+    var pref = null;
+    try { pref = localStorage.getItem('chm_theme'); } catch (e) {}
+    applyTheme(pref !== 'light');
+  })();
   document.getElementById('themeBtn').addEventListener('click', () =>
     applyTheme(!document.body.classList.contains('dark')));
   document.getElementById('authThemeBtn').addEventListener('click', () =>
