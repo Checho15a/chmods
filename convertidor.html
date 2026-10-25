@@ -570,6 +570,7 @@
         <span style="flex-shrink:0">📜</span>
         <span>Al subir archivos aceptás los <a href="terminos.html" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">Términos y Condiciones</a>. Los links son públicos: no subas contenido sexual, violento, ilegal ni material sobre el que no tengas derechos.</span>
       </div>
+
       <div class="gallery-title">Tus imágenes subidas</div>
       <div id="img-gallery"></div>
     </div>
@@ -611,6 +612,11 @@
         <span>El video se sube y obtenés un link <strong>.mp4</strong> permanente y público, listo para pegar en el mod.</span>
       </div>
 
+      <div class="info-note">
+        <span style="flex-shrink:0">📜</span>
+        <span>Al subir archivos aceptás los <a href="terminos.html" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">Términos y Condiciones</a>. Los links son públicos: no subas contenido sexual, violento, ilegal ni material sobre el que no tengas derechos.</span>
+      </div>
+
       <div class="gallery-title">Tus videos subidos</div>
       <div id="vid-gallery"></div>
     </div>
@@ -626,19 +632,23 @@
   let _activeSection = 'images';
 
   // ── Tema ──────────────────────────────────────────────────────
-  function applyTheme(dark) {
+  // Modo oscuro por defecto, salvo que la persona haya elegido "Claro" (clave compartida con el sitio).
+  function setThemeUI(dark) {
     document.body.classList.toggle('dark', dark);
     const icon = dark ? '🌙' : '☀️';
     ['themeBtn', 'authThemeBtn'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.textContent = icon;
     });
+  }
+  function applyTheme(dark) {
+    setThemeUI(dark);
     try { localStorage.setItem('chm_theme', dark ? 'dark' : 'light'); } catch (e) {}
   }
   (function () {
     var pref = null;
     try { pref = localStorage.getItem('chm_theme'); } catch (e) {}
-    applyTheme(pref !== 'light');
+    setThemeUI(pref !== 'light');
   })();
   document.getElementById('themeBtn').addEventListener('click', () =>
     applyTheme(!document.body.classList.contains('dark')));
@@ -903,7 +913,8 @@
       const pId = res.public_id;
 
       // vc_h264:baseline elimina el parpadeo/tartamudeo en Minecraft
-      const optimizedUrl = `https://res.cloudinary.com/${window._conv.cld.cloudName}/video/upload/vc_h264:baseline,q_auto:best,w_1280/${pId}.mp4`;      const thumbUrl = `https://res.cloudinary.com/${window._conv.cld.cloudName}/video/upload/so_0,f_jpg,w_400/${pId}.jpg`;
+      const optimizedUrl = `https://res.cloudinary.com/${window._conv.cld.cloudName}/video/upload/vc_h264:baseline,q_auto:best,w_1280/${pId}.mp4`;
+      const thumbUrl = `https://res.cloudinary.com/${window._conv.cld.cloudName}/video/upload/so_0,f_jpg,w_400/${pId}.jpg`;
       const cleanName = file.name.replace(/(\.[a-zA-Z0-9]+)+$/, '') + '.mp4';
       const durationStr = duration > 0
         ? `${Math.floor(duration / 60)}:${String(Math.floor(duration % 60)).padStart(2, '0')}`
